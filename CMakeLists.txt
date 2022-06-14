@@ -1,0 +1,21 @@
+cmake_minimum_required(VERSION 3.14)
+project(TryingOutRayTracing VERSION 1.0)
+
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_BUILD_TYPE Debug)
+
+find_package(SDL2 REQUIRED)
+find_package(GLEW REQUIRED)
+
+
+#file(GLOB_RECURSE SRC_FILES src/*.cc src/*.c src/*.cpp)
+
+add_executable(main main.cpp)
+
+
+target_link_libraries(main ${SDL2_LIBRARIES}  ${GLEW_LIBRARIES})
+target_include_directories(main PUBLIC ${SDL2_INCLUDE_DIRS} 
+									   ${CMAKE_CURRENT_SOURCE_DIR}/eigen
+									   ${GLEW_INCLUDE_DIRS})
+
