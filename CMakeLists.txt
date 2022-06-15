@@ -6,16 +6,18 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_BUILD_TYPE Debug)
 
 find_package(SDL2 REQUIRED)
-find_package(GLEW REQUIRED)
+find_package(GLEW 2.0 REQUIRED)
 
 
-#file(GLOB_RECURSE SRC_FILES src/*.cc src/*.c src/*.cpp)
+file(GLOB_RECURSE SRC_FILES src/*.cpp)
 
-add_executable(main main.cpp)
+add_executable(main main.cpp ${SRC_FILES})
 
+target_link_libraries(main ${SDL2_LIBRARIES})
+target_link_libraries(main GLEW::glew)
+target_link_libraries(main -lGL)
 
-target_link_libraries(main ${SDL2_LIBRARIES}  ${GLEW_LIBRARIES})
 target_include_directories(main PUBLIC ${SDL2_INCLUDE_DIRS} 
-									   ${CMAKE_CURRENT_SOURCE_DIR}/eigen
+									   ${CMAKE_CURRENT_SOURCE_DIR}/include
 									   ${GLEW_INCLUDE_DIRS})
 
