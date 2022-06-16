@@ -7,7 +7,7 @@
 
 int main(){
 	Display display(800, 600, "hell world");
-	Shader shader("../basicShader");
+	Shader shader("../shaders.shader");
 	Vertex vertices [] ={
 		Vertex(glm::vec3(-0.5,-0.5,0)),
 		Vertex(glm::vec3(0,0.5,0)),

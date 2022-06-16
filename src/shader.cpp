@@ -1,17 +1,23 @@
 #include "shader.h"
+#include <unordered_map>
+#include <sstream>
+struct shader_srcs{
+	std::string vertex_src;
+	std::string frag_src;
+};
 
-static std::string loadShader(const std::string& filename);
 static void CheckShaderError(GLuint shader, GLuint flag, bool isProgram, const std::string& errorMessage);
 static GLuint createShader(const std::string& text, GLenum shaderType);
-
-
+static struct shader_srcs parseShader(const std::string& filename);
 
 
 Shader::Shader(const std::string& filename){
 	m_program = glCreateProgram();
 
-	m_vs = createShader(loadShader(filename + ".vs"), GL_VERTEX_SHADER); 
-	m_fs = createShader(loadShader(filename + ".fs"), GL_FRAGMENT_SHADER);
+	struct shader_srcs srcs = parseShader(filename);
+
+	m_vs = createShader(srcs.vertex_src, GL_VERTEX_SHADER);
+	m_fs = createShader(srcs.frag_src, GL_FRAGMENT_SHADER);
 
 	glAttachShader(m_program, m_vs);
 	glAttachShader(m_program, m_fs);
@@ -21,6 +27,7 @@ Shader::Shader(const std::string& filename){
 
 	glValidateProgram(m_program);
 	CheckShaderError(m_program, GL_VALIDATE_STATUS, true, "Error: Program validating failed");
+
 };
 
 Shader::~Shader(){
@@ -49,20 +56,6 @@ static GLuint createShader(const std::string& shader_src, GLenum shaderType){
 	return shader;
 }
 
-static std::string loadShader(const std::string& filename){
-	std::ifstream file(filename);
-
-	std::string line, output;
-
-	output = "";
-	if(!file.is_open()) std::cerr << "Error: Failed opening file " <<  filename << std::endl;
-
-	while(file.good()){
-		getline(file, line);
-		output.append(line + "\n");
-	}
-	return output;
-}
 static void CheckShaderError(GLuint shader, GLuint flag, bool isProgram, const std::string& errorMessage)
 {
     GLint success = 0;
@@ -83,3 +76,56 @@ static void CheckShaderError(GLuint shader, GLuint flag, bool isProgram, const s
         std::cerr << errorMessage << ": '" << error << "'" << std::endl;
     }
 }
+
+static struct shader_srcs parseShader(const std::string& filename){
+	std::ifstream file(filename);
+
+	std::string line;
+
+	if(!file.is_open()) std::cerr << "Error: Failed opening file " <<  filename << std::endl;
+
+	enum class shaderType{
+		NONE = -1, 
+		VERTEX = 0, 	
+		FRAGMENT = 1
+	};
+
+	std::unordered_map<shaderType, std::string> s_srcs;
+
+	shaderType type = shaderType::NONE;
+
+	while(file.good()){
+		getline(file, line);
+
+		if(line.find("#shader") != std::string::npos){
+			if(line.find("fragment") != std::string::npos){
+				type = shaderType::FRAGMENT;
+			}else if (line.find("vertex") != std::string::npos){
+				type = shaderType::VERTEX;
+			}
+		}else{
+			s_srcs[type].append(line + "\n");
+		}
+	}
+
+	return {s_srcs[shaderType::VERTEX], s_srcs[shaderType::FRAGMENT]};
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
