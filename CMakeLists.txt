@@ -13,11 +13,8 @@ file(GLOB_RECURSE SRC_FILES src/*.cpp)
 
 add_executable(main main.cpp ${SRC_FILES})
 
-target_link_libraries(main ${SDL2_LIBRARIES})
-target_link_libraries(main GLEW::glew)
-target_link_libraries(main -lGL)
+#target_link_libraries(main)
 
-target_include_directories(main PUBLIC ${SDL2_INCLUDE_DIRS} 
-									   ${CMAKE_CURRENT_SOURCE_DIR}/include
-									   ${GLEW_INCLUDE_DIRS})
+target_include_directories(main PUBLIC  ${CMAKE_CURRENT_SOURCE_DIR}/include)
+									  
 
