@@ -1,5 +1,6 @@
 #include <vector>
 #include <iostream>
+#include <unordered_map>
 
 enum class becode_type{
 	INT = 1,
@@ -25,6 +26,7 @@ becode_type get_type(char c){
 			if(std::isdigit(c) != 0) return becode_type::STRING;
 	}
 }
+
 struct becode_node * becode_string(std::string& s, int offset, int n){
 	std::string ans = "";
 	for(int i = offset; i < offset + n; i++){
@@ -103,13 +105,27 @@ std::string list_to_string(std::vector<struct becode_node*>& becode_list){
 		node = becode_list[i];
 		switch(node->type){
 			case becode_type::INT:
-				ans += std::to_string(*reinterpret_cast<int*>(node->val)) + ", ";
+				ans += std::to_string(*reinterpret_cast<int*>(node->val));
+				break;
 			case becode_type::STRING:
-				ans += *reinterpret_cast<std::string*>(node->val) + ", ";
+				ans += *reinterpret_cast<std::string*>(node->val);
+				break;
 		} 
+		if(i < n-1) ans += ", ";
 	}
 	ans += "]";
 	return ans;
+}
+
+std::string node_to_string(struct becode_node * node){
+	switch(node->type){
+		case becode_type::LIST:
+			return list_to_string(*reinterpret_cast<std::vector<struct becode_node*> *>(node->val));
+		case becode_type::INT:
+			return std::to_string(*reinterpret_cast<int*>(node->val));
+		case becode_type::STRING:
+			return *reinterpret_cast<std::string*>(node->val);
+	}
 }
 
 std::string get_key(std::string& s, int& i){
