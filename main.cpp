@@ -93,64 +93,74 @@ std::vector<std::string> parse_bencode(std::string s){
 	std::vector<std::string> ans;
 	std::string elem = "";
 	int len;
+	std::string list = "list [";
 	for(int i = 0; i < n; ++i){
-		if(s[i] == 'i'){
-			ans.push_back(std::to_string(becode_int(s, ++i)));
-			elem = "";
-		}else if (std::isdigit(s[i]) != 0){
-			while(s[i] != ':'){
-				elem += s[i];
-				i++;
-			}
-			i++;
-			len = std::stoi(elem);
-			ans.push_back(becode_string(s, i, len));
-			i += len-1;
-			elem = "";
-		}else if (s[i] == 'l'){ 
-			std::string list = "list [";
-			i++;
-			for(auto e : parse_list(s, i)){
-				list += e + ", ";
-			}
-			list += "]";
-			ans.push_back(list);
-		}else if(s[i] == 'd'){
-			i++;
-			while(i < n && s[i] != 'e'){
-				std::string key, value;
-				key = get_key(s, i);
-				becode_type type = get_type(s[i]);
-				std::cout << i << std::endl;
-				switch(type){
-					case becode_type::INT:
-						i++; /*skip i char*/
-						value = std::to_string(becode_int(s, i));
-						break;
-					case becode_type::STRING:
-						len = get_str_len(s, i);
-						value = becode_string(s, i, len);
-						i += len-1;
-						break;
-					case becode_type::LIST:
-						i++;
-						std::string list = "list [";
-						for(auto e : parse_list(s, i)){
-							list += e + ", ";
-						}
-						value = list + "]";
-						break;
-
+		becode_type type = get_type(s[i]);
+		switch(type){
+			case becode_type::INT:
+				ans.push_back(std::to_string(becode_int(s, ++i)));
+				elem = "";
+				break;
+			case becode_type::STRING:
+				while(s[i] != ':'){
+					elem += s[i];
+					i++;
 				}
-				std::string entry = "";
-				entry += "{" + key + ":" + value + "}";
-				ans.push_back("dict " + entry);
 				i++;
-			}
+				len = std::stoi(elem);
+				ans.push_back(becode_string(s, i, len));
+				i += len-1;
+				elem = "";
+				break;
+			case becode_type::LIST:
+				i++;
+				for(auto e : parse_list(s, i)){
+					list += e + ", ";
+				}
+				list += "]";
+				ans.push_back(list);
+				list = "list [";
+				break;
+			case becode_type::DICT:
+				i++;
+				while(i < n && s[i] != 'e'){
+					std::string key, value;
+					key = get_key(s, i);
+					becode_type type = get_type(s[i]);
+					std::cout << i << std::endl;
+					switch(type){
+						case becode_type::INT:
+							i++; /*skip i char*/
+							value = std::to_string(becode_int(s, i));
+							break;
+						case becode_type::STRING:
+							len = get_str_len(s, i);
+							value = becode_string(s, i, len);
+							i += len-1;
+							break;
+						case becode_type::LIST:
+							i++;
+							list = "list [";
+							for(auto e : parse_list(s, i)){
+								list += e + ", ";
+							}
+							value = list + "]";
+							list = "list [";
+							break;
+
+					}
+					std::string entry = "";
+					entry += "{" + key + ":" + value + "}";
+					ans.push_back("dict " + entry);
+					i++;
+				}
+				break;
 		}
+
 	}
 	return ans;
 }
+
 
 int main(){
 	std::vector<std::string> vec;
