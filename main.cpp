@@ -225,20 +225,20 @@ std::string dict_to_string(std::unordered_map<std::string, struct becode_node*>&
 //std::unordered_map<std::string, struct 
 //std::vector<struct becode_node *> becode;
 
-std::vector<std::string> parse_bencode(std::string s){
+std::vector<struct becode_node *> parse_bencode(std::string s){
 	int n;
 	n = s.size();
-	std::vector<std::string> ans;
+	//std::vector<std::string> ans;
 	std::string elem = "";
 	int len;
-	std::string list = "list [";
+	std::vector<struct becode_node *> ans;
 	for(int i = 0; i < n; ++i){
 		becode_type type = get_type(s[i]);
 		switch(type){
 			case becode_type::INT:
 				{
 					struct becode_node * node  = becode_int(s, ++i);
-					ans.push_back(node_to_string(node));
+					ans.push_back(node);
 					elem = "";
 					break;
 				}
@@ -251,7 +251,7 @@ std::vector<std::string> parse_bencode(std::string s){
 					i++;
 					len = std::stoi(elem);
 					struct becode_node * node = becode_string(s, i, len);
-					ans.push_back(node_to_string(node));
+					ans.push_back(node);
 					i += len-1;
 					elem = "";
 					break;
@@ -261,15 +261,14 @@ std::vector<std::string> parse_bencode(std::string s){
 					i++;
 					struct becode_node * node = parse_list(s, i);
 					std::vector<struct becode_node *> list_nodes = *reinterpret_cast<std::vector<struct becode_node*> *>(node->val);
-					ans.push_back(node_to_string(node));
-					list = "list [";
+					ans.push_back(node);
 					break;
 				}
 			case becode_type::DICT:
 				{
 					i++;
 					struct becode_node * node = parse_dict(s, i, n);
-					ans.push_back(node_to_string(node));
+					ans.push_back(node);
 					break;
 				}
 		}
@@ -278,7 +277,16 @@ std::vector<std::string> parse_bencode(std::string s){
 	return ans;
 }
 
-std::string becode_to_string(void);
+std::string bencode_to_string(std::vector<struct becode_node*>& bencode){
+	int n;
+	n = bencode.size();
+	std::string ans = "";
+	for(int i = 0; i < n; i++){
+		ans += node_to_string(bencode[i]);
+		ans += "\n";
+	}
+	return ans;
+}
 
 int main(){
 	std::vector<becode_node> file;
@@ -287,7 +295,8 @@ int main(){
 	std::string val;
 	while(std::cin >> val);
 
-	for(auto x : parse_bencode(val)) std::cout << x << std::endl;
-
+	std::vector<struct becode_node *> bencode = parse_bencode(val);
+	std::string s = bencode_to_string(bencode);
+	std::cout << s;
 	return 0;
 }
