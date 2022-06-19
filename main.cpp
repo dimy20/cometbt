@@ -228,7 +228,6 @@ std::string dict_to_string(std::unordered_map<std::string, struct becode_node*>&
 std::vector<struct becode_node *> parse_bencode(std::string s){
 	int n;
 	n = s.size();
-	//std::vector<std::string> ans;
 	std::string elem = "";
 	int len;
 	std::vector<struct becode_node *> ans;
@@ -244,12 +243,7 @@ std::vector<struct becode_node *> parse_bencode(std::string s){
 				}
 			case becode_type::STRING:
 				{
-					while(s[i] != ':'){
-						elem += s[i];
-						i++;
-					}
-					i++;
-					len = std::stoi(elem);
+					len = get_str_len(s, i);
 					struct becode_node * node = becode_string(s, i, len);
 					ans.push_back(node);
 					i += len-1;
