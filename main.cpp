@@ -1,7 +1,8 @@
 #include "bencode.h"
 
-std::string dict_to_string(std::unordered_map<std::string, struct becode_node*>& dict);
+//std::string dict_to_string(std::unordered_map<std::string, struct becode_node*>& dict);
 
+/*
 becode_type get_type(char c){
 	switch(c){
 		case 'i':
@@ -14,7 +15,8 @@ becode_type get_type(char c){
 			if(std::isdigit(c) != 0) return becode_type::STRING;
 	}
 }
-
+*/
+/*
 struct becode_node * becode_string(std::string& s, int offset, int n){
 	std::string ans = "";
 	for(int i = offset; i < offset + n; i++){
@@ -27,7 +29,8 @@ struct becode_node * becode_string(std::string& s, int offset, int n){
 	*reinterpret_cast<std::string *>(node->val) = ans;
 	return node;
 }
-
+*/
+/*
 struct becode_node * becode_int(const std::string& s, int& i){
 	std::string ans = "";
 	while(s[i] != 'e'){
@@ -40,7 +43,8 @@ struct becode_node * becode_int(const std::string& s, int& i){
 	*reinterpret_cast<int*>(node->val) = std::stoi(ans);
 	return node;
 }
-
+*/
+/*
 struct becode_node * parse_list(std::string& s, int& i){
 	std::vector<becode_node *> ans;
 	std::string elem = "";
@@ -82,7 +86,8 @@ struct becode_node * parse_list(std::string& s, int& i){
 	*reinterpret_cast<std::vector<struct becode_node *> *>(list_node->val) = ans;
 	return list_node;
 }
-
+*/
+/*
 std::string list_to_string(std::vector<struct becode_node*>& becode_list){
 	int n;
 	n = becode_list.size();
@@ -104,7 +109,9 @@ std::string list_to_string(std::vector<struct becode_node*>& becode_list){
 	ans += "]";
 	return ans;
 }
+*/
 
+/*
 std::string node_to_string(struct becode_node * node){
 	switch(node->type){
 		case becode_type::LIST:
@@ -118,6 +125,9 @@ std::string node_to_string(struct becode_node * node){
 	}
 }
 
+*/
+
+/*
 std::string get_key(std::string& s, int& i){
 	int len;
 	std::string elem = "";
@@ -136,7 +146,8 @@ std::string get_key(std::string& s, int& i){
 	free(node);
 	return ans;
 }
-
+*/
+/*
 int get_str_len(std::string& s, int& i){
 	std::string len_s = "";
 	while(s[i] != ':'){
@@ -146,6 +157,8 @@ int get_str_len(std::string& s, int& i){
 	i++;
 	return std::stoi(len_s);
 }
+*/
+/*
 struct becode_node * parse_dict(std::string& s, int& i, int n){
 	std::unordered_map<std::string, struct becode_node *> d;
 	int len;
@@ -156,7 +169,7 @@ struct becode_node * parse_dict(std::string& s, int& i, int n){
 		switch(type){
 			case becode_type::INT:
 				{
-					struct becode_node * node  = becode_int(s, ++i); /*skip i char*/
+					struct becode_node * node  = becode_int(s, ++i); 
 					d[key] = node;
 					break;
 				}
@@ -185,6 +198,8 @@ struct becode_node * parse_dict(std::string& s, int& i, int n){
 	return dict_node;
 
 }
+*/
+/*
 std::string dict_to_string(std::unordered_map<std::string, struct becode_node*>& dict){
 	std::string ans = "dict { ";
 	std::string value = "";
@@ -199,18 +214,8 @@ std::string dict_to_string(std::unordered_map<std::string, struct becode_node*>&
 	ans += " }";
 	return ans;
 }
+*/
 /*
- * integets -> ints or std::strings
- * string -> std::strings
- * dicts -> std::unordered_maps
- * lists -> std::vector<struct becode_nodes> -> 
- * std::vector<struct becode_node> 
- * becode_node = {type, content}
- *
- * */
-//std::unordered_map<std::string, struct 
-//std::vector<struct becode_node *> becode;
-
 std::vector<struct becode_node *> parse_bencode(std::string s){
 	int n;
 	n = s.size();
@@ -257,6 +262,8 @@ std::vector<struct becode_node *> parse_bencode(std::string s){
 	return ans;
 }
 
+*/
+/*
 std::string bencode_to_string(std::vector<struct becode_node*>& bencode){
 	int n;
 	n = bencode.size();
@@ -267,16 +274,14 @@ std::string bencode_to_string(std::vector<struct becode_node*>& bencode){
 	}
 	return ans;
 }
+*/
 
 int main(){
-	std::vector<becode_node> file;
-	std::vector<std::string> vec;
-
 	std::string val;
 	while(std::cin >> val);
 
-	std::vector<struct becode_node *> bencode = parse_bencode(val);
-	std::string s = bencode_to_string(bencode);
-	std::cout << s;
+	Bencode bencode(val);
+	bencode.parse();
+	std::cout << bencode.to_string();
 	return 0;
 }
