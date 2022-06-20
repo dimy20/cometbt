@@ -1,21 +1,7 @@
-#include <vector>
-#include <iostream>
-#include <unordered_map>
-
-enum class becode_type{
-	INT = 1,
-	STRING,
-	LIST,
-	DICT
-};
-
-struct becode_node{
-	becode_type type;
-	void * val;
-};
-
+#include "bencode.h"
 
 std::string dict_to_string(std::unordered_map<std::string, struct becode_node*>& dict);
+
 becode_type get_type(char c){
 	switch(c){
 		case 'i':
