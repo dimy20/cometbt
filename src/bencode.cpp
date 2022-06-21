@@ -76,35 +76,14 @@ struct bencode_node * Bencode::decode_list(){
 struct bencode_node * Bencode::decode_dict(int n){
 	std::unordered_map<std::string, struct bencode_node *> d;
 	int len;
-	while(m_index < n && m_bencode[m_index] != 'e'){
-		std::string key;
-		key = get_key();
-		becode_type type = get_type(m_bencode[m_index]);
-		switch(type){
-			case becode_type::INT:
-				{
-					step();
-					struct bencode_node * node  = decode_int(); /*skip i char*/
-					d[key] = node;
-					break;
-				}
-			case becode_type::STRING:
-				{
-					len = get_str_len();
-					struct bencode_node * node = decode_string(m_index, len);
-					m_index += len -1;
-					d[key] = node;
-					break;
-				}
-			case becode_type::LIST:
-				step();
-				struct bencode_node * node = decode_list(); // skip l char
-				std::vector<struct bencode_node *> list_nodes = *reinterpret_cast<std::vector<struct bencode_node *> *>(node->val);
-				d[key] = node;
-				break;
+	struct bencode_node * key_node, * value_node;
+	while(m_index < n && m_bencode[m_index] != token_type::END_TOKEN){
+		key_node = decode();
+		std::string key = *reinterpret_cast<std::string*>(key_node->val);
+		delete key_node;
+		value_node = decode();
 
-		}
-		step();
+		d[key] = value_node;
 	}
 
 	struct bencode_node * dict_node = new struct bencode_node;
