@@ -5,8 +5,10 @@ char Bencode::peek(){
 	return m_bencode[m_index];
 };
 
-void Bencode::step(){
-	m_index++;
+void Bencode::step(int step_count){
+	if(m_index + step_count < m_bencode.size()){
+		m_index += step_count;
+	}
 };
 
 becode_type Bencode::get_type(char c){

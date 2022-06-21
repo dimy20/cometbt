@@ -49,5 +49,5 @@ class Bencode{
 		std::string node_to_string(struct bencode_node * node);
 
 		char peek();
-		void step();
+		void step(int step_count);
 };
