@@ -5,7 +5,7 @@ int main(){
 	while(std::cin >> val);
 
 	Bencode bencode(val);
-	bencode.parse();
+	bencode.decode();
 	std::cout << bencode.to_string();
 	return 0;
 }

@@ -2,7 +2,7 @@
 #include <iostream>
 #include <unordered_map>
 
-enum class token{
+enum token_type {
 	END_TOKEN = 'e',
 	INT_TOKEN = 'i',
 	LIST_TOKEN = 'l',
@@ -26,7 +26,7 @@ class Bencode{
 
 	public:
 		Bencode(std::string bencode_s);
-		std::vector<struct bencode_node *>& parse(void);
+		std::vector<struct bencode_node *>& decode(void);
 		std::string to_string(void);
 		std::vector<struct bencode_node *>& nodes();
 
