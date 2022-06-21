@@ -40,8 +40,10 @@ class Bencode{
 		struct bencode_node * bencode_int();
 		struct bencode_node * bencode_list();
 		struct bencode_node * bencode_dict(int n);
-		std::string get_key(std::string&s, int& i);
-		int get_str_len(std::string& s, int& i);
+
+		std::string get_key();
+		int get_str_len();
+
 		std::string dict_to_string(std::unordered_map<std::string, struct bencode_node*>& dict);
 		std::string list_to_string(std::vector<struct bencode_node*>& becode_list);
 		std::string node_to_string(struct bencode_node * node);
