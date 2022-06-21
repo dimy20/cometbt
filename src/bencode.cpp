@@ -95,21 +95,8 @@ struct bencode_node * Bencode::decode_dict(int n){
 
 }
 
-/*
- * This is a hack, change to proper solution later
- * */
 std::string Bencode::to_string(){
-	int n;
-	n = m_nodes.size();
-	/*
-	std::string ans = "";
-	for(int i = 0; i < n; i++){
-		ans += node_to_string(m_nodes[i]);
-		ans += "\n";
-	}
-	return ans;
-	*/
-	return node_to_string(m_nodes[n-1]) + "\n";
+	return node_to_string(m_node) + "\n";
 }
 
 struct bencode_node * Bencode::decode(){
@@ -118,7 +105,6 @@ struct bencode_node * Bencode::decode(){
 	int len;
 	char token = peek();
 
-	struct bencode_node * node;
 
 	if(token == EOF){
 		return NULL;
@@ -128,58 +114,34 @@ struct bencode_node * Bencode::decode(){
 		case token_type::INT_TOKEN:
 			{
 				step(1);
-				node  = decode_int();
-				m_nodes.push_back(node);
+				m_node  = decode_int();
 				step(1);
-				return node;
+				return m_node;
 			}
 		case token_type::LIST_TOKEN:
 			{
 				step(1); // skip token
-				node = decode_list();
-				std::vector<struct bencode_node *> list_nodes = *reinterpret_cast<std::vector<struct bencode_node*> *>(node->val);
-				m_nodes.push_back(node);
+				m_node = decode_list();
 				step(1); // skip end token
-				return node;
+				return m_node;
 			}
 		case token_type::DICT_TOKEN:
 			{
 				step(1);
-				node = decode_dict(n);
-				m_nodes.push_back(node);
+				m_node = decode_dict(n);
 				step(1);
-				return node;
+				return m_node;
 			}
 		default:
 			if(std::isdigit(token) != 0){
 				len = get_str_len();
-				node = decode_string(m_index, len);
-				m_nodes.push_back(node);
+				m_node = decode_string(m_index, len);
 				step(len);
-				return node;
+				return m_node;
 			}
 	}
-	return node;
-}
 
-
-std::string Bencode::get_key(){
-	int len;
-	std::string elem = "";
-	std::string ans = "";
-	if(std::isdigit(m_bencode[m_index])){
-		while(m_bencode[m_index] != ':'){
-			elem += m_bencode[m_index];
-			m_index++;
-		}
-		m_index++;
-		len = std::stoi(elem);
-	}
-	struct bencode_node * node = decode_string(m_index, len);
-	ans = *reinterpret_cast<std::string*>(node->val);
-	m_index += len;
-	free(node);
-	return ans;
+	return m_node;
 }
 
 int Bencode::get_str_len(){
@@ -235,6 +197,3 @@ std::string Bencode::node_to_string(struct bencode_node * node){
 	}
 }
 
-std::vector<struct bencode_node *>& Bencode::nodes(){
-	return m_nodes;
-}

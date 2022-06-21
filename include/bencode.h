@@ -28,12 +28,12 @@ class Bencode{
 		Bencode(std::string bencode_s);
 		struct bencode_node * decode(void);
 		std::string to_string(void);
-		std::vector<struct bencode_node *>& nodes();
 
 	private:
 		std::string m_bencode;
 		int m_index;
-		std::vector<struct bencode_node *> m_nodes;
+		struct bencode_node * m_node;
+		
 	private:
 		becode_type get_type(char c);
 		struct bencode_node * decode_string(int offset, int n);
@@ -41,7 +41,6 @@ class Bencode{
 		struct bencode_node * decode_list();
 		struct bencode_node * decode_dict(int n);
 
-		std::string get_key();
 		int get_str_len();
 
 		std::string dict_to_string(std::unordered_map<std::string, struct bencode_node*>& dict);
