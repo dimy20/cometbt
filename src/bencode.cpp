@@ -147,44 +147,54 @@ std::string Bencode::to_string(){
 	return ans;
 }
 
-std::vector<struct bencode_node *>& Bencode::decode(){
+struct bencode_node * Bencode::decode(){
 	int n;
 	n = m_bencode.size();
 	int len;
 	char token = peek();
+
+	struct bencode_node * node;
+
+	if(token == EOF){
+		return NULL;
+	}
+
 	switch(token){
 		case token_type::INT_TOKEN:
 			{
-				step();
-				struct bencode_node * node  = decode_int();
+				step(1);
+				node  = decode_int();
 				m_nodes.push_back(node);
-				break;
+				step(1);
+				return node;
 			}
 		case token_type::LIST_TOKEN:
 			{
-				step();
-				struct bencode_node * node = decode_list();
+				step(1); // skip token
+				node = decode_list();
 				std::vector<struct bencode_node *> list_nodes = *reinterpret_cast<std::vector<struct bencode_node*> *>(node->val);
 				m_nodes.push_back(node);
-				break;
+				step(1); // skip end token
+				return node;
 			}
 		case token_type::DICT_TOKEN:
 			{
-				step();
-				struct bencode_node * node = decode_dict(n);
+				step(1);
+				node = decode_dict(n);
 				m_nodes.push_back(node);
-				break;
+				step(1);
+				return node;
 			}
 		default:
 			if(std::isdigit(token) != 0){
 				len = get_str_len();
-				struct bencode_node * node = decode_string(m_index, len);
+				node = decode_string(m_index, len);
 				m_nodes.push_back(node);
-				m_index += len -1;
-				break;
+				step(len);
+				return node;
 			}
 	}
-	return m_nodes;
+	return node;
 }
 
 

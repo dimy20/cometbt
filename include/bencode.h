@@ -26,7 +26,7 @@ class Bencode{
 
 	public:
 		Bencode(std::string bencode_s);
-		std::vector<struct bencode_node *>& decode(void);
+		struct bencode_node * decode(void);
 		std::string to_string(void);
 		std::vector<struct bencode_node *>& nodes();
 
