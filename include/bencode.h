@@ -36,10 +36,10 @@ class Bencode{
 		std::vector<struct bencode_node *> m_nodes;
 	private:
 		becode_type get_type(char c);
-		struct bencode_node* bencode_string(int offset, int n);
-		struct bencode_node * bencode_int();
-		struct bencode_node * bencode_list();
-		struct bencode_node * bencode_dict(int n);
+		struct bencode_node * decode_string(int offset, int n);
+		struct bencode_node * decode_int();
+		struct bencode_node * decode_list();
+		struct bencode_node * decode_dict(int n);
 
 		std::string get_key();
 		int get_str_len();
