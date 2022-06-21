@@ -47,6 +47,7 @@ struct bencode_node * Bencode::decode_int(){
 		ans += m_bencode[m_index];
 		m_index++;
 	}
+
 	struct bencode_node * node = new struct bencode_node;
 	node->type = becode_type::INT;
 	node->val = new int;
@@ -94,15 +95,21 @@ struct bencode_node * Bencode::decode_dict(int n){
 
 }
 
+/*
+ * This is a hack, change to proper solution later
+ * */
 std::string Bencode::to_string(){
 	int n;
 	n = m_nodes.size();
+	/*
 	std::string ans = "";
 	for(int i = 0; i < n; i++){
 		ans += node_to_string(m_nodes[i]);
 		ans += "\n";
 	}
 	return ans;
+	*/
+	return node_to_string(m_nodes[n-1]) + "\n";
 }
 
 struct bencode_node * Bencode::decode(){
