@@ -208,14 +208,7 @@ std::string Bencode::list_to_string(std::vector<struct bencode_node*>& becode_li
 
 	for(int i = 0; i < n; i++){
 		node = becode_list[i];
-		switch(node->type){
-			case becode_type::INT:
-				ans += std::to_string(*reinterpret_cast<int*>(node->val));
-				break;
-			case becode_type::STRING:
-				ans += *reinterpret_cast<std::string*>(node->val);
-				break;
-		} 
+		ans += node_to_string(node);
 		if(i < n-1) ans += ", ";
 	}
 	ans += "]";
