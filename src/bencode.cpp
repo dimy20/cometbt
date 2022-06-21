@@ -1,5 +1,14 @@
 #include "bencode.h"
 
+char Bencode::peek(){
+	if(m_index + 1 >= m_bencode.size()) return EOF;
+	return m_bencode[m_index];
+};
+
+void Bencode::step(){
+	m_index++;
+};
+
 becode_type Bencode::get_type(char c){
 	switch(c){
 		case 'i':
@@ -15,12 +24,13 @@ becode_type Bencode::get_type(char c){
 
 Bencode::Bencode(std::string bencode){
 	m_bencode = bencode;
+	m_index = 0;
 }
 
-struct bencode_node * Bencode::bencode_string(std::string& s, int offset, int n){
+struct bencode_node * Bencode::bencode_string(int offset, int n){
 	std::string ans = "";
 	for(int i = offset; i < offset + n; i++){
-		ans += s[i];
+		ans += m_bencode[i];
 	}
 	struct bencode_node * node = new struct bencode_node;
 	node->type = becode_type::STRING;
@@ -29,11 +39,11 @@ struct bencode_node * Bencode::bencode_string(std::string& s, int offset, int n)
 	return node;
 }
 
-struct bencode_node * Bencode::bencode_int(const std::string& s, int& i){
+struct bencode_node * Bencode::bencode_int(){
 	std::string ans = "";
-	while(s[i] != 'e'){
-		ans += s[i];
-		i++;
+	while(m_bencode[m_index] != 'e'){
+		ans += m_bencode[m_index];
+		m_index++;
 	}
 	struct bencode_node * node = new struct bencode_node;
 	node->type = becode_type::INT;
@@ -42,36 +52,40 @@ struct bencode_node * Bencode::bencode_int(const std::string& s, int& i){
 	return node;
 }
 
-struct bencode_node * Bencode::bencode_list(std::string& s, int& i){
+struct bencode_node * Bencode::bencode_list(){
 	std::vector<struct bencode_node*> ans;
 	std::string elem = "";
 	int len;
 	becode_type type;
-	while(s[i] != 'e'){
-		type = get_type(s[i]);
+	while(m_bencode[m_index] != 'e'){
+		type = get_type(m_bencode[m_index]);
 		switch(type){
 			case becode_type::INT:
 				{
-					struct bencode_node * node = bencode_int(s, ++i);
+					step();
+					struct bencode_node * node = bencode_int();
 					ans.push_back(node);
 					break;
 				}
 			case becode_type::STRING:
 				{
-					while(s[i] != ':'){
-						elem += s[i];
-						i++;
+					while(m_bencode[m_index] != ':'){
+						elem += m_bencode[m_index];
+						m_index++;
 					}
-					i++;
+					//i++;
+					step();
 					len = std::stoi(elem);
-					struct bencode_node * node = bencode_string(s, i, len);
+					struct bencode_node * node = bencode_string(m_index, len);
 					ans.push_back(node);
-					i += len - 1;
+					//i += len - 1;
+					m_index += len -1;
 					elem = "";
 					break;
 				}
 		}
-		i++;
+		//i++;
+		m_index;
 	}
 	struct bencode_node * list_node = new struct bencode_node;
 	list_node->type = becode_type::LIST;
@@ -81,36 +95,39 @@ struct bencode_node * Bencode::bencode_list(std::string& s, int& i){
 	return list_node;
 }
 
-struct bencode_node * Bencode::bencode_dict(std::string& s, int& i, int n){
+struct bencode_node * Bencode::bencode_dict(int n){
 	std::unordered_map<std::string, struct bencode_node *> d;
 	int len;
-	while(i < n && s[i] != 'e'){
+	while(m_index < n && m_bencode[m_index] != 'e'){
 		std::string key;
-		key = get_key(s, i);
-		becode_type type = get_type(s[i]);
+		key = get_key(m_bencode, m_index);
+		becode_type type = get_type(m_bencode[m_index]);
 		switch(type){
 			case becode_type::INT:
 				{
-					struct bencode_node * node  = bencode_int(s, ++i); /*skip i char*/
+					step();
+					struct bencode_node * node  = bencode_int(); /*skip i char*/
 					d[key] = node;
 					break;
 				}
 			case becode_type::STRING:
 				{
-					len = get_str_len(s, i);
-					struct bencode_node * node = bencode_string(s, i, len);
-					i += len-1;
+					len = get_str_len(m_bencode, m_index);
+					struct bencode_node * node = bencode_string(m_index, len);
+					//i += len-1;
+					m_index += len -1;
 					d[key] = node;
 					break;
 				}
 			case becode_type::LIST:
-				struct bencode_node * node = bencode_list(s, ++i); // skip l char
+				step();
+				struct bencode_node * node = bencode_list(); // skip l char
 				std::vector<struct bencode_node *> list_nodes = *reinterpret_cast<std::vector<struct bencode_node *> *>(node->val);
 				d[key] = node;
 				break;
 
 		}
-		i++;
+		step();
 	}
 
 	struct bencode_node * dict_node = new struct bencode_node;
@@ -138,42 +155,45 @@ std::vector<struct bencode_node *>& Bencode::parse(){
 	std::string elem = "";
 	int len;
 	std::vector<struct bencode_node *> ans;
-	for(int i = 0; i < n; ++i){
-		becode_type type = get_type(m_bencode[i]);
+	while(m_index < n){
+		becode_type type = get_type(m_bencode[m_index]);
 		switch(type){
 			case becode_type::INT:
 				{
-					struct bencode_node * node  = bencode_int(m_bencode, ++i);
+					step();
+					struct bencode_node * node  = bencode_int();
 					ans.push_back(node);
 					elem = "";
 					break;
 				}
 			case becode_type::STRING:
 				{
-					len = get_str_len(m_bencode, i);
-					struct bencode_node * node = bencode_string(m_bencode, i, len);
+					len = get_str_len(m_bencode, m_index);
+					struct bencode_node * node = bencode_string(m_index, len);
 					ans.push_back(node);
-					i += len-1;
+					//i += len-1;
+					m_index += len -1;
+
 					elem = "";
 					break;
 				}
 			case becode_type::LIST:
 				{
-					i++;
-					struct bencode_node * node = bencode_list(m_bencode, i);
+					step();
+					struct bencode_node * node = bencode_list();
 					std::vector<struct bencode_node *> list_nodes = *reinterpret_cast<std::vector<struct bencode_node*> *>(node->val);
 					ans.push_back(node);
 					break;
 				}
 			case becode_type::DICT:
 				{
-					i++;
-					struct bencode_node * node = bencode_dict(m_bencode, i, n);
+					step();
+					struct bencode_node * node = bencode_dict(n);
 					ans.push_back(node);
 					break;
 				}
 		}
-
+		step();
 	}
 	m_nodes = ans;
 	return m_nodes;
@@ -192,7 +212,7 @@ std::string Bencode::get_key(std::string& s, int& i){
 		i++;
 		len = std::stoi(elem);
 	}
-	struct bencode_node * node = bencode_string(s, i, len);
+	struct bencode_node * node = bencode_string(i, len);
 	ans = *reinterpret_cast<std::string*>(node->val);
 	i += len;
 	free(node);
