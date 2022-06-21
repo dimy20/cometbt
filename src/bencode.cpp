@@ -148,7 +148,6 @@ std::string Bencode::to_string(){
 std::vector<struct bencode_node *>& Bencode::decode(){
 	int n;
 	n = m_bencode.size();
-	std::string elem = "";
 	int len;
 	char token = peek();
 	switch(token){
@@ -157,7 +156,6 @@ std::vector<struct bencode_node *>& Bencode::decode(){
 				step();
 				struct bencode_node * node  = decode_int();
 				m_nodes.push_back(node);
-				elem = "";
 				break;
 			}
 		case token_type::LIST_TOKEN:
@@ -181,7 +179,6 @@ std::vector<struct bencode_node *>& Bencode::decode(){
 				struct bencode_node * node = decode_string(m_index, len);
 				m_nodes.push_back(node);
 				m_index += len -1;
-				elem = "";
 				break;
 			}
 	}
