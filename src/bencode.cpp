@@ -59,37 +59,16 @@ struct bencode_node * Bencode::decode_list(){
 	std::string elem = "";
 	int len;
 	becode_type type;
-	while(m_bencode[m_index] != 'e'){
-		type = get_type(m_bencode[m_index]);
-		switch(type){
-			case becode_type::INT:
-				{
-					step();
-					struct bencode_node * node = decode_int();
-					ans.push_back(node);
-					break;
-				}
-			case becode_type::STRING:
-				{
-					while(m_bencode[m_index] != ':'){
-						elem += m_bencode[m_index];
-						m_index++;
-					}
-					step();
-					len = std::stoi(elem);
-					struct bencode_node * node = decode_string(m_index, len);
-					ans.push_back(node);
-					m_index += len -1;
-					elem = "";
-					break;
-				}
+	while(m_bencode[m_index] != token_type::END_TOKEN){
+		struct bencode_node * node = decode();
+		if(node != NULL){
+			ans.push_back(node);
 		}
-		m_index++;
 	}
+
 	struct bencode_node * list_node = new struct bencode_node;
 	list_node->type = becode_type::LIST;
 	list_node->val = new std::vector<struct bencode_node*>;
-
 	*reinterpret_cast<std::vector<struct bencode_node *> *>(list_node->val) = ans;
 	return list_node;
 }
