@@ -31,13 +31,14 @@ enum class becode_type{
 class Bencode{
 	public:
 		Bencode(std::string bencode_s);
-		struct bencode_node * decode(void);
+		std::shared_ptr<struct Bnode> decode(void);
 		std::string to_string(void);
+
 
 	private:
 		std::string m_bencode;
 		int m_index;
-		struct bencode_node * m_node;
+		std::shared_ptr<struct Bnode> m_node;
 		
 	private:
 		becode_type get_type(char c);

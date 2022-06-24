@@ -81,11 +81,9 @@ std::shared_ptr<struct Bnode> Bencode::decode_dict(int n){
 	return dict_node;
 }
 
-std::string Bencode::to_string(){
-	return node_to_string(m_node) + "\n";
-}
 
-struct bencode_node * Bencode::decode(){
+
+std::shared_ptr<struct Bnode> Bencode::decode(){
 	int n;
 	n = m_bencode.size();
 	int len;
