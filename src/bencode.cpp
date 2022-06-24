@@ -1,22 +1,22 @@
 #include "bencode.h"
 
-char Bencode::peek(){
+char Bencode::Decoder::peek(){
 	if(m_index + 1 >= m_bencode.size()) return EOF;
 	return m_bencode[m_index];
 };
 
-void Bencode::step(int step_count){
+void Bencode::Decoder::step(int step_count){
 	if(m_index + step_count < m_bencode.size()){
 		m_index += step_count;
 	}
 };
 
-Bencode::Bencode(std::string bencode){
+Bencode::Decoder::Decoder(std::string bencode){
 	m_bencode = bencode;
 	m_index = 0;
 }
 
-std::shared_ptr<struct Bnode> Bencode::decode_string(int n){
+std::shared_ptr<struct Bencode::Bnode> Bencode::Decoder::decode_string(int n){
 	std::string ans = "";
 	for(int i = m_index; i < m_index + n; i++){
 		ans += m_bencode[i];
@@ -26,7 +26,7 @@ std::shared_ptr<struct Bnode> Bencode::decode_string(int n){
 	return node;
 }
 
-std::shared_ptr<struct Bnode> Bencode::decode_int(){
+std::shared_ptr<struct Bencode::Bnode> Bencode::Decoder::decode_int(){
 	std::string ans = "";
 	while(m_bencode[m_index] != token_type::END_TOKEN){
 		ans += m_bencode[m_index];
@@ -38,12 +38,12 @@ std::shared_ptr<struct Bnode> Bencode::decode_int(){
 	return node;
 }
 
-std::shared_ptr<struct Bnode> Bencode::decode_list(){
+std::shared_ptr<struct Bencode::Bnode> Bencode::Decoder::decode_list(){
 	list_t ans;
 	std::string elem = "";
 	int len;
 
-	while(m_index < m_bencode.size() && m_bencode[m_index] != token_type::END_TOKEN){
+	while(m_index < m_bencode.size() && m_bencode[m_index] != Bencode::token_type::END_TOKEN){
 		std::shared_ptr<struct Bnode> node = decode();
 		ans.push_back(node);
 	}
@@ -53,7 +53,7 @@ std::shared_ptr<struct Bnode> Bencode::decode_list(){
 	return list_node;
 }
 
-std::shared_ptr<struct Bnode> Bencode::decode_dict(){
+std::shared_ptr<struct Bencode::Bnode> Bencode::Decoder::decode_dict(){
 	dict_t d;
 	int len;
 	std::shared_ptr<struct Bnode> key_node;
@@ -67,7 +67,7 @@ std::shared_ptr<struct Bnode> Bencode::decode_dict(){
 	return dict_node;
 }
 
-std::shared_ptr<struct Bnode> Bencode::decode(){
+std::shared_ptr<struct Bencode::Bnode> Bencode::Decoder::decode(){
 	int n;
 	n = m_bencode.size();
 	char token = peek();
@@ -75,21 +75,21 @@ std::shared_ptr<struct Bnode> Bencode::decode(){
 	if(token == EOF || m_index >= n) return NULL;
 
 	switch(token){
-		case token_type::INT_TOKEN:
+		case Bencode::token_type::INT_TOKEN:
 			{
 				step(1);
 				m_node  = decode_int();
 				step(1);
 				return m_node;
 			}
-		case token_type::LIST_TOKEN:
+		case Bencode::token_type::LIST_TOKEN:
 			{
 				step(1); // skip token
 				m_node = decode_list();
 				step(1); // skip end token
 				return m_node;
 			}
-		case token_type::DICT_TOKEN:
+		case Bencode::token_type::DICT_TOKEN:
 			{
 				step(1);
 				m_node = decode_dict();
@@ -108,7 +108,7 @@ std::shared_ptr<struct Bnode> Bencode::decode(){
 	return m_node;
 }
 
-int Bencode::get_str_len(){
+int Bencode::Decoder::get_str_len(){
 	std::string len_s = "";
 	while(m_bencode[m_index] != ':'){
 		len_s += m_bencode[m_index];
@@ -118,7 +118,7 @@ int Bencode::get_str_len(){
 	return std::stoi(len_s);
 }
 
-std::string Bencode::dict_to_string(dict_t& dict){
+std::string Bencode::Decoder::dict_to_string(dict_t& dict){
 	std::string ans = "dict { ";
 	std::string value = "";
 	int i = 0;
@@ -133,7 +133,7 @@ std::string Bencode::dict_to_string(dict_t& dict){
 	return ans;
 }
 
-std::string Bencode::list_to_string(list_t& becode_list){
+std::string Bencode::Decoder::list_to_string(list_t& becode_list){
 	int n;
 	n = becode_list.size();
 	std::string ans = "list [";
@@ -146,7 +146,7 @@ std::string Bencode::list_to_string(list_t& becode_list){
 	return ans;
 }
 
-std::string Bencode::node_to_string(std::shared_ptr<struct Bnode> node){
+std::string Bencode::Decoder::node_to_string(std::shared_ptr<struct Bnode> node){
 	int i = node->m_val.index();
 	std::string ans;
 	if(std::holds_alternative<int>(node->m_val))
@@ -161,6 +161,6 @@ std::string Bencode::node_to_string(std::shared_ptr<struct Bnode> node){
 	return ans;
 };
 
-std::string Bencode::to_string(){
+std::string Bencode::Decoder::to_string(){
 	return node_to_string(m_node) + "\n";
 }
