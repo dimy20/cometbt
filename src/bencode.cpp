@@ -42,7 +42,6 @@ std::shared_ptr<struct Bnode> Bencode::decode_list(){
 	list_t ans;
 	std::string elem = "";
 	int len;
-	becode_type type;
 
 	while(m_bencode[m_index] != token_type::END_TOKEN){
 		std::shared_ptr<struct Bnode> node = decode();

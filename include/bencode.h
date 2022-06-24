@@ -21,19 +21,11 @@ enum token_type {
 	DICT_TOKEN = 'd',
 };
 
-enum class becode_type{
-	INT = 1,
-	STRING,
-	LIST,
-	DICT
-};
-
 class Bencode{
 	public:
 		Bencode(std::string bencode_s);
 		std::shared_ptr<struct Bnode> decode(void);
 		std::string to_string(void);
-
 
 	private:
 		std::string m_bencode;
