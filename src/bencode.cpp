@@ -29,70 +29,56 @@ Bencode::Bencode(std::string bencode){
 	m_index = 0;
 }
 
-struct bencode_node * Bencode::decode_string(int offset, int n){
+std::shared_ptr<struct Bnode> Bencode::decode_string(int offset, int n){
 	std::string ans = "";
 	for(int i = offset; i < offset + n; i++){
 		ans += m_bencode[i];
 	}
-	struct bencode_node * node = new struct bencode_node;
-	node->type = becode_type::STRING;
-	node->val = new std::string;
-	*reinterpret_cast<std::string *>(node->val) = ans;
+	std::shared_ptr<struct Bnode> node(new struct Bnode);
+	node->m_val = ans;
 	return node;
 }
 
-struct bencode_node * Bencode::decode_int(){
+std::shared_ptr<struct Bnode> Bencode::decode_int(){
 	std::string ans = "";
 	while(m_bencode[m_index] != token_type::END_TOKEN){
 		ans += m_bencode[m_index];
 		m_index++;
 	}
 
-	struct bencode_node * node = new struct bencode_node;
-	node->type = becode_type::INT;
-	node->val = new int;
-	*reinterpret_cast<int*>(node->val) = std::stoi(ans);
+	std::shared_ptr<struct Bnode> node(new struct Bnode);
+	node->m_val = std::stoi(ans);
 	return node;
 }
 
-struct bencode_node * Bencode::decode_list(){
-	std::vector<struct bencode_node*> ans;
+std::shared_ptr<struct Bnode> Bencode::decode_list(){
+	list_t ans;
 	std::string elem = "";
 	int len;
 	becode_type type;
+
 	while(m_bencode[m_index] != token_type::END_TOKEN){
-		struct bencode_node * node = decode();
-		if(node != NULL){
-			ans.push_back(node);
-		}
+		std::shared_ptr<struct Bnode> node = decode();
+		ans.push_back(node);
 	}
 
-	struct bencode_node * list_node = new struct bencode_node;
-	list_node->type = becode_type::LIST;
-	list_node->val = new std::vector<struct bencode_node*>;
-	*reinterpret_cast<std::vector<struct bencode_node *> *>(list_node->val) = ans;
+	std::shared_ptr<struct Bnode> list_node(new struct Bnode);
+	list_node->m_val = ans; // move?
 	return list_node;
 }
 
-struct bencode_node * Bencode::decode_dict(int n){
-	std::unordered_map<std::string, struct bencode_node *> d;
+std::shared_ptr<struct Bnode> Bencode::decode_dict(int n){
+	dict_t d;
 	int len;
-	struct bencode_node * key_node, * value_node;
+	std::shared_ptr<struct Bnode> key_node;
 	while(m_index < n && m_bencode[m_index] != token_type::END_TOKEN){
 		key_node = decode();
-		std::string key = *reinterpret_cast<std::string*>(key_node->val);
-		delete key_node;
-		value_node = decode();
-
-		d[key] = value_node;
+		std::string key = std::get<std::string>(key_node->m_val);
+		d[key] = decode();
 	}
-
-	struct bencode_node * dict_node = new struct bencode_node;
-	dict_node->type = becode_type::DICT;
-	dict_node->val = new std::unordered_map<std::string, struct bencode_node*>;
-	*reinterpret_cast<std::unordered_map<std::string, struct bencode_node*> *>(dict_node->val) = d;
+	std::shared_ptr<struct Bnode> dict_node(new struct Bnode);
+	dict_node->m_val = d;
 	return dict_node;
-
 }
 
 std::string Bencode::to_string(){

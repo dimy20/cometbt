@@ -1,6 +1,18 @@
+#pragma once
 #include <vector>
 #include <iostream>
 #include <unordered_map>
+#include <variant>
+#include <memory>
+
+struct Bnode;
+
+using list_t = std::vector<std::shared_ptr<struct Bnode>>;
+using dict_t = std::unordered_map<std::string, std::shared_ptr<struct Bnode>>;
+
+struct Bnode{
+	std::variant<int, std::string, list_t, dict_t> m_val;
+};
 
 enum token_type {
 	END_TOKEN = 'e',
@@ -16,14 +28,7 @@ enum class becode_type{
 	DICT
 };
 
-struct bencode_node{
-	becode_type type;
-	void * val;
-};
-
-
 class Bencode{
-
 	public:
 		Bencode(std::string bencode_s);
 		struct bencode_node * decode(void);
@@ -36,10 +41,11 @@ class Bencode{
 		
 	private:
 		becode_type get_type(char c);
-		struct bencode_node * decode_string(int offset, int n);
-		struct bencode_node * decode_int();
-		struct bencode_node * decode_list();
-		struct bencode_node * decode_dict(int n);
+
+		std::shared_ptr<struct Bnode> decode_string(int offset, int n);
+		std::shared_ptr<struct Bnode> decode_int();
+		std::shared_ptr<struct Bnode> decode_list();
+		std::shared_ptr<struct Bnode> decode_dict(int n);
 
 		int get_str_len();
 
