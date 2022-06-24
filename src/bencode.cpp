@@ -1,5 +1,10 @@
 #include "bencode.h"
 
+static void die(const std::string& msg){
+	std::cerr << "Error : " << msg << std::endl;
+	exit(EXIT_FAILURE);
+}
+
 char Bencode::Decoder::peek(){
 	if(m_index + 1 >= m_bencode.size()) return EOF;
 	return m_bencode[m_index];
@@ -18,12 +23,16 @@ Bencode::Decoder::Decoder(std::string bencode){
 
 std::shared_ptr<struct Bencode::Bnode> Bencode::Decoder::decode_string(int n){
 	std::string ans = "";
-	for(int i = m_index; i < m_index + n; i++){
-		ans += m_bencode[i];
-	}
-	std::shared_ptr<struct Bnode> node(new struct Bnode);
-	node->m_val = ans;
-	return node;
+	if(m_index + n <= m_bencode.size()){
+		for(int i = m_index; i < m_index + n; i++){
+			ans += m_bencode[i];
+		}
+
+		std::shared_ptr<struct Bnode> node(new struct Bnode);
+		node->m_val = ans;
+		return node;
+
+	} else return NULL;
 }
 
 std::shared_ptr<struct Bencode::Bnode> Bencode::Decoder::decode_int(){
@@ -99,7 +108,9 @@ std::shared_ptr<struct Bencode::Bnode> Bencode::Decoder::decode(){
 		case '0'...'9':
 			{
 				int len = get_str_len();
+				if(len == -1) die("Invalid string length syntax.");
 				m_node = decode_string(len);
+				if(!m_node) die("Invalid string syntax");
 				step(len);
 				return m_node;
 			}
@@ -110,7 +121,9 @@ std::shared_ptr<struct Bencode::Bnode> Bencode::Decoder::decode(){
 
 int Bencode::Decoder::get_str_len(){
 	std::string len_s = "";
-	while(m_bencode[m_index] != ':'){
+	while(m_bencode[m_index] != Bencode::token_type::SDEL_TOKEN){
+		if(std::isdigit(m_bencode[m_index]) == 0) return -1;
+
 		len_s += m_bencode[m_index];
 		m_index++;
 	}

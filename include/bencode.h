@@ -17,10 +17,11 @@ namespace Bencode{
 	};
 
 	enum token_type {
-		END_TOKEN = 'e',
-		INT_TOKEN = 'i',
+		END_TOKEN  = 'e',
+		INT_TOKEN  = 'i',
 		LIST_TOKEN = 'l',
 		DICT_TOKEN = 'd',
+		SDEL_TOKEN = ':'
 	};
 
 	class Decoder{
@@ -48,6 +49,7 @@ namespace Bencode{
 
 			char peek();
 			void step(int step_count);
+
 	};
 };
 
