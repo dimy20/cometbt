@@ -37,7 +37,9 @@ std::shared_ptr<struct Bencode::Bnode> Bencode::Decoder::decode_string(int n){
 
 std::shared_ptr<struct Bencode::Bnode> Bencode::Decoder::decode_int(){
 	std::string ans = "";
+
 	while(m_bencode[m_index] != token_type::END_TOKEN){
+		if(std::isdigit(m_bencode[m_index]) == 0) return NULL;
 		ans += m_bencode[m_index];
 		m_index++;
 	}
@@ -88,6 +90,7 @@ std::shared_ptr<struct Bencode::Bnode> Bencode::Decoder::decode(){
 			{
 				step(1);
 				m_node  = decode_int();
+				if(!m_node) die("Invalid integer syntax.");
 				step(1);
 				return m_node;
 			}
