@@ -49,9 +49,9 @@ class Bencode{
 
 		int get_str_len();
 
-		std::string dict_to_string(std::unordered_map<std::string, struct bencode_node*>& dict);
-		std::string list_to_string(std::vector<struct bencode_node*>& becode_list);
-		std::string node_to_string(struct bencode_node * node);
+		std::string node_to_string(std::shared_ptr<struct Bnode> node);
+		std::string dict_to_string(dict_t& dict);
+		std::string list_to_string(list_t& list);
 
 		char peek();
 		void step(int step_count);

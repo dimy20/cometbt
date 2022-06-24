@@ -140,7 +140,7 @@ int Bencode::get_str_len(){
 	return std::stoi(len_s);
 }
 
-std::string Bencode::dict_to_string(std::unordered_map<std::string, struct bencode_node*>& dict){
+std::string Bencode::dict_to_string(dict_t& dict){
 	std::string ans = "dict { ";
 	std::string value = "";
 	int i = 0;
@@ -155,31 +155,34 @@ std::string Bencode::dict_to_string(std::unordered_map<std::string, struct benco
 	return ans;
 }
 
-std::string Bencode::list_to_string(std::vector<struct bencode_node*>& becode_list){
+std::string Bencode::list_to_string(list_t& becode_list){
 	int n;
 	n = becode_list.size();
-	struct bencode_node * node;
 	std::string ans = "list [";
 
 	for(int i = 0; i < n; i++){
-		node = becode_list[i];
-		ans += node_to_string(node);
+		ans += node_to_string(becode_list[i]);
 		if(i < n-1) ans += ", ";
 	}
 	ans += "]";
 	return ans;
 }
 
-std::string Bencode::node_to_string(struct bencode_node * node){
-	switch(node->type){
-		case becode_type::LIST:
-			return list_to_string(*reinterpret_cast<std::vector<struct bencode_node*> *>(node->val));
-		case becode_type::INT:
-			return std::to_string(*reinterpret_cast<int*>(node->val));
-		case becode_type::STRING:
-			return *reinterpret_cast<std::string*>(node->val);
-		case becode_type::DICT:
-			return dict_to_string(*reinterpret_cast<std::unordered_map<std::string, struct bencode_node*> *>(node->val));
+std::string Bencode::node_to_string(std::shared_ptr<struct Bnode> node){
+	int i = node->m_val.index();
+	std::string ans;
+	if(std::holds_alternative<int>(node->m_val))
+		return std::to_string(std::get<int>(node->m_val));
+	else if(std::holds_alternative<std::string>(node->m_val))
+		return std::get<std::string>(node->m_val);
+	else if (std::holds_alternative<list_t>(node->m_val)){
+		return list_to_string(std::get<list_t>(node->m_val));
+	}else if (std::holds_alternative<dict_t>(node->m_val)){
+		return dict_to_string(std::get<dict_t>(node->m_val));
 	}
-}
+	return ans;
+};
 
+std::string Bencode::to_string(){
+	return node_to_string(m_node) + "\n";
+}
