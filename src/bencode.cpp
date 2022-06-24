@@ -11,19 +11,6 @@ void Bencode::step(int step_count){
 	}
 };
 
-becode_type Bencode::get_type(char c){
-	switch(c){
-		case 'i':
-			return becode_type::INT;
-		case 'd':
-			return becode_type::DICT;
-		case 'l':
-			return becode_type::LIST;
-		default:
-			if(std::isdigit(c) != 0) return becode_type::STRING;
-	}
-}
-
 Bencode::Bencode(std::string bencode){
 	m_bencode = bencode;
 	m_index = 0;

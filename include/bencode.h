@@ -41,8 +41,6 @@ class Bencode{
 		std::shared_ptr<struct Bnode> m_node;
 		
 	private:
-		becode_type get_type(char c);
-
 		std::shared_ptr<struct Bnode> decode_string(int offset, int n);
 		std::shared_ptr<struct Bnode> decode_int();
 		std::shared_ptr<struct Bnode> decode_list();
