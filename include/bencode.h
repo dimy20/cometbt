@@ -33,10 +33,10 @@ class Bencode{
 		std::shared_ptr<struct Bnode> m_node;
 		
 	private:
-		std::shared_ptr<struct Bnode> decode_string(int offset, int n);
+		std::shared_ptr<struct Bnode> decode_string(int n);
 		std::shared_ptr<struct Bnode> decode_int();
 		std::shared_ptr<struct Bnode> decode_list();
-		std::shared_ptr<struct Bnode> decode_dict(int n);
+		std::shared_ptr<struct Bnode> decode_dict();
 
 		int get_str_len();
 

@@ -16,9 +16,9 @@ Bencode::Bencode(std::string bencode){
 	m_index = 0;
 }
 
-std::shared_ptr<struct Bnode> Bencode::decode_string(int offset, int n){
+std::shared_ptr<struct Bnode> Bencode::decode_string(int n){
 	std::string ans = "";
-	for(int i = offset; i < offset + n; i++){
+	for(int i = m_index; i < m_index + n; i++){
 		ans += m_bencode[i];
 	}
 	std::shared_ptr<struct Bnode> node(new struct Bnode);
@@ -43,7 +43,7 @@ std::shared_ptr<struct Bnode> Bencode::decode_list(){
 	std::string elem = "";
 	int len;
 
-	while(m_bencode[m_index] != token_type::END_TOKEN){
+	while(m_index < m_bencode.size() && m_bencode[m_index] != token_type::END_TOKEN){
 		std::shared_ptr<struct Bnode> node = decode();
 		ans.push_back(node);
 	}
@@ -53,11 +53,11 @@ std::shared_ptr<struct Bnode> Bencode::decode_list(){
 	return list_node;
 }
 
-std::shared_ptr<struct Bnode> Bencode::decode_dict(int n){
+std::shared_ptr<struct Bnode> Bencode::decode_dict(){
 	dict_t d;
 	int len;
 	std::shared_ptr<struct Bnode> key_node;
-	while(m_index < n && m_bencode[m_index] != token_type::END_TOKEN){
+	while(m_index < m_bencode.size() && m_bencode[m_index] != token_type::END_TOKEN){
 		key_node = decode();
 		std::string key = std::get<std::string>(key_node->m_val);
 		d[key] = decode();
@@ -67,18 +67,12 @@ std::shared_ptr<struct Bnode> Bencode::decode_dict(int n){
 	return dict_node;
 }
 
-
-
 std::shared_ptr<struct Bnode> Bencode::decode(){
 	int n;
 	n = m_bencode.size();
-	int len;
 	char token = peek();
 
-
-	if(token == EOF){
-		return NULL;
-	}
+	if(token == EOF || m_index >= n) return NULL;
 
 	switch(token){
 		case token_type::INT_TOKEN:
@@ -98,14 +92,14 @@ std::shared_ptr<struct Bnode> Bencode::decode(){
 		case token_type::DICT_TOKEN:
 			{
 				step(1);
-				m_node = decode_dict(n);
+				m_node = decode_dict();
 				step(1);
 				return m_node;
 			}
-		default:
-			if(std::isdigit(token) != 0){
-				len = get_str_len();
-				m_node = decode_string(m_index, len);
+		case '0'...'9':
+			{
+				int len = get_str_len();
+				m_node = decode_string(len);
 				step(len);
 				return m_node;
 			}
