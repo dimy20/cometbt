@@ -1,20 +1,21 @@
 cmake_minimum_required(VERSION 3.14)
-project(TryingOutRayTracing VERSION 1.0)
+project(TorrentClient VERSION 1.0)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_BUILD_TYPE Debug)
 
-find_package(SDL2 REQUIRED)
-find_package(GLEW 2.0 REQUIRED)
-
-
 file(GLOB_RECURSE SRC_FILES src/*.cpp)
 
-add_executable(main main.cpp ${SRC_FILES})
+add_library(decoder STATIC src/bencode.cpp)
+target_include_directories(decoder PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
 
-#target_link_libraries(main)
+add_executable(main main.cpp)
+target_link_libraries(main decoder)
+target_include_directories(main PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
 
-target_include_directories(main PUBLIC  ${CMAKE_CURRENT_SOURCE_DIR}/include)
-									  
+include(CTest)
+include(GoogleTest)
 
+add_subdirectory(tests)
+enable_testing()
