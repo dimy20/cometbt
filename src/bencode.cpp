@@ -6,12 +6,12 @@ static void die(const std::string& msg){
 }
 
 char Bencode::Decoder::peek(){
-	if(m_index + 1 >= m_bencode.size()) return EOF;
+	if(m_index == m_bencode.size()) return EOF;
 	return m_bencode[m_index];
 };
 
 void Bencode::Decoder::step(int step_count){
-	if(m_index + step_count < m_bencode.size()){
+	if(m_index + step_count <= m_bencode.size()){
 		m_index += step_count;
 	}
 };
@@ -32,24 +32,34 @@ std::shared_ptr<struct Bencode::Bnode> Bencode::Decoder::decode_string(int n){
 		node->m_val = ans;
 		return node;
 
-	} else return NULL;
+	} else throw std::invalid_argument("Unexpected end of string.");
 }
 
 std::shared_ptr<struct Bencode::Bnode> Bencode::Decoder::decode_int(){
 	std::string ans = "";
 
-	while(m_bencode[m_index] != token_type::END_TOKEN){
-		if(std::isdigit(m_bencode[m_index]) == 0) return NULL;
+	while(m_index < m_bencode.size() && m_bencode[m_index] != token_type::END_TOKEN){
+		if(!std::isdigit(m_bencode[m_index]))
+			throw std::invalid_argument("Invalid syntax (Non numeric value)");
 		ans += m_bencode[m_index];
 		m_index++;
 	}
 
+	if(m_index == m_bencode.size() || ans == "")
+			throw std::invalid_argument("Invalid syntax (Empty integer)");
+
 	std::shared_ptr<struct Bnode> node(new struct Bnode);
-	node->m_val = std::stoi(ans);
+	try{
+		node->m_val = std::stoi(ans);
+	}catch(std::out_of_range &e){
+		die("Integer overflow.");
+	};
+
 	return node;
 }
 
 std::shared_ptr<struct Bencode::Bnode> Bencode::Decoder::decode_list(){
+
 	list_t ans;
 	std::string elem = "";
 	int len;
@@ -57,7 +67,10 @@ std::shared_ptr<struct Bencode::Bnode> Bencode::Decoder::decode_list(){
 	while(m_index < m_bencode.size() && m_bencode[m_index] != Bencode::token_type::END_TOKEN){
 		std::shared_ptr<struct Bnode> node = decode();
 		ans.push_back(node);
-	}
+	};
+
+	if(m_index >= m_bencode.size())
+		throw std::invalid_argument("Invalid syntax");
 
 	std::shared_ptr<struct Bnode> list_node(new struct Bnode);
 	list_node->m_val = ans; // move?
@@ -90,7 +103,6 @@ std::shared_ptr<struct Bencode::Bnode> Bencode::Decoder::decode(){
 			{
 				step(1);
 				m_node  = decode_int();
-				if(!m_node) die("Invalid integer syntax.");
 				step(1);
 				return m_node;
 			}
@@ -111,12 +123,12 @@ std::shared_ptr<struct Bencode::Bnode> Bencode::Decoder::decode(){
 		case '0'...'9':
 			{
 				int len = get_str_len();
-				if(len == -1) die("Invalid string length syntax.");
 				m_node = decode_string(len);
-				if(!m_node) die("Invalid string syntax");
 				step(len);
 				return m_node;
 			}
+		default:
+			throw std::invalid_argument("Invalid syntax");
 	}
 
 	return m_node;
