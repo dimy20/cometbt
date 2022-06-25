@@ -137,13 +137,27 @@ std::shared_ptr<struct Bencode::Bnode> Bencode::Decoder::decode(){
 int Bencode::Decoder::get_str_len(){
 	std::string len_s = "";
 	while(m_bencode[m_index] != Bencode::token_type::SDEL_TOKEN){
-		if(std::isdigit(m_bencode[m_index]) == 0) return -1;
+		if(m_index == m_bencode.size())
+			throw std::invalid_argument("Unexpected end of string.");
+
+		if(!std::isdigit(m_bencode[m_index]) && (m_bencode[m_index] != ':')){
+			throw std::invalid_argument("Expected \":\"");
+		}
 
 		len_s += m_bencode[m_index];
 		m_index++;
 	}
+
 	m_index++;
-	return std::stoi(len_s);
+	int ans;
+
+	try{
+		ans = std::stoi(len_s);
+	}catch(std::out_of_range){
+		die("Integer overflow.");
+	}
+
+	return ans;
 }
 
 std::string Bencode::Decoder::dict_to_string(dict_t& dict){
