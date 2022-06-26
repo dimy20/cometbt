@@ -12,6 +12,22 @@ std::string get_random_str(int len){
 	return ans;
 };
 
+std::vector<int> random_ints(int count){
+	std::vector<int> ans;
+	for(int i = 0; i < count; i++){
+		ans.push_back(rand() % 1000);
+	};
+	return ans;
+};
+
+std::vector<std::string> random_strings(int count){
+	std::vector<std::string> ans;
+	for(int i = 0; i < count; i++){
+		ans.push_back(get_random_str(rand() % 100));
+	};
+	return ans;
+};
+
 TEST(Bencode_Decoder, int_test){
 	std::string input = "i10e";
 	Bencode::Decoder decoder;
@@ -67,6 +83,7 @@ TEST(Bencode_Decoder, string_test){
 
 	/*Specified length is shorter than the actual length*/
 	int smaller_len;
+	std::string msg = "";
 	for(int i = 0; i < 1000; i++){
 		len = rand() % 1000;
 		smaller_len = len - (rand() % 1000);
@@ -76,9 +93,102 @@ TEST(Bencode_Decoder, string_test){
 		original_string = get_random_str(smaller_len);
 		bencode_string = std::to_string(len) + ":" + original_string;
 		decoder.set_bencode(bencode_string);
-		ASSERT_THROW(decoder.decode(), std::invalid_argument);
+
+		msg += "len : "  + std::to_string(len) + " ";
+		msg += "s_len: " + std::to_string(smaller_len) + " ";
+		msg += "string : " + original_string;
+
+		if(smaller_len < len){
+			ASSERT_THROW(decoder.decode(), std::invalid_argument) << msg;
+		}else{
+			auto data = decoder.decode();
+			ASSERT_EQ(std::get<std::string>(data->m_val), original_string) << msg;
+		}
+
 	};
 
+};
+
+TEST(Bencode_Decoder, list_test){
+	Bencode::Decoder decoder;
+	decoder.set_bencode("le");
+
+	std::shared_ptr<struct Bencode::Bnode> data = decoder.decode();
+		
+	auto list = std::get<Bencode::list_t>(data->m_val);
+
+	ASSERT_EQ(list.size(), 0);
+
+	/*test a list containing just integers*/
+	std::string bencode_list = "l";
+	int integer;
+	std::vector<int> ints(100, 0);
+	for(int i = 0; i < 100; i++){
+		ints[i] = rand() % 1000;
+		bencode_list += "i" + std::to_string(ints[i]) + "e";
+	};
+
+	bencode_list += "e";
+
+	decoder.set_bencode(bencode_list);
+	data = decoder.decode();
+	list = std::get<Bencode::list_t>(data->m_val);
+
+	int n = list.size();
+	for(int i = 0; i<n; i++){
+		ASSERT_EQ(std::get<int>(list[i]->m_val), ints[i]);
+	};
+
+	/*Test a list containing just strings*/
+	bencode_list = "l";
+	int len;
+
+	std::string bencode_string, original_string;
+	std::vector<std::string> strs(100, "");
+	for(int i = 0; i < 100; i++){
+		len = rand() % 100;
+		original_string = get_random_str(len);
+		bencode_string = std::to_string(len) + ":" + original_string;
+		strs[i] = original_string;
+		bencode_list += bencode_string;
+	}
+
+	bencode_list += "e";
+
+	decoder.set_bencode(bencode_list);
+	data = decoder.decode();
+	list = std::get<Bencode::list_t>(data->m_val);
+
+	for(int i = 0; i < list.size(); i++){
+		ASSERT_EQ(std::get<std::string>(list[i]->m_val), strs[i]);
+	}
+
+	/*Mix strings and ints*/
+	bencode_list = "l";
+	ints = random_ints(50);
+	strs = random_strings(50);
+
+	for(int i = 0; i < 50; i++){
+		bencode_list += "i" + std::to_string(ints[i]) + "e";
+		bencode_list += std::to_string(strs[i].size()) + ":" + strs[i];
+	};
+	bencode_list += "e";
+
+	decoder.set_bencode(bencode_list);
+	data = decoder.decode();
+	list = std::get<Bencode::list_t>(data->m_val);
+
+	int j = 0;
+	for(int i = 0; i < 100; i+=2){
+		ASSERT_EQ(std::get<int>(list[i]->m_val), ints[j]);
+		j++;
+	}
+
+	j = 0;
+	for(int i = 1; i < 100; i+=2){
+		ASSERT_EQ(std::get<std::string>(list[i]->m_val), strs[j]);
+		j++;
+	}
 };
 
 int main(int argc, char **argv){
