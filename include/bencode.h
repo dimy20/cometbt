@@ -27,8 +27,10 @@ namespace Bencode{
 	class Decoder{
 		public:
 			Decoder(std::string bencode_s);
+			Decoder();
 			std::shared_ptr<struct Bnode> decode(void);
 			std::string to_string(void);
+			void set_bencode(const std::string& bencode);
 
 		private:
 			std::string m_bencode;
