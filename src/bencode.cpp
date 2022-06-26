@@ -16,10 +16,21 @@ void Bencode::Decoder::step(int step_count){
 	}
 };
 
+Bencode::Decoder::Decoder(){
+	m_bencode = "";
+	m_index = 0;
+	m_node = nullptr;
+};
+
 Bencode::Decoder::Decoder(std::string bencode){
 	m_bencode = bencode;
 	m_index = 0;
 }
+
+void Bencode::Decoder::set_bencode(const std::string& bencode){
+	m_bencode = bencode;
+	m_index = 0;
+};
 
 std::shared_ptr<struct Bencode::Bnode> Bencode::Decoder::decode_string(int n){
 	std::string ans = "";
@@ -29,7 +40,7 @@ std::shared_ptr<struct Bencode::Bnode> Bencode::Decoder::decode_string(int n){
 		}
 
 		std::shared_ptr<struct Bnode> node(new struct Bnode);
-		node->m_val = ans;
+		node->m_val = std::move(ans);
 		return node;
 
 	} else throw std::invalid_argument("Unexpected end of string.");
@@ -73,7 +84,7 @@ std::shared_ptr<struct Bencode::Bnode> Bencode::Decoder::decode_list(){
 		throw std::invalid_argument("Invalid syntax");
 
 	std::shared_ptr<struct Bnode> list_node(new struct Bnode);
-	list_node->m_val = ans; // move?
+	list_node->m_val = std::move(ans);
 	return list_node;
 }
 
@@ -83,11 +94,19 @@ std::shared_ptr<struct Bencode::Bnode> Bencode::Decoder::decode_dict(){
 	std::shared_ptr<struct Bnode> key_node;
 	while(m_index < m_bencode.size() && m_bencode[m_index] != token_type::END_TOKEN){
 		key_node = decode();
+
+		if(!std::holds_alternative<std::string>(key_node->m_val))
+			throw std::invalid_argument("Invalid syntax : Key must be of string type");
+
 		std::string key = std::get<std::string>(key_node->m_val);
 		d[key] = decode();
 	}
+
+	if(m_index >= m_bencode.size())
+			throw std::invalid_argument("Invalid syntax : Unexpected end of string");
+
 	std::shared_ptr<struct Bnode> dict_node(new struct Bnode);
-	dict_node->m_val = d;
+	dict_node->m_val = std::move(d);
 	return dict_node;
 }
 
@@ -141,6 +160,7 @@ int Bencode::Decoder::get_str_len(){
 			throw std::invalid_argument("Unexpected end of string.");
 
 		if(!std::isdigit(m_bencode[m_index]) && (m_bencode[m_index] != ':')){
+			std::cerr << m_index << std::endl;
 			throw std::invalid_argument("Expected \":\"");
 		}
 
@@ -168,7 +188,7 @@ std::string Bencode::Decoder::dict_to_string(dict_t& dict){
 	for(auto& [key, node] : dict){
 		ans += key + " : ";
 		ans += node_to_string(node);
-		if(i < n-1) ans += ",";
+		if(i < n-1) ans += ", ";
 		i++;
 	}
 	ans += " }";
