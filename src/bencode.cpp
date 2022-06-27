@@ -38,10 +38,12 @@ void Bencode::Decoder::set_bencode(const std::vector<char>& bencode){
 };
 
 std::shared_ptr<struct Bencode::Bnode> Bencode::Decoder::decode_string(int n){
-	std::string ans = "";
+	std::vector<char> ans(n);
+	int j = 0;
 	if(m_index + n <= m_bencode.size()){
 		for(int i = m_index; i < m_index + n; i++){
-			ans += m_bencode[i];
+			ans[j] = m_bencode[i];
+			j++;
 		}
 
 		std::shared_ptr<struct Bnode> node(new struct Bnode);
@@ -52,24 +54,26 @@ std::shared_ptr<struct Bencode::Bnode> Bencode::Decoder::decode_string(int n){
 }
 
 std::shared_ptr<struct Bencode::Bnode> Bencode::Decoder::decode_int(){
-	std::string ans = "";
+	int ans, char_count;
 
+	ans = char_count = 0;
 	while(m_index < m_bencode.size() && m_bencode[m_index] != token_type::END_TOKEN){
 		if(!std::isdigit(m_bencode[m_index]))
 			throw std::invalid_argument("Invalid syntax (Non numeric value)");
-		ans += m_bencode[m_index];
+
+		if(digit_overflows(ans, m_bencode[m_index]))
+			throw std::invalid_argument("Integer overflow.");
+
+		ans = ans * 10 + (m_bencode[m_index] - '0');
+		char_count++;
 		m_index++;
 	}
 
-	if(m_index == m_bencode.size() || ans == "")
+	if(m_index == m_bencode.size() || char_count == 0)
 			throw std::invalid_argument("Invalid syntax (Empty integer)");
 
 	std::shared_ptr<struct Bnode> node(new struct Bnode);
-	try{
-		node->m_val = std::stoi(ans);
-	}catch(std::out_of_range &e){
-		die("Integer overflow.");
-	};
+	node->m_val = ans;
 
 	return node;
 }
