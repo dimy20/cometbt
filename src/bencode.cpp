@@ -79,9 +79,7 @@ std::shared_ptr<struct Bencode::Bnode> Bencode::Decoder::decode_int(){
 }
 
 std::shared_ptr<struct Bencode::Bnode> Bencode::Decoder::decode_list(){
-
 	list_t ans;
-	std::string elem = "";
 	int len;
 
 	while(m_index < m_bencode.size() && m_bencode[m_index] != Bencode::token_type::END_TOKEN){
@@ -104,10 +102,11 @@ std::shared_ptr<struct Bencode::Bnode> Bencode::Decoder::decode_dict(){
 	while(m_index < m_bencode.size() && m_bencode[m_index] != token_type::END_TOKEN){
 		key_node = decode();
 
-		if(!std::holds_alternative<std::string>(key_node->m_val))
+		if(!std::holds_alternative<std::vector<char>>(key_node->m_val))
 			throw std::invalid_argument("Invalid syntax : Key must be of string type");
 
-		std::string key = std::get<std::string>(key_node->m_val);
+		auto buff = std::get<std::vector<char>>(key_node->m_val);
+		auto key = std::string(&buff[0], buff.size());
 		d[key] = decode();
 	}
 
@@ -163,29 +162,22 @@ std::shared_ptr<struct Bencode::Bnode> Bencode::Decoder::decode(){
 }
 
 int Bencode::Decoder::get_str_len(){
-	std::string len_s = "";
+	int ans = 0;
 	while(m_bencode[m_index] != Bencode::token_type::SDEL_TOKEN){
 		if(m_index == m_bencode.size())
 			throw std::invalid_argument("Unexpected end of string.");
 
-		if(!std::isdigit(m_bencode[m_index]) && (m_bencode[m_index] != ':')){
-			std::cerr << m_index << std::endl;
+		if(!std::isdigit(m_bencode[m_index]) && (m_bencode[m_index] != ':'))
 			throw std::invalid_argument("Expected \":\"");
-		}
 
-		len_s += m_bencode[m_index];
+		if(digit_overflows(ans, m_bencode[m_index]))
+			throw std::invalid_argument("String too big.");
+
+		ans = ans * 10 + (m_bencode[m_index] - '0');
 		m_index++;
 	}
 
 	m_index++;
-	int ans;
-
-	try{
-		ans = std::stoi(len_s);
-	}catch(std::out_of_range){
-		die("Integer overflow.");
-	}
-
 	return ans;
 }
 
@@ -222,9 +214,10 @@ std::string Bencode::Decoder::node_to_string(std::shared_ptr<struct Bnode> node)
 	std::string ans;
 	if(std::holds_alternative<int>(node->m_val))
 		return std::to_string(std::get<int>(node->m_val));
-	else if(std::holds_alternative<std::string>(node->m_val))
-		return std::get<std::string>(node->m_val);
-	else if (std::holds_alternative<list_t>(node->m_val)){
+	else if(std::holds_alternative<std::vector<char>>(node->m_val)){
+		auto buff = std::get<std::vector<char>>(node->m_val);
+		return std::string(&buff[0], buff.size());
+	}else if (std::holds_alternative<list_t>(node->m_val)){
 		return list_to_string(std::get<list_t>(node->m_val));
 	}else if (std::holds_alternative<dict_t>(node->m_val)){
 		return dict_to_string(std::get<dict_t>(node->m_val));
