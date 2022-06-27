@@ -1,5 +1,11 @@
 #include "bencode.h"
 
+static bool digit_overflows(int curr_value, int next_digit){
+	return ((curr_value > (INT_MAX) / 10) ||
+			(curr_value == (INT_MAX / 10) &&
+			 next_digit > (INT_MAX % 10)));
+};
+
 static void die(const std::string& msg){
 	std::cerr << "Error : " << msg << std::endl;
 	exit(EXIT_FAILURE);
