@@ -12,6 +12,14 @@ std::string get_random_str(int len){
 	return ans;
 };
 
+std::vector<char> get_random_stream(int len){
+	std::vector<char> ans;
+	for(int i = 0; i < len; i++){
+		ans.push_back(rand() % 255);
+	}
+	return ans;
+}
+
 std::vector<int> random_ints(int count){
 	std::vector<int> ans;
 	for(int i = 0; i < count; i++){
@@ -20,12 +28,17 @@ std::vector<int> random_ints(int count){
 	return ans;
 };
 
-std::vector<std::string> random_strings(int count){
-	std::vector<std::string> ans;
+std::vector<std::vector<char>> random_strings(int count){
+	std::vector<std::vector<char>> ans;
 	for(int i = 0; i < count; i++){
-		ans.push_back(get_random_str(rand() % 100));
+		ans.push_back(get_random_stream(rand() % 100));
 	};
 	return ans;
+};
+
+std::vector<char> buff_str(const std::string& s){
+	std::vector<char> buff(s.data(), s.data() + s.size());
+	return buff;
 };
 
 TEST(Bencode_Decoder, int_test){
