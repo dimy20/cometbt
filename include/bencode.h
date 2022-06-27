@@ -4,6 +4,7 @@
 #include <unordered_map>
 #include <variant>
 #include <memory>
+#include <climits>
 
 namespace Bencode{
 
@@ -13,7 +14,7 @@ namespace Bencode{
 	using dict_t = std::unordered_map<std::string, std::shared_ptr<struct Bnode>>;
 
 	struct Bnode{
-		std::variant<int, std::string, list_t, dict_t> m_val;
+		std::variant<int, std::vector<char>, list_t, dict_t> m_val;
 	};
 
 	enum token_type {
@@ -26,14 +27,14 @@ namespace Bencode{
 
 	class Decoder{
 		public:
-			Decoder(std::string bencode_s);
+			Decoder(std::vector<char> bencode);
 			Decoder();
 			std::shared_ptr<struct Bnode> decode(void);
 			std::string to_string(void);
-			void set_bencode(const std::string& bencode);
+			void set_bencode(const std::vector<char>& bencode);
 
 		private:
-			std::string m_bencode;
+			std::vector<char> m_bencode;
 			int m_index;
 			std::shared_ptr<struct Bnode> m_node;
 			

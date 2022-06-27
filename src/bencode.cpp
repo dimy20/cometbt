@@ -23,17 +23,16 @@ void Bencode::Decoder::step(int step_count){
 };
 
 Bencode::Decoder::Decoder(){
-	m_bencode = "";
 	m_index = 0;
 	m_node = nullptr;
 };
 
-Bencode::Decoder::Decoder(std::string bencode){
+Bencode::Decoder::Decoder(std::vector<char> bencode){
 	m_bencode = bencode;
 	m_index = 0;
 }
 
-void Bencode::Decoder::set_bencode(const std::string& bencode){
+void Bencode::Decoder::set_bencode(const std::vector<char>& bencode){
 	m_bencode = bencode;
 	m_index = 0;
 };
