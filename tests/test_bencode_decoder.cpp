@@ -3,7 +3,7 @@
 #include "bencode.h"
 
 std::string get_random_str(int len){
-	srand(time(NULL));
+	//srand(time(NULL));
 	char base_c = 'a';
 	std::string ans = "";
 	for(int i = 0; i < len; i++){
@@ -28,7 +28,7 @@ std::vector<int> random_ints(int count){
 	return ans;
 };
 
-std::vector<std::vector<char>> random_strings(int count){
+std::vector<std::vector<char>> random_streams(int count){
 	std::vector<std::vector<char>> ans;
 	for(int i = 0; i < count; i++){
 		ans.push_back(get_random_stream(rand() % 100));
@@ -205,7 +205,7 @@ TEST(Bencode_Decoder, list_test){
 	//Mix strings and ints
 	std::vector<char> list_int_str;
 	ints = random_ints(50);
-	strs = random_strings(50);
+	strs = random_streams(50);
 
 	list_int_str.push_back('l');
 	char * cstream;
@@ -270,6 +270,72 @@ TEST(Bencode_Decoder, list_of_list_test){
 		i++;
 	}
 }
+
+void insert_key_value(std::vector<char>& stream, const std::vector<char>& key, const std::string& value){		
+	std::string tmp = std::to_string(key.size()) + ":";
+	stream.insert(stream.end(), tmp.data(), tmp.data() + tmp.size());
+	stream.insert(stream.end(), &key[0], &key[key.size()]);
+	stream.insert(stream.end(), value.data(), value.data() + value.size());
+};
+
+void insert_key(std::vector<char>& stream, const std::vector<char>& key){
+	std::string tmp = std::to_string(key.size()) + ":";
+	stream.insert(stream.end(), tmp.data(), tmp.data() + tmp.size());
+	stream.insert(stream.end(), &key[0], &key[key.size()]);
+}
+
+std::string int_bencode(int value){
+	return "i" + std::to_string(value) + "e";
+};
+
+TEST(Bencode_Decoder, dict_test){
+	Bencode::Decoder decoder;
+	std::vector<char> input;
+
+	input.push_back('d');
+
+	std::vector<std::string> keys(20);
+	std::vector<int> values(10);
+	std::vector<std::vector<char>> byte_strings(10);
+	for(int i = 0; i < 10; i++){
+		keys[i] = get_random_str(10);
+		values[i] = rand() % 100;
+		insert_key_value(input, buff_str(keys[i]), int_bencode(values[i]));
+	}
+
+	for(int i = 10; i < 20 ; i++){
+		keys[i] = get_random_str(10);
+		byte_strings[i-10] = get_random_stream(10);
+
+		insert_key(input, buff_str(keys[i]));
+
+		std::string value_tmp = std::to_string(byte_strings[i-10].size()) + ":";
+		input.insert(input.end(), value_tmp.data(), value_tmp.data() + value_tmp.size());
+
+		char * cstring_val = &byte_strings[i-10][0];
+
+		input.insert(input.end(), cstring_val, cstring_val + byte_strings[i-10].size());
+
+	};
+
+	input.push_back('e');
+
+	decoder.set_bencode(input);
+
+	auto data = decoder.decode();
+	auto dict = std::get<Bencode::dict_t>(data->m_val);
+
+	for(int i = 0; i < 10; i++){
+		ASSERT_EQ(std::get<int>(dict[keys[i]]->m_val), values[i]);
+	}
+
+	for(int i = 10; i < 20; i++){
+		auto bytes_string = std::get<std::vector<char>>(dict[keys[i]]->m_val);
+		ASSERT_EQ(bytes_string, byte_strings[i-10]);
+	}
+
+
+};
 
 int main(int argc, char **argv){
 	testing::InitGoogleTest(&argc, argv);
