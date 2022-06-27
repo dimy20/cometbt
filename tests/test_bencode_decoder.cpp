@@ -42,26 +42,34 @@ std::vector<char> buff_str(const std::string& s){
 };
 
 TEST(Bencode_Decoder, int_test){
-	std::string input = "i10e";
+
+
 	Bencode::Decoder decoder;
-	decoder.set_bencode(input);
+	decoder.set_bencode(buff_str("i10e"));
+	auto data = decoder.decode();
+	ASSERT_EQ(std::get<int>(data->m_val), 10);
 
-	decoder.set_bencode("ie30");
+	decoder.set_bencode(buff_str("ie30"));
+
 	EXPECT_THROW(decoder.decode(), std::invalid_argument);
 
-	decoder.set_bencode("30ie");
+	decoder.set_bencode(buff_str("30ie"));
 	EXPECT_THROW(decoder.decode(), std::invalid_argument);
 
-	decoder.set_bencode("i10asde");
+
+	decoder.set_bencode(buff_str("i10asde"));
 	EXPECT_THROW(decoder.decode(), std::invalid_argument);
 
-	decoder.set_bencode("ie");
+
+	decoder.set_bencode(buff_str("ie"));
 	EXPECT_THROW(decoder.decode(), std::invalid_argument);
 
-	decoder.set_bencode("i2sdsa2e");
+
+	decoder.set_bencode(buff_str("i2sdsa2e"));
 	EXPECT_THROW(decoder.decode(), std::invalid_argument);
 
-	decoder.set_bencode("10000000000000000");
+
+	decoder.set_bencode(buff_str("10000000000000000"));
 	EXPECT_THROW(decoder.decode(), std::invalid_argument);
 
     srand(time(NULL));
@@ -72,7 +80,7 @@ TEST(Bencode_Decoder, int_test){
 	for(int i = 0; i < 1000; i++){
 		x = rand() % INT_MAX;
 		str = "i" + std::to_string(x) + "e";
-		decoder.set_bencode(str);
+		decoder.set_bencode(buff_str(str));
 		int_data = decoder.decode();
 		ASSERT_EQ(x, std::get<int>(int_data->m_val));
 	};
