@@ -88,21 +88,28 @@ TEST(Bencode_Decoder, int_test){
 };
 
 
+
 TEST(Bencode_Decoder, string_test){
 	Bencode::Decoder decoder;
 
 	int len;
-	std::string original_string, bencode_string;
-	for(int i = 0; i < 1000; i++){
-		len = rand() % 1000;
-		original_string = get_random_str(len);
-		bencode_string = std::to_string(len) + ":" + original_string;
-		decoder.set_bencode(bencode_string);
-		std::shared_ptr<struct Bencode::Bnode> data = decoder.decode();
-		ASSERT_EQ(std::get<std::string>(data->m_val), original_string);
-	}
 
-	/*Specified length is shorter than the actual length*/
+	for(int i = 0; i < 100; i++){
+		len = rand() % 100;
+		auto stream = get_random_stream(len);
+		std::string len_s = std::to_string(len) + ":";
+
+		std::vector<char> buff(len_s.data(), len_s.data() + len_s.size());
+		char * cstream = &stream[0];
+		buff.insert(buff.end(), cstream, cstream + stream.size());
+		decoder.set_bencode(buff);
+		std::shared_ptr<struct Bencode::Bnode> data = decoder.decode();
+		
+		auto decoded = std::get<std::vector<char>>(data->m_val);
+		
+		ASSERT_EQ(decoded, stream);
+	}
+	//Specified length is shorter than the actual length
 	int smaller_len;
 	std::string msg = "";
 	for(int i = 0; i < 1000; i++){
@@ -111,19 +118,23 @@ TEST(Bencode_Decoder, string_test){
 		while(smaller_len < 0){
 			smaller_len = len - (rand() % 1000);
 		};
-		original_string = get_random_str(smaller_len);
-		bencode_string = std::to_string(len) + ":" + original_string;
-		decoder.set_bencode(bencode_string);
+
+		auto stream = get_random_stream(smaller_len);
+		std::string len_s = std::to_string(len) + ":";
+		std::vector<char> buff(len_s.data(), len_s.data() + len_s.size());
+		char * cstream = &stream[0];
+		buff.insert(buff.end(), cstream, cstream + stream.size());
+
+		decoder.set_bencode(buff);
 
 		msg += "len : "  + std::to_string(len) + " ";
 		msg += "s_len: " + std::to_string(smaller_len) + " ";
-		msg += "string : " + original_string;
 
 		if(smaller_len < len){
 			ASSERT_THROW(decoder.decode(), std::invalid_argument) << msg;
 		}else{
 			auto data = decoder.decode();
-			ASSERT_EQ(std::get<std::string>(data->m_val), original_string) << msg;
+			ASSERT_EQ(std::get<std::vector<char>>(data->m_val), stream) << msg;
 		}
 
 	};
