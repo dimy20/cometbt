@@ -239,6 +239,37 @@ TEST(Bencode_Decoder, list_test){
 
 };
 
+TEST(Bencode_Decoder, list_of_list_test){
+	/*list of lists of ints*/
+	Bencode::Decoder decoder;
+
+	std::vector<char> lists;
+	std::vector<int> ints(100);
+
+	lists.push_back('l');
+	for(int i = 0; i < 100; i++){
+		lists.push_back('l');
+
+		ints[i] = rand() % 1000;
+
+		std::string tmp = "i" + std::to_string(ints[i]) + "e";
+		lists.insert(lists.end(), tmp.data(), tmp.data() + tmp.size());
+
+		lists.push_back('e');
+	}
+
+	lists.push_back('e');
+
+	decoder.set_bencode(lists);
+	auto data = decoder.decode();
+
+	int i = 0;
+	for(auto elem: std::get<Bencode::list_t>(data->m_val)){
+		auto list = std::get<Bencode::list_t>(elem->m_val);
+		ASSERT_EQ(std::get<int>(list[0]->m_val), ints[i]);
+		i++;
+	}
+}
 
 int main(int argc, char **argv){
 	testing::InitGoogleTest(&argc, argv);
