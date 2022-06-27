@@ -294,7 +294,7 @@ TEST(Bencode_Decoder, dict_test){
 
 	input.push_back('d');
 
-	std::vector<std::string> keys(20);
+	std::vector<std::string> keys(21);
 	std::vector<int> values(10);
 	std::vector<std::vector<char>> byte_strings(10);
 	for(int i = 0; i < 10; i++){
@@ -318,6 +318,19 @@ TEST(Bencode_Decoder, dict_test){
 
 	};
 
+	std::vector<int> ints(10);
+	std::vector<char> nums;
+	nums.push_back('l');
+	for(int i = 0; i < 10; i++){
+		ints[i] = rand() % 100;
+		std::string tmp = "i" + std::to_string(ints[i]) + "e";
+		nums.insert(nums.end(), tmp.data(), tmp.data() + tmp.size());
+	};
+	nums.push_back('e');
+
+	insert_key(input, buff_str("nums"));
+	input.insert(input.end(), nums.begin(), nums.end());
+
 	input.push_back('e');
 
 	decoder.set_bencode(input);
@@ -334,6 +347,11 @@ TEST(Bencode_Decoder, dict_test){
 		ASSERT_EQ(bytes_string, byte_strings[i-10]);
 	}
 
+	auto decoded_nums = std::get<Bencode::list_t>(dict["nums"]->m_val);
+
+	for(int i = 0; i < 10 ; i++){
+		ASSERT_EQ(std::get<int>(decoded_nums[i]->m_val), ints[i]);
+	}
 
 };
 
