@@ -36,36 +36,63 @@ static std::vector<info_file_t> extract_info_files(Bencode::dict_t& info){
 	return info_files;
 };
 
-void Torrent::getData(){
+
+void Torrent::init(){
 	Bencode::Decoder decoder;
 	decoder.set_bencode(m_buff);
+
 	auto data = decoder.decode();
 	auto document = std::get<Bencode::dict_t>(data->m_val);
 
 	auto buff_tmp = std::get<std::vector<char>>(document["announce"]->m_val);
 	m_announce = std::string(&buff_tmp[0], buff_tmp.data() + buff_tmp.size());
 
-	for(auto elem: std::get<Bencode::list_t>(document["announce-list"]->m_val)){
-		auto elem_list = std::get<Bencode::list_t>(elem->m_val);
-		auto announce = std::get<std::vector<char>>(elem_list[0]->m_val);
-		m_announce_list.push_back(std::string(&announce[0], &announce[announce.size()]));
+	if(document["announce-list"] != nullptr){ /*optional*/
+		for(auto elem: std::get<Bencode::list_t>(document["announce-list"]->m_val)){
+			auto elem_list = std::get<Bencode::list_t>(elem->m_val);
+			auto announce = std::get<std::vector<char>>(elem_list[0]->m_val);
+			m_announce_list.push_back(std::string(&announce[0], &announce[announce.size()]));
+		};
+	}
+	
+	if(document["comment"] != nullptr){ /*optional*/
+		buff_tmp = std::get<std::vector<char>>(document["comment"]->m_val);
+		m_comment = std::string(buff_tmp.data(), buff_tmp.data() + buff_tmp.size());
+	}
+
+	if(document["comment"] != nullptr){ /*optional*/
+		buff_tmp = std::get<std::vector<char>>(document["created by"]->m_val);
+		m_created_by = std::string(buff_tmp.data(), buff_tmp.data() + buff_tmp.size());
 	};
 
-	buff_tmp = std::get<std::vector<char>>(document["comment"]->m_val);
-	m_comment = std::string(buff_tmp.data(), buff_tmp.data() + buff_tmp.size());
-	buff_tmp = std::get<std::vector<char>>(document["created by"]->m_val);
+	if(document["comment"] != nullptr){ /*optional*/
+		m_creation_date = std::get<long long>(document["creation date"]->m_val);
+	}
 
-	m_created_by = std::string(buff_tmp.data(), buff_tmp.data() + buff_tmp.size());
-	m_creation_date = std::get<int>(document["creation date"]->m_val);
-	buff_tmp = std::get<std::vector<char>>(document["encoding"]->m_val);
-	m_encoding = std::string(buff_tmp.data(), buff_tmp.data() + buff_tmp.size());
+	if(document["encoding"] != nullptr){ /*optional*/
+		buff_tmp = std::get<std::vector<char>>(document["encoding"]->m_val);
+		m_encoding = std::string(buff_tmp.data(), buff_tmp.data() + buff_tmp.size());
+	}
 
 	/*info dict*/
 	m_info = std::get<Bencode::dict_t>(document["info"]->m_val);
-	m_info_files = std::move(extract_info_files(m_info));
+
 	buff_tmp = std::get<std::vector<char>>(m_info["name"]->m_val);
 	m_info_name = std::string(buff_tmp.data(), buff_tmp.data() + buff_tmp.size());
-	m_info_piecelen = std::get<int>(m_info["piece length"]->m_val);
+
+	if(m_info["files"] != nullptr){ /*only in multiple file mode*/
+		m_info_files = std::move(extract_info_files(m_info));
+	}else if(m_info["length"] != nullptr){ /*single file mode*/
+		m_length = std::get<long long>(m_info["length"]->m_val);
+	}
+
+	/*Common fields to both file modes*/
+	if(m_info["private"] != nullptr){
+		/*will remain unsuported for now*/
+		m_info_private = std::get<long long>(m_info["private"]->m_val);
+	}
+
+	m_info_piecelen = std::get<long long>(m_info["piece length"]->m_val);
 	m_info_pieces = std::get<std::vector<char>>(m_info["pieces"]->m_val);
 
 };
