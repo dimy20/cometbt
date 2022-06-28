@@ -1,9 +1,7 @@
 #include "bencode.h"
 
 static bool digit_overflows(int curr_value, int next_digit){
-	return ((curr_value > (INT_MAX) / 10) ||
-			(curr_value == (INT_MAX / 10) &&
-			 next_digit > (INT_MAX % 10)));
+	return (next_digit > 0 && (next_digit > (LLONG_MAX - curr_value)));
 };
 
 static void die(const std::string& msg){
@@ -37,7 +35,7 @@ void Bencode::Decoder::set_bencode(const std::vector<char>& bencode){
 	m_index = 0;
 };
 
-std::shared_ptr<struct Bencode::Bnode> Bencode::Decoder::decode_string(int n){
+std::shared_ptr<struct Bencode::Bnode> Bencode::Decoder::decode_string(long long n){
 	std::vector<char> ans(n);
 	int j = 0;
 	if(m_index + n <= m_bencode.size()){
@@ -54,7 +52,8 @@ std::shared_ptr<struct Bencode::Bnode> Bencode::Decoder::decode_string(int n){
 }
 
 std::shared_ptr<struct Bencode::Bnode> Bencode::Decoder::decode_int(){
-	int ans, char_count;
+	int char_count;
+	long long ans;
 
 	ans = char_count = 0;
 	while(m_index < m_bencode.size() && m_bencode[m_index] != token_type::END_TOKEN){
@@ -149,7 +148,7 @@ std::shared_ptr<struct Bencode::Bnode> Bencode::Decoder::decode(){
 			}
 		case '0'...'9':
 			{
-				int len = get_str_len();
+				long long len = get_str_len();
 				m_node = decode_string(len);
 				step(len);
 				return m_node;
@@ -161,8 +160,8 @@ std::shared_ptr<struct Bencode::Bnode> Bencode::Decoder::decode(){
 	return m_node;
 }
 
-int Bencode::Decoder::get_str_len(){
-	int ans = 0;
+long long Bencode::Decoder::get_str_len(){
+	long long ans = 0;
 	while(m_bencode[m_index] != Bencode::token_type::SDEL_TOKEN){
 		if(m_index == m_bencode.size())
 			throw std::invalid_argument("Unexpected end of string.");
@@ -212,8 +211,8 @@ std::string Bencode::Decoder::list_to_string(list_t& becode_list){
 std::string Bencode::Decoder::node_to_string(std::shared_ptr<struct Bnode> node){
 	int i = node->m_val.index();
 	std::string ans;
-	if(std::holds_alternative<int>(node->m_val))
-		return std::to_string(std::get<int>(node->m_val));
+	if(std::holds_alternative<long long>(node->m_val))
+		return std::to_string(std::get<long long>(node->m_val));
 	else if(std::holds_alternative<std::vector<char>>(node->m_val)){
 		auto buff = std::get<std::vector<char>>(node->m_val);
 		return std::string(&buff[0], buff.size());

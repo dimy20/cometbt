@@ -14,7 +14,7 @@ namespace Bencode{
 	using dict_t = std::unordered_map<std::string, std::shared_ptr<struct Bnode>>;
 
 	struct Bnode{
-		std::variant<int, std::vector<char>, list_t, dict_t> m_val;
+		std::variant<long long, std::vector<char>, list_t, dict_t> m_val;
 	};
 
 	enum token_type {
@@ -39,12 +39,12 @@ namespace Bencode{
 			std::shared_ptr<struct Bnode> m_node;
 			
 		private:
-			std::shared_ptr<struct Bnode> decode_string(int n);
+			std::shared_ptr<struct Bnode> decode_string(long long n);
 			std::shared_ptr<struct Bnode> decode_int();
 			std::shared_ptr<struct Bnode> decode_list();
 			std::shared_ptr<struct Bnode> decode_dict();
 
-			int get_str_len();
+			long long get_str_len();
 
 			std::string node_to_string(std::shared_ptr<struct Bnode> node);
 			std::string dict_to_string(dict_t& dict);
