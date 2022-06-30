@@ -46,7 +46,7 @@ static std::vector<info_file_t> extract_info_files(Bencode::dict_t& info){
 	std::vector<info_file_t> info_files;
 	for(auto elem : std::get<Bencode::list_t>(info["files"]->m_val)){
 		auto file = std::get<Bencode::dict_t>(elem->m_val);
-		length = std::get<int>(file["length"]->m_val);
+		length = std::get<long long>(file["length"]->m_val);
 		info_files.push_back({length, std::move(info_file_path(file))});
 	}
 	return info_files;
