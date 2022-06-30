@@ -70,4 +70,27 @@ void SocketTcp::connect_to(const std::string& host, const std::string& port){
     freeaddrinfo(servinfo);
 }
 
-int SocketTcp::get_fd(){ return m_fd; };
+void SocketTcp::send(char * buff, int size){
+	int err;
+	if(m_flags & option::SSL_CLIENT){
+		err = SSL_write(m_ssl, buff, size);
+	}
+}
+
+void SocketTcp::recv(char * buff, int size){
+	int err;
+	if(m_flags & option::SSL_CLIENT){
+		memset(buff, 0, size);
+		int n, total;
+		total = 0;
+		while(1){
+			n = SSL_read(m_ssl, buff + total, size - total);
+			if(n == 0) break;
+			else if (n == -1) std::cerr << "Error reading" << std::endl;
+			else {
+				total +=n;
+			}
+		};
+		buff[total] = '\0';
+	}
+}

@@ -25,7 +25,8 @@ class SocketTcp{
 		SocketTcp();
 		SocketTcp(uint8_t flags);
 		void connect_to(const std::string& host, const std::string& port);
-		int get_fd();
+		void recv(char * buff, int size);
+		void send(char * buff, int size);
 	private:
 		void init_openssl();
 	private:
