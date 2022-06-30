@@ -52,6 +52,56 @@ static std::vector<info_file_t> extract_info_files(Bencode::dict_t& info){
 	return info_files;
 };
 
+static int find_pattern(const std::vector<char>& buff, const std::vector<char>& pattern){
+	int n, pattern_len;
+	n = buff.size();
+	pattern_len = pattern.size();
+	int j = 0;
+	for(int i = 0; i < n - pattern_len; i++){
+		if(buff[i] == pattern[j]){
+			j++;
+			if(j == pattern_len){
+				return i - j + 1; /*match starts at index : i-j+1*/
+			}
+		}else{
+			i -= j;
+			j = 0;
+		}
+	}
+	return -1;
+};
+
+std::string info_hash(std::vector<char> bencode){
+	std::vector<unsigned char> sha1(SHA_DIGEST_LENGTH);
+	int n, start, end, info_len;
+	n = bencode.size();
+	start = 0;
+
+	start = find_pattern(bencode, {'4',':','i', 'n', 'f', 'o', 'd'});
+	if(start == -1) die("Error : info dictionary not found in bencode.");
+	start += 6; // hash must start at info's value including 'd'
+
+	end = n-2;
+	info_len = end - start + 1;
+
+	SHA1(reinterpret_cast<unsigned char*>(&bencode[start]), info_len, sha1.data());
+
+	/*sha1 hex representation*/
+	char sha1_hex[(SHA_DIGEST_LENGTH * 2) + 1];
+	for (int i = 0; i < SHA_DIGEST_LENGTH; i++){
+		sprintf(sha1_hex + (i * 2),"%02x\n", sha1[i]);
+	}
+	sha1_hex[SHA_DIGEST_LENGTH * 2] = '\0';
+
+	std::string s = std::string(sha1_hex);
+
+	std::stringstream ss;
+	for(int i = 0; i < s.size(); i+=2){ /*Tracker requieres this */
+		ss << "%" << s[i] << s[i+1];
+	};
+
+	return ss.str();
+};
 
 void Torrent::init(){
 	Bencode::Decoder decoder;
