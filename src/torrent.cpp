@@ -22,9 +22,18 @@ static std::vector<char> open_file(const std::string& filename){
 
 Torrent::Torrent(const std::string& filename){
 	m_buff = open_file(filename);
-	getData();
-};
+	/*optional params*/
+	m_announce_list = {};
+	m_comment = "";
+	m_created_by = "";
+	m_creation_date = 0;
+	m_encoding = "";
+	m_info_private = -1;
 
+
+	init_torrent_data();
+	init_openssl();
+};
 
 static std::string info_file_path(Bencode::dict_t& d){
 	auto list_node = std::get<Bencode::list_t>(d["path"]->m_val)[0];
