@@ -3,6 +3,22 @@
 #include <vector>
 #include <string>
 #include <fstream>
+
+#include <openssl/sha.h>
+#include <openssl/crypto.h>
+#include <openssl/x509.h>
+#include <openssl/pem.h>
+#include <openssl/ssl.h>
+#include <openssl/err.h>
+
+#include <sys/socket.h>
+#include <sys/types.h>
+#include <arpa/inet.h>
+#include <netdb.h>
+#include <unistd.h>
+#include <string.h>
+#include <stdio.h>
+
 #include "bencode.h"
 
 typedef struct info_file_s info_file_t;
@@ -15,11 +31,16 @@ struct info_file_s{
 class Torrent{
 	public:
 		Torrent(const std::string& filename);
-		void init();
 		const std::string& get_announce();
 		const std::vector<std::string>& get_announce_list();
 		const std::vector<info_file_t>& get_info_files();
-		void requestTracker();
+		std::string get_peers();
+
+	private:
+		std::string build_request(const std::string& host);
+		void init_torrent_data();
+		void init_openssl();
+
 	private:
 		std::vector<char> m_buff;               /*binary bencode*/
 		std::string m_announce;
@@ -43,7 +64,12 @@ class Torrent{
 		long long m_info_piecelen; /*size in bytes of each piece*/
 		std::vector<char> m_info_pieces; /*piece's sha1 hash*/
 
-		std::vector<unsigned char> m_sha1;
+		std::string m_infohash_hex; /*info dict's formatted sha1 hex for tracker*/
+
+		/* ssl */
+		SSL_CTX * m_ctx;
+		SSL     * m_ssl;
+		X509    * m_server_cert;
 };
 
 
