@@ -1,5 +1,7 @@
 #pragma once
 
+#include <iostream>
+
 #include <sys/socket.h>
 #include <sys/types.h>
 #include <arpa/inet.h>
@@ -9,7 +11,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <string>
-
+#include <assert.h>
 
 #include <openssl/x509.h>
 #include <openssl/pem.h>

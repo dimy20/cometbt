@@ -1,5 +1,5 @@
 #include "tcp.h"
-#include <iostream>
+
 
 static int new_socket(int family, int socktype, int protocol){
 	int fd, ret;
@@ -78,6 +78,7 @@ void SocketTcp::connect_to(const std::string& host, const std::string& port){
 void SocketTcp::send(char * buff, int size){
 	int err;
 	if(m_flags & option::SSL_CLIENT){
+		assert(m_ssl != nullptr && "ssl is null, session not created");
 		err = SSL_write(m_ssl, buff, size);
 	}
 }
@@ -85,6 +86,7 @@ void SocketTcp::send(char * buff, int size){
 void SocketTcp::recv(char * buff, int size){
 	int err;
 	if(m_flags & option::SSL_CLIENT){
+		assert(m_ssl != nullptr && "ssl is null, session not created");
 		memset(buff, 0, size);
 		int n, total;
 		total = 0;
