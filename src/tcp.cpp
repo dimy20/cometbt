@@ -47,16 +47,21 @@ void SocketTcp::connect_to(const std::string& host, const std::string& port){
 
 	p = servinfo;
 
-	while(p != nullptr){
+	for(p == servinfo; p != nullptr; p = p->ai_next){
 		m_fd = new_socket(p->ai_family, p->ai_socktype, p->ai_protocol);
 		if(m_fd == -1) continue;
-		
-		ret = connect(m_fd, p->ai_addr, p->ai_addrlen); /*takes too long*/
-		if(ret == -1) perror("connect");
 
-		break;
-		p = p->ai_next;
-	};
+		ret = connect(m_fd, p->ai_addr, p->ai_addrlen); /*takes too long*/
+		if(ret == -1){
+			close(m_fd);
+			std::cerr << "Error : failed to connect to " << host << std::endl;
+		}else break; /*connected*/
+	}
+
+	if(p == nullptr){
+		std::cerr << "Error : Unable to create socket. " << std::endl;
+		exit(EXIT_FAILURE);
+	}
 
 	if(m_flags & option::SSL_CLIENT){
 		//assert m_ctx != nullptr
