@@ -103,9 +103,11 @@ std::string info_hash(std::vector<char> bencode){
 	return ss.str();
 };
 
-void Torrent::init(){
+void Torrent::init_torrent_data(){
 	Bencode::Decoder decoder;
 	decoder.set_bencode(m_buff);
+
+	m_infohash_hex = std::move(info_hash(m_buff));
 
 	auto data = decoder.decode();
 	auto document = std::get<Bencode::dict_t>(data->m_val);
@@ -163,8 +165,37 @@ void Torrent::init(){
 
 };
 
-const std::string& Torrent::get_announce(){
-	return m_announce;
+void Torrent::init_openssl(){
+	OpenSSL_add_ssl_algorithms();
+	SSL_load_error_strings();
+	m_ctx = SSL_CTX_new(TLS_client_method());
+};
+
+
+
+static std::string gen_peer_id(){
+	std::string ans = "-PC0001-";
+	for(int i = 0; i < 12; i++){
+		ans += std::to_string(rand() % 10);
+	};
+	return ans;
+};
+
+std::string Torrent::build_request(const std::string& host){
+	auto peer_id = gen_peer_id();
+	long long left = (m_info_pieces.size() / 20) * m_info_piecelen;
+
+	std::stringstream ss;
+	ss << "GET /announce?info_hash=" << m_infohash_hex << "&";
+	ss << "peer_id=" << peer_id << "&";
+	ss << "uploaded=0&downloaded=0&";
+	ss << "left=" << std::to_string(left) << "&";
+	ss << "port=" << "443&" << "compact=1";
+	ss << " HTTP/1.1\r\n";
+	ss << "Host: " << host.c_str() << "\r\n\r\n";
+
+	std::string s =	ss.str();
+	return ss.str();
 };
 
 const std::vector<std::string>& Torrent::get_announce_list(){
