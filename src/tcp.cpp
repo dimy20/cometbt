@@ -1,4 +1,5 @@
 #include "tcp.h"
+#include <iostream>
 
 static int new_socket(int family, int socktype, int protocol){
 	int fd, ret;
@@ -14,6 +15,21 @@ static int new_socket(int family, int socktype, int protocol){
 
 SocketTcp::SocketTcp(){
 	m_fd = 0;
+	m_ssl = nullptr;
+};
+
+SocketTcp::SocketTcp(uint8_t options){
+	m_fd = 0;
+	if(options & option::SSL_CLIENT){
+		init_openssl();
+	};
+	m_flags = options;
+};
+
+void SocketTcp::init_openssl(){
+	OpenSSL_add_ssl_algorithms();
+	SSL_load_error_strings();
+	m_ctx = SSL_CTX_new(TLS_client_method());
 };
 
 void SocketTcp::connect_to(const std::string& host, const std::string& port){
@@ -23,7 +39,7 @@ void SocketTcp::connect_to(const std::string& host, const std::string& port){
     hints.ai_family = AF_UNSPEC; /*ipv4 or ipv6*/
     hints.ai_flags = AI_PASSIVE; /* wildcard addr if no node is specified*/
     hints.ai_socktype = SOCK_STREAM;
-    int ret, yes = 1;
+    int err, ret, yes = 1;
 
     ret = getaddrinfo(host.c_str(), port.c_str(), &hints, &servinfo);
 
@@ -40,6 +56,15 @@ void SocketTcp::connect_to(const std::string& host, const std::string& port){
 
 		break;
 		p = p->ai_next;
+	};
+
+	if(m_flags & option::SSL_CLIENT){
+		//assert m_ctx != nullptr
+		m_ssl = SSL_new(m_ctx);
+		if(!m_ssl) std::cerr << "failed to create SSL session" << std::endl;
+		SSL_set_fd(m_ssl, m_fd);
+		err = SSL_connect(m_ssl);
+		if(!err) std::cerr << "Failed to initiate negotiaion" << std::endl;
 	};
 
     freeaddrinfo(servinfo);
