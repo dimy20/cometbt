@@ -40,7 +40,6 @@ class Torrent{
 	private:
 		std::string build_request(const std::string& host);
 		void init_torrent_data();
-		void init_openssl();
 
 	private:
 		std::vector<char> m_buff;               /*binary bencode*/
@@ -68,10 +67,6 @@ class Torrent{
 		std::string m_infohash_hex; /*info dict's formatted sha1 hex for tracker*/
 
 		SocketTcp m_sock;
-		/* ssl */
-		SSL_CTX * m_ctx;
-		SSL     * m_ssl;
-		X509    * m_server_cert;
 };
 
 

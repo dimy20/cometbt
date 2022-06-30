@@ -30,9 +30,8 @@ Torrent::Torrent(const std::string& filename){
 	m_encoding = "";
 	m_info_private = -1;
 
-
 	init_torrent_data();
-	init_openssl();
+	m_sock = SocketTcp(SocketTcp::option::SSL_CLIENT);
 };
 
 static std::string info_file_path(Bencode::dict_t& d){
@@ -165,14 +164,6 @@ void Torrent::init_torrent_data(){
 
 };
 
-void Torrent::init_openssl(){
-	OpenSSL_add_ssl_algorithms();
-	SSL_load_error_strings();
-	m_ctx = SSL_CTX_new(TLS_client_method());
-};
-
-
-
 static std::string gen_peer_id(){
 	std::string ans = "-PC0001-";
 	for(int i = 0; i < 12; i++){
@@ -214,30 +205,10 @@ std::string Torrent::get_peers(){
 	std::string host = get_host(m_announce);
 	m_sock.connect_to(host, "443");
 
-	m_ssl = SSL_new(m_ctx);
-	if(!m_ssl) std::cerr << "failed to create SSL session" << std::endl;
-	SSL_set_fd(m_ssl, m_sock.get_fd());
-	err = SSL_connect(m_ssl);
-	if(!err) std::cerr << "Failed to initiate negotiaion" << std::endl;
-
 	auto req = build_request(host); // build request for tracker
-
-	err = SSL_write(m_ssl, req.data(), req.size());
+	m_sock.send(req.data(), req.size());
 
 	char buff[1024*16];
-	memset(buff, 0, sizeof(buff));
-
-	int n, total;
-	total = 0;
-	while(1){
-		n = SSL_read(m_ssl, buff + total, (1024*16) - total);
-		if(n == 0) break;
-		else if (n == -1) std::cerr << "Error reading" << std::endl;
-		else {
-			total +=n;
-		}
-	};
-
-	buff[total] = '\0';
+	m_sock.recv(buff, 1024*16);
 	return std::string (std::move(buff)); /*for now, response is not te be interpreted as text*/
 };
