@@ -208,59 +208,15 @@ static std::string get_host(const std::string& url){
 	return url.substr(8, count);
 };
 
-int new_socket(int family, int socktype, int protocol){
-	int fd, ret;
-	fd = socket(family, socktype, protocol);
-
-	if(fd < 0){
-		perror("socket");
-		exit(1);
-	};
-
-	return fd;
-};
-
-int connect_to(const char * host, const char * port){
-	struct addrinfo hints, * servinfo, * p;
-    memset(&hints,0,sizeof(hints));
-
-    hints.ai_family = AF_UNSPEC; /*ipv4 or ipv6*/
-    hints.ai_flags = AI_PASSIVE; /* wildcard addr if no node is specified*/
-    hints.ai_socktype = SOCK_STREAM;
-    int ret, yes = 1;
-
-    ret = getaddrinfo(host, port, &hints, &servinfo);
-
-	if(ret == -1) perror("getaddrinfo");
-
-	p = servinfo;
-
-	int fd;
-	while(p != nullptr){
-		fd = new_socket(p->ai_family, p->ai_socktype, p->ai_protocol);
-		if(fd == -1) continue;
-		
-		ret = connect(fd, p->ai_addr, p->ai_addrlen); /*takes too long*/
-		if(ret == -1) perror("connect");
-
-		break;
-		p = p->ai_next;
-	};
-
-
-    freeaddrinfo(servinfo);
-	return fd;
-};
-
 std::string Torrent::get_peers(){
-	int fd, err;
+	int err;
 
 	std::string host = get_host(m_announce);
-	fd = connect_to(host.c_str(), "443");
+	m_sock.connect_to(host, "443");
 
 	m_ssl = SSL_new(m_ctx);
 	if(!m_ssl) std::cerr << "failed to create SSL session" << std::endl;
-	SSL_set_fd(m_ssl, fd);
+	SSL_set_fd(m_ssl, m_sock.get_fd());
 	err = SSL_connect(m_ssl);
 	if(!err) std::cerr << "Failed to initiate negotiaion" << std::endl;
 

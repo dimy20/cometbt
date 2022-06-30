@@ -20,6 +20,7 @@
 #include <stdio.h>
 
 #include "bencode.h"
+#include "tcp.h"
 
 typedef struct info_file_s info_file_t;
 
@@ -66,6 +67,7 @@ class Torrent{
 
 		std::string m_infohash_hex; /*info dict's formatted sha1 hex for tracker*/
 
+		SocketTcp m_sock;
 		/* ssl */
 		SSL_CTX * m_ctx;
 		SSL     * m_ssl;
