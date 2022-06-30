@@ -198,6 +198,15 @@ std::string Torrent::build_request(const std::string& host){
 	return ss.str();
 };
 
+static std::string get_host(const std::string& url){
+	int n, count, i;
+
+	n = url.size(), count = 0, i = 8;
+	for(i = 8; i <n & url[i] != '/'; i++){
+		count++;
+	};
+	return url.substr(8, count);
+};
 
 int new_socket(int family, int socktype, int protocol){
 	int fd, ret;
