@@ -1,4 +1,11 @@
 #include "torrent.h"
+#include <stdio.h>
+#include <sstream>
+
+static void die(const std::string& msg){
+	std::cerr << msg << std::endl;
+	exit(EXIT_FAILURE);
+}
 
 static std::vector<char> open_file(const std::string& filename){
 	std::vector<char> buff;
