@@ -198,10 +198,47 @@ std::string Torrent::build_request(const std::string& host){
 	return ss.str();
 };
 
-const std::vector<std::string>& Torrent::get_announce_list(){
-	return m_announce_list;
+
+int new_socket(int family, int socktype, int protocol){
+	int fd, ret;
+	fd = socket(family, socktype, protocol);
+
+	if(fd < 0){
+		perror("socket");
+		exit(1);
+	};
+
+	return fd;
 };
 
-const std::vector<info_file_t>& Torrent::get_info_files(){
-	return m_info_files;
+int connect_to(const char * host, const char * port){
+	struct addrinfo hints, * servinfo, * p;
+    memset(&hints,0,sizeof(hints));
+
+    hints.ai_family = AF_UNSPEC; /*ipv4 or ipv6*/
+    hints.ai_flags = AI_PASSIVE; /* wildcard addr if no node is specified*/
+    hints.ai_socktype = SOCK_STREAM;
+    int ret, yes = 1;
+
+    ret = getaddrinfo(host, port, &hints, &servinfo);
+
+	if(ret == -1) perror("getaddrinfo");
+
+	p = servinfo;
+
+	int fd;
+	while(p != nullptr){
+		fd = new_socket(p->ai_family, p->ai_socktype, p->ai_protocol);
+		if(fd == -1) continue;
+		
+		ret = connect(fd, p->ai_addr, p->ai_addrlen); /*takes too long*/
+		if(ret == -1) perror("connect");
+
+		break;
+		p = p->ai_next;
+	};
+
+
+    freeaddrinfo(servinfo);
+	return fd;
 };
