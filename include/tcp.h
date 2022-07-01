@@ -18,14 +18,9 @@
 #include <openssl/ssl.h>
 #include <openssl/err.h>
 
-class SocketTcp{
+class SocketSSL{
 	public:
-		enum option {
-			SSL_CLIENT = 1
-		};
-
-		SocketTcp();
-		SocketTcp(uint8_t flags);
+		SocketSSL();
 		void connect_to(const std::string& host, const std::string& port);
 		void recv(char * buff, int size);
 		void send(char * buff, int size);

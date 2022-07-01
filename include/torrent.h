@@ -66,7 +66,7 @@ class Torrent{
 
 		std::string m_infohash_hex; /*info dict's formatted sha1 hex for tracker*/
 
-		SocketTcp m_sock;
+		SocketSSL m_sock;
 };
 
 

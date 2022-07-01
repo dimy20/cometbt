@@ -13,26 +13,19 @@ static int new_socket(int family, int socktype, int protocol){
 	return fd;
 };
 
-SocketTcp::SocketTcp(){
+SocketSSL::SocketSSL(){
 	m_fd = 0;
 	m_ssl = nullptr;
+	init_openssl();
 };
 
-SocketTcp::SocketTcp(uint8_t options){
-	m_fd = 0;
-	if(options & option::SSL_CLIENT){
-		init_openssl();
-	};
-	m_flags = options;
-};
-
-void SocketTcp::init_openssl(){
+void SocketSSL::init_openssl(){
 	OpenSSL_add_ssl_algorithms();
 	SSL_load_error_strings();
 	m_ctx = SSL_CTX_new(TLS_client_method());
 };
 
-void SocketTcp::connect_to(const std::string& host, const std::string& port){
+void SocketSSL::connect_to(const std::string& host, const std::string& port){
 	struct addrinfo hints, * servinfo, * p;
     memset(&hints,0,sizeof(hints));
 
@@ -63,41 +56,43 @@ void SocketTcp::connect_to(const std::string& host, const std::string& port){
 		exit(EXIT_FAILURE);
 	}
 
-	if(m_flags & option::SSL_CLIENT){
-		//assert m_ctx != nullptr
-		m_ssl = SSL_new(m_ctx);
-		if(!m_ssl) std::cerr << "failed to create SSL session" << std::endl;
-		SSL_set_fd(m_ssl, m_fd);
-		err = SSL_connect(m_ssl);
-		if(!err) std::cerr << "Failed to initiate negotiaion" << std::endl;
-	};
+	/* Negotiate ssl session */
+	assert(m_ctx != nullptr && "m_ctx is a null pointer");
+	m_ssl = SSL_new(m_ctx);
+	if(!m_ssl) std::cerr << "failed to create SSL session" << std::endl;
+	SSL_set_fd(m_ssl, m_fd);
+	err = SSL_connect(m_ssl);
+	if(!err) std::cerr << "Failed to initiate negotiaion" << std::endl;
 
     freeaddrinfo(servinfo);
 }
 
-void SocketTcp::send(char * buff, int size){
+void SocketSSL::send(char * buff, int size){
 	int err;
-	if(m_flags & option::SSL_CLIENT){
-		assert(m_ssl != nullptr && "ssl is null, session not created");
-		err = SSL_write(m_ssl, buff, size);
-	}
+	assert(m_ssl != nullptr && "ssl is null, session not created");
+	err = SSL_write(m_ssl, buff, size);
 }
 
-void SocketTcp::recv(char * buff, int size){
-	int err;
-	if(m_flags & option::SSL_CLIENT){
+void SocketSSL::recv(char * buff, int size){
+	int err, n, total;
+	total = 0;
+	memset(buff, 0, size);
+
+	while(1){
 		assert(m_ssl != nullptr && "ssl is null, session not created");
-		memset(buff, 0, size);
-		int n, total;
-		total = 0;
-		while(1){
-			n = SSL_read(m_ssl, buff + total, size - total);
-			if(n == 0) break;
-			else if (n == -1) std::cerr << "Error reading" << std::endl;
-			else {
-				total +=n;
-			}
-		};
-		buff[total] = '\0';
-	}
+		n = SSL_read(m_ssl, buff + total, size - total);
+
+		if(n > 0){
+			total += n;
+		}else if( n <= 0 ){
+			err = SSL_get_error(m_ssl, n);
+			if(err == SSL_ERROR_WANT_READ){
+				std::cerr << "want read" << std::endl;
+			}else if(err == SSL_ERROR_WANT_WRITE){
+				std::cerr << "want write" << std::endl;
+			}else break;
+		}
+	};
+
+	buff[total] = '\0';
 }
