@@ -199,7 +199,51 @@ static std::string get_host(const std::string& url){
 	return url.substr(8, count);
 };
 
-std::string Torrent::get_peers(){
+static auto parse_header(const char * msg, std::size_t size){
+	std::unordered_map<std::string, std::string> header;
+
+	const char * start, * end, * msg_end;
+	start = end = msg;
+	msg_end = msg + size;
+
+	while(end != msg_end && *end != ' ') end++;
+	header["version"] = std::string(start, end);
+	while(end != msg_end && *end == ' ') end++; // trim spaces
+	start = end;
+	while(end != msg_end && *end != ' ') end++;
+	header["status"] = std::string(start, end);
+
+	while(end != msg_end && *end != '\r') end++;
+	end += 2; // skip \r\n
+
+
+	const char * colon, * value_start;
+	while(end != msg_end && *end != '\r'){
+		start = end;
+		while(end != msg_end && *end != '\r') end++;
+		colon = (const char *)memchr(start, ':', end-start);
+		if(!colon){
+			std::cout << "Error : Bad response" << std::endl;
+			exit(1);
+		}else{
+			value_start = colon + 1;
+			while(value_start != end && *value_start == ' ') value_start++;
+			header[std::string(start, colon)] = std::string(value_start, end);
+			start = end + 2;
+			end += 2;
+		}
+
+	};
+	return header;
+}
+
+static const char * get_body(const char * msg, const char * msg_end){
+	int index = find_pattern(std::vector<char>(msg, msg_end), {'\r', '\n', '\r', '\n'});
+	if(index == -1) std::cerr << "bad request" << std::endl;
+	return msg + index + 4;
+}
+
+const std::vector<struct peer_s>& Torrent::get_peers(){
 	int err;
 
 	std::string host = get_host(m_announce);
