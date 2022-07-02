@@ -2,7 +2,9 @@
 
 int main(){
 	Torrent client("ubuntu-22.04-desktop-amd64.iso.torrent");
-	std::string response = client.get_peers();
-	std::cout << response << std::endl;
+	auto peers = client.get_peers();
+	for(auto peer : peers){
+		std::cout << "ip -> " << peer.ip << " port-> " << peer.port << std::endl;
+	}
 	return 0;
 };

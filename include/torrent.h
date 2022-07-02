@@ -22,11 +22,19 @@
 #include "bencode.h"
 #include "tcp.h"
 
+#define BUFF_SIZE 1024*16
+
 typedef struct info_file_s info_file_t;
 
 struct info_file_s{
 	int length;
 	std::string path;
+};
+
+struct peer_s{
+	std::vector<char> id;
+	std::string ip;
+	std::string port;
 };
 
 class Torrent{
@@ -35,7 +43,7 @@ class Torrent{
 		const std::string& get_announce();
 		const std::vector<std::string>& get_announce_list();
 		const std::vector<info_file_t>& get_info_files();
-		std::string get_peers();
+		const std::vector<struct peer_s>& get_peers();
 
 	private:
 		std::string build_request(const std::string& host);
@@ -67,6 +75,8 @@ class Torrent{
 		std::string m_infohash_hex; /*info dict's formatted sha1 hex for tracker*/
 
 		SocketSSL m_sock;
+
+		std::vector<struct peer_s> m_peers;
 };
 
 

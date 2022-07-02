@@ -252,7 +252,29 @@ const std::vector<struct peer_s>& Torrent::get_peers(){
 	auto req = build_request(host); // build request for tracker
 	m_sock.send(req.data(), req.size());
 
-	char buff[1024*16];
-	m_sock.recv(buff, 1024*16);
-	return std::string (std::move(buff)); /*for now, response is not te be interpreted as text*/
+	char buff[BUFF_SIZE];
+	int n = m_sock.recv(buff, BUFF_SIZE);
+
+	auto headers = parse_header(buff, n);
+	int content_len = std::stoi(headers["Content-Length"]);
+	const char * body = get_body(buff, buff + n);
+
+
+	Bencode::Decoder decoder;
+	decoder.set_bencode(std::vector<char>(body, body + content_len));
+	auto response = decoder.decode();
+	auto document = std::get<Bencode::dict_t>(response->m_val);
+	auto peers = std::get<Bencode::list_t>(document["peers"]->m_val);
+
+	for(auto peer : peers){
+		auto peer_doc = std::get<Bencode::dict_t>(peer->m_val);
+		auto id = std::get<std::vector<char>>(peer_doc["peer id"]->m_val);
+		auto ip = std::get<std::vector<char>>(peer_doc["ip"]->m_val);
+		auto port = std::get<long long>(peer_doc["port"]->m_val);
+		std::string ip_s(ip.data(), ip.size());
+		m_peers.push_back({std::move(id), std::move(ip_s), std::to_string(port)});
+	}
+
+	return m_peers;
 };
+
