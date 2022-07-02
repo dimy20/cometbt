@@ -22,8 +22,8 @@ class SocketSSL{
 	public:
 		SocketSSL();
 		void connect_to(const std::string& host, const std::string& port);
-		void recv(char * buff, int size);
-		void send(char * buff, int size);
+		int recv(char * buff, int size);
+		int send(char * buff, int size);
 	private:
 		void init_openssl();
 	private:

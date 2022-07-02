@@ -67,13 +67,27 @@ void SocketSSL::connect_to(const std::string& host, const std::string& port){
     freeaddrinfo(servinfo);
 }
 
-void SocketSSL::send(char * buff, int size){
-	int err;
+int SocketSSL::send(char * buff, int size){
 	assert(m_ssl != nullptr && "ssl is null, session not created");
-	err = SSL_write(m_ssl, buff, size);
+	int err, n, total;
+	total = 0;
+	while(1){
+		n = SSL_write(m_ssl, buff + total, size - total);
+		if(n > 0){
+			total += n;
+		}else if(n <= 0){
+			err = SSL_get_error(m_ssl, n);
+			if(err == SSL_ERROR_WANT_READ){
+				std::cerr << "want read" << std::endl;
+			}else if(err == SSL_ERROR_WANT_WRITE){
+				std::cerr << "want write" << std::endl;
+			}else break;
+		}
+	}
+	return total;
 }
 
-void SocketSSL::recv(char * buff, int size){
+int SocketSSL::recv(char * buff, int size){
 	int err, n, total;
 	total = 0;
 	memset(buff, 0, size);
@@ -94,5 +108,7 @@ void SocketSSL::recv(char * buff, int size){
 		}
 	};
 
-	buff[total] = '\0';
+	buff[total + 1] = '\0';
+	return total;
 }
+
