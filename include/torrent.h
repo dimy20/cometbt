@@ -33,6 +33,17 @@ struct info_file_s{
 	std::string path;
 };
 
+class Peer{
+	public:
+		Peer(std::vector<char> id, const std::string& ip, const std::string& port);
+		void handshake(const std::vector<char>& info_hash, const std::string& id);
+	public:
+		std::vector<char> m_id;
+		std::string m_ip;
+		std::string m_port;
+		SocketTcp m_sock;
+};
+
 struct peer_s{
 	std::vector<char> id;
 	std::string ip;
@@ -45,8 +56,8 @@ class Torrent{
 		const std::string& get_announce();
 		const std::vector<std::string>& get_announce_list();
 		const std::vector<info_file_t>& get_info_files();
-		const std::vector<struct peer_s>& get_peers();
-		void handshake(const struct peer_s& peer);
+		const std::vector<Peer>& get_peers();
+
 
 	private:
 		std::string build_request(const std::string& host);
@@ -81,7 +92,7 @@ class Torrent{
 
 		SocketSSL m_sock;
 
-		std::vector<struct peer_s> m_peers;
+		std::vector<Peer> m_peers;
 };
 
 

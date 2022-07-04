@@ -248,7 +248,7 @@ static const char * get_body(const char * msg, const char * msg_end){
 	return msg + index + 4;
 }
 
-const std::vector<struct peer_s>& Torrent::get_peers(){
+const std::vector<Peer>& Torrent::get_peers(){
 	int err;
 
 	std::string host = get_host(m_announce);
@@ -277,9 +277,14 @@ const std::vector<struct peer_s>& Torrent::get_peers(){
 		auto ip = std::get<std::vector<char>>(peer_doc["ip"]->m_val);
 		auto port = std::get<long long>(peer_doc["port"]->m_val);
 		std::string ip_s(ip.data(), ip.size());
-		m_peers.push_back({std::move(id), std::move(ip_s), std::to_string(port)});
+		m_peers.push_back(Peer(id, ip_s, std::to_string(port)));
 	}
 
 	return m_peers;
 };
 
+Peer::Peer(std::vector<char> id, const std::string& ip, const std::string& port){
+	m_id = std::move(id);
+	m_ip = std::move(ip);
+	m_port = std::move(port);
+};
