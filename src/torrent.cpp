@@ -7,6 +7,14 @@ static void die(const std::string& msg){
 	exit(EXIT_FAILURE);
 }
 
+static std::string gen_peer_id(){
+	std::string ans = "-PC0001-";
+	for(int i = 0; i < 12; i++){
+		ans += std::to_string(rand() % 10);
+	};
+	return ans;
+};
+
 static std::vector<char> open_file(const std::string& filename){
 	std::vector<char> buff;
 	int size;
@@ -29,6 +37,7 @@ Torrent::Torrent(const std::string& filename){
 	m_creation_date = 0;
 	m_encoding = "";
 	m_info_private = -1;
+	m_id = gen_peer_id();
 
 	init_torrent_data();
 	m_sock = SocketSSL();
@@ -164,21 +173,14 @@ void Torrent::init_torrent_data(){
 
 };
 
-static std::string gen_peer_id(){
-	std::string ans = "-PC0001-";
-	for(int i = 0; i < 12; i++){
-		ans += std::to_string(rand() % 10);
-	};
-	return ans;
-};
+
 
 std::string Torrent::build_request(const std::string& host){
-	auto peer_id = gen_peer_id();
 	long long left = (m_info_pieces.size() / 20) * m_info_piecelen;
 
 	std::stringstream ss;
 	ss << "GET /announce?info_hash=" << m_infohash_hex << "&";
-	ss << "peer_id=" << peer_id << "&";
+	ss << "peer_id=" << m_id << "&";
 	ss << "uploaded=0&downloaded=0&";
 	ss << "left=" << std::to_string(left) << "&";
 	ss << "port=" << "443&" << "compact=1";
