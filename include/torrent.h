@@ -20,7 +20,7 @@
 #include <stdio.h>
 
 #include "bencode.h"
-#include "tcp.h"
+#include "socketSSL.h"
 
 #define BUFF_SIZE 1024*16
 
