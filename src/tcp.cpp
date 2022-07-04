@@ -21,13 +21,15 @@ SocketTcp::SocketTcp(){
 	m_fd = -1;
 };
 
-void SocketTcp::connect_to(const std::string& host, const std::string& port){
+int SocketTcp::connect_to(const std::string& host, const std::string& port){
 	struct addrinfo hints, * servinfo, * p;
     memset(&hints,0,sizeof(hints));
 
     hints.ai_family = AF_UNSPEC; /*ipv4 or ipv6*/
-    hints.ai_flags = AI_PASSIVE; /* wildcard addr if no node is specified*/
     hints.ai_socktype = SOCK_STREAM;
+    hints.ai_flags = 0;
+    hints.ai_protocol = 0;
+	
     int err, ret, yes = 1;
 
     ret = getaddrinfo(host.c_str(), port.c_str(), &hints, &servinfo);
@@ -52,13 +54,14 @@ void SocketTcp::connect_to(const std::string& host, const std::string& port){
 		exit(EXIT_FAILURE);
 	}
 
+	return m_fd;
 };
 
 int SocketTcp::recv(char * buff, int size){
 	int total, n;
 	total = 0;
 	while(1){
-		n = ::recv(m_fd, buff + total, total - size, 0);
+		n = ::recv(m_fd, buff + total, size - total, 0);
 		if(n > 0){
 			total += n;
 		}else if (n == -1){
@@ -73,11 +76,11 @@ int SocketTcp::send(char * buff, int size){
 	int total, n;
 	total = 0;
 	while(1){
-		n = ::send(m_fd, buff + total, total - size, 0);
+		n = ::send(m_fd, buff + total, size - total, 0);
 		if(n > 0){
 			total += n;
 		}else if(n == -1){
-			if(errno != EAGAIN && errno != EWOULDBLOCK) die("recv");
+			if(errno != EAGAIN && errno != EWOULDBLOCK) die("send");
 			else break;  // socket out buffer is full right now
 		}else break;
 	}
