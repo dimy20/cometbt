@@ -21,8 +21,10 @@
 
 #include "bencode.h"
 #include "socketSSL.h"
+#include "tcp.h"
 
 #define BUFF_SIZE 1024*16
+#define RESERVED_BYTES_SIZE 8
 
 typedef struct info_file_s info_file_t;
 
@@ -44,12 +46,14 @@ class Torrent{
 		const std::vector<std::string>& get_announce_list();
 		const std::vector<info_file_t>& get_info_files();
 		const std::vector<struct peer_s>& get_peers();
+		void handshake(const struct peer_s& peer);
 
 	private:
 		std::string build_request(const std::string& host);
 		void init_torrent_data();
 
 	private:
+		std::string m_id;						/*this peer id*/
 		std::vector<char> m_buff;               /*binary bencode*/
 		std::string m_announce;
 
