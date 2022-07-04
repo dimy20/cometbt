@@ -79,7 +79,24 @@ static int find_pattern(const std::vector<char>& buff, const std::vector<char>& 
 	return -1;
 };
 
-std::string info_hash(std::vector<char> bencode){
+std::string hash_to_hex(std::vector<unsigned char> hash){
+	char sha1_hex[(SHA_DIGEST_LENGTH * 2) + 1];
+	for (int i = 0; i < SHA_DIGEST_LENGTH; i++){
+		sprintf(sha1_hex + (i * 2),"%02x\n", hash[i]);
+	}
+
+	sha1_hex[SHA_DIGEST_LENGTH * 2] = '\0';
+	std::string s = std::string(sha1_hex);
+
+	std::stringstream ss;
+	for(int i = 0; i < s.size(); i+=2){ /*Tracker requieres this */
+		ss << "%" << s[i] << s[i+1];
+	};
+
+	return ss.str();
+}
+
+std::vector<unsigned char> info_hash(std::vector<char> bencode){
 	std::vector<unsigned char> sha1(SHA_DIGEST_LENGTH);
 	int n, start, end, info_len;
 	n = bencode.size();
@@ -93,29 +110,15 @@ std::string info_hash(std::vector<char> bencode){
 	info_len = end - start + 1;
 
 	SHA1(reinterpret_cast<unsigned char*>(&bencode[start]), info_len, sha1.data());
-
-	/*sha1 hex representation*/
-	char sha1_hex[(SHA_DIGEST_LENGTH * 2) + 1];
-	for (int i = 0; i < SHA_DIGEST_LENGTH; i++){
-		sprintf(sha1_hex + (i * 2),"%02x\n", sha1[i]);
-	}
-	sha1_hex[SHA_DIGEST_LENGTH * 2] = '\0';
-
-	std::string s = std::string(sha1_hex);
-
-	std::stringstream ss;
-	for(int i = 0; i < s.size(); i+=2){ /*Tracker requieres this */
-		ss << "%" << s[i] << s[i+1];
-	};
-
-	return ss.str();
+	return sha1;
 };
 
 void Torrent::init_torrent_data(){
 	Bencode::Decoder decoder;
 	decoder.set_bencode(m_buff);
 
-	m_infohash_hex = std::move(info_hash(m_buff));
+	m_info_hash = std::move(info_hash(m_buff));
+	m_infohash_hex = hash_to_hex(m_info_hash);
 
 	auto data = decoder.decode();
 	auto document = std::get<Bencode::dict_t>(data->m_val);

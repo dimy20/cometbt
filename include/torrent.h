@@ -76,6 +76,7 @@ class Torrent{
 		long long m_info_piecelen; /*size in bytes of each piece*/
 		std::vector<char> m_info_pieces; /*piece's sha1 hash*/
 
+		std::vector<unsigned char> m_info_hash;
 		std::string m_infohash_hex; /*info dict's formatted sha1 hex for tracker*/
 
 		SocketSSL m_sock;
