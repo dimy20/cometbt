@@ -51,16 +51,19 @@ class Peer{
 
 		Peer(std::vector<char> id, const std::string& ip, const std::string& port);
 		void send_handshake(const std::vector<unsigned char>& info_hash, const std::string& id);
+		bool wait_handshake();
 	public:
 		enum p_state{
-			HANDSHAKE_SENT = 1,
-			HANDSHAKE_DONE = 2
+			HANDSHAKE_WAIT = 1, /*handshake sent and waiting for response*/
+			HANDSHAKE_DONE = 2,  /*Successful handshake response received*/
+			HANDSHAKE_FAIL = 4  /*Incorrenct handshake response received*/
 		};
-		int m_state;
+		std::uint32_t m_state;
 		std::vector<char> m_id;
 		std::string m_ip;
 		std::string m_port;
 		SocketTcp m_sock;
+		std::vector<unsigned char> m_info_hash;
 };
 
 struct peer_s{

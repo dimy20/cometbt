@@ -294,7 +294,8 @@ void Peer::send_handshake(const std::vector<unsigned char>& info_hash, const std
 	memcpy(hs.peer_id, id.c_str(), PEER_ID_LENGTH);
 
 	m_sock.send(reinterpret_cast<char *>(&hs), HANDSHAKE_SIZE);
-	m_state = p_state::HANDSHAKE_SENT;
+	m_info_hash = info_hash; // copy to verify later when handshake response comes
+	m_state = p_state::HANDSHAKE_WAIT;
 };
 
 
@@ -302,4 +303,39 @@ Peer::Peer(std::vector<char> id, const std::string& ip, const std::string& port)
 	m_id = std::move(id);
 	m_ip = std::move(ip);
 	m_port = std::move(port);
+};
+
+bool Peer::wait_handshake(){
+	/* check if handshake has be done already*/
+	if(((m_state & p_state::HANDSHAKE_WAIT) == 0) && (m_state & p_state::HANDSHAKE_DONE))
+		return true;
+	else if(m_state & p_state::HANDSHAKE_FAIL) return false;
+
+	char buff[HANDSHAKE_SIZE];
+	bool info_hash_match, peer_id_match;
+	info_hash_match = peer_id_match = false;
+	int n;
+
+	memset(buff, 0, HANDSHAKE_SIZE);
+	n = m_sock.recv(buff, HANDSHAKE_SIZE);
+	std::cout << "peer " << m_ip << " sent " << n << " bytes." << std::endl;
+	//wait for handshake response
+	struct handshake_s * hs_reply;
+	hs_reply = reinterpret_cast<struct handshake_s *>(buff);
+
+	if(memcmp(hs_reply->info_hash, m_info_hash.data(), INFO_HASH_LENGTH) == 0)
+		info_hash_match = true;
+	if(memcmp(hs_reply->peer_id, m_id.data(), PEER_ID_LENGTH) == 0)
+		peer_id_match = true;
+
+	if(info_hash_match && peer_id_match){
+		m_state = Peer::p_state::HANDSHAKE_DONE;
+		return true;
+	}else{
+		m_sock.close();
+		m_state = Peer::p_state::HANDSHAKE_FAIL;
+		return false;
+		// what about epoll??
+	}
+	// bitfield here?
 };
