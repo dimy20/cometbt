@@ -11,6 +11,7 @@
 #include <string.h>
 #include <string>
 #include <assert.h>
+#include <fcntl.h>
 
 class SocketTcp{
 	public:
@@ -18,7 +19,16 @@ class SocketTcp{
 		int connect_to(const std::string& host, const std::string& port);
 		int recv(char * buff, int size);
 		int send(char * buff, int size);
+		void close();
+		int set_flags(int op);
+		int get_fd() const;
+	public:
+		enum state_op{
+			CLOSED = 1,
+		};
+		std::uint8_t m_state;
 	private:
 		int m_fd;
+
 };
 

@@ -21,6 +21,21 @@ SocketTcp::SocketTcp(){
 	m_fd = -1;
 };
 
+int SocketTcp::set_flags(int flags){
+	if(m_fd == -1) die("Bad fd");
+	int m_flags, ret;
+
+    m_flags = fcntl(m_fd, F_GETFL, 0);
+	if(m_flags == -1) die("fcntl");
+
+    m_flags |= flags;
+	ret = fcntl(m_fd, F_SETFL, m_flags);
+
+	if(ret == -1) die("fcntl");
+
+	return m_flags;
+};
+
 int SocketTcp::connect_to(const std::string& host, const std::string& port){
 	struct addrinfo hints, * servinfo, * p;
     memset(&hints,0,sizeof(hints));
@@ -44,14 +59,15 @@ int SocketTcp::connect_to(const std::string& host, const std::string& port){
 
 		ret = connect(m_fd, p->ai_addr, p->ai_addrlen); /*takes too long*/
 		if(ret == -1){
-			close(m_fd);
+			::close(m_fd);
 			std::cerr << "Error : failed to connect to " << host << std::endl;
+			m_state |= state_op::CLOSED;
 		}else break; /*connected*/
 	}
 
 	if(p == nullptr){
 		std::cerr << "Error : Unable to create socket. " << std::endl;
-		exit(EXIT_FAILURE);
+		return -1;
 	}
 
 	return m_fd;
@@ -86,3 +102,11 @@ int SocketTcp::send(char * buff, int size){
 	}
 	return total;
 };
+
+int SocketTcp::get_fd() const {
+	return m_fd;
+}
+
+void SocketTcp::close(){
+	::close(m_fd);
+}
