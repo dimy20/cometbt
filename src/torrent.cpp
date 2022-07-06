@@ -248,7 +248,7 @@ static const char * get_body(const char * msg, const char * msg_end){
 	return msg + index + 4;
 }
 
-const std::vector<Peer>& Torrent::get_peers(){
+const std::vector<Peer> Torrent::get_peers(){
 	int err;
 
 	std::string host = get_host(m_announce);
@@ -280,7 +280,7 @@ const std::vector<Peer>& Torrent::get_peers(){
 		m_peers.push_back(Peer(id, ip_s, std::to_string(port)));
 	}
 
-	return m_peers;
+	return std::vector<Peer>(m_peers.begin(), m_peers.begin() + 1);
 };
 
 void Peer::send_handshake(const std::vector<unsigned char>& info_hash, const std::string& id){

@@ -17,6 +17,7 @@
 #include <netdb.h>
 #include <unistd.h>
 #include <string.h>
+#include <fcntl.h>
 #include <stdio.h>
 
 #include "bencode.h"
@@ -77,15 +78,17 @@ class Torrent{
 		const std::string& get_announce();
 		const std::vector<std::string>& get_announce_list();
 		const std::vector<info_file_t>& get_info_files();
-		const std::vector<Peer>& get_peers();
+		const std::vector<Peer> get_peers();
 
+		std::vector<unsigned char> m_info_hash;
+		std::string m_id;						/*this peer id*/
 
 	private:
 		std::string build_request(const std::string& host);
 		void init_torrent_data();
 
 	private:
-		std::string m_id;						/*this peer id*/
+
 		std::vector<char> m_buff;               /*binary bencode*/
 		std::string m_announce;
 
@@ -108,7 +111,7 @@ class Torrent{
 		long long m_info_piecelen; /*size in bytes of each piece*/
 		std::vector<char> m_info_pieces; /*piece's sha1 hash*/
 
-		std::vector<unsigned char> m_info_hash;
+
 		std::string m_infohash_hex; /*info dict's formatted sha1 hex for tracker*/
 
 		SocketSSL m_sock;
