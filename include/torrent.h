@@ -24,7 +24,12 @@
 #include "tcp.h"
 
 #define BUFF_SIZE 1024*16
-#define RESERVED_BYTES_SIZE 8
+#define HANDSHAKE_SIZE 68
+#define RESERVED_BYTES_LENGTH 8
+#define INFO_HASH_LENGTH 20
+#define PEER_ID_LENGTH   20
+#define PROTOCOL_ID_LENGTH 19
+#define PROTOCOL_ID "BitTorrent protocol"
 
 typedef struct info_file_s info_file_t;
 
@@ -33,11 +38,25 @@ struct info_file_s{
 	std::string path;
 };
 
+struct handshake_s{
+	char proto_id_size;
+	char protocol_id[PROTOCOL_ID_LENGTH];
+	char reserved_bytes[RESERVED_BYTES_LENGTH];
+	char info_hash[INFO_HASH_LENGTH];
+	char peer_id[PEER_ID_LENGTH];
+};
+
 class Peer{
 	public:
+
 		Peer(std::vector<char> id, const std::string& ip, const std::string& port);
-		void handshake(const std::vector<char>& info_hash, const std::string& id);
+		void send_handshake(const std::vector<unsigned char>& info_hash, const std::string& id);
 	public:
+		enum p_state{
+			HANDSHAKE_SENT = 1,
+			HANDSHAKE_DONE = 2
+		};
+		int m_state;
 		std::vector<char> m_id;
 		std::string m_ip;
 		std::string m_port;
