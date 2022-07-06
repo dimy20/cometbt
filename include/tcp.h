@@ -22,6 +22,7 @@ class SocketTcp{
 		void close();
 		int set_flags(int op);
 		int get_fd() const;
+		virtual ~SocketTcp() = default;
 	public:
 		enum state_op{
 			CLOSED = 1,
