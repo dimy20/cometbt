@@ -284,7 +284,7 @@ const std::vector<Peer>& Torrent::get_peers(){
 };
 
 void Peer::send_handshake(const std::vector<unsigned char>& info_hash, const std::string& id){
-	assert(m_sock.get_fd() != -1);
+	assert(get_fd() != -1);
 
 	struct handshake_s hs;
 	hs.proto_id_size = 19;
@@ -293,13 +293,13 @@ void Peer::send_handshake(const std::vector<unsigned char>& info_hash, const std
 	memcpy(hs.info_hash, info_hash.data(), INFO_HASH_LENGTH);
 	memcpy(hs.peer_id, id.c_str(), PEER_ID_LENGTH);
 
-	m_sock.send(reinterpret_cast<char *>(&hs), HANDSHAKE_SIZE);
+	send(reinterpret_cast<char *>(&hs), HANDSHAKE_SIZE);
 	m_info_hash = info_hash; // copy to verify later when handshake response comes
 	m_state = p_state::HANDSHAKE_WAIT;
 };
 
 
-Peer::Peer(std::vector<char> id, const std::string& ip, const std::string& port){
+Peer::Peer(std::vector<char> id, const std::string& ip, const std::string& port) : SocketTcp() {
 	m_id = std::move(id);
 	m_ip = std::move(ip);
 	m_port = std::move(port);
@@ -317,7 +317,7 @@ bool Peer::wait_handshake(){
 	int n;
 
 	memset(buff, 0, HANDSHAKE_SIZE);
-	n = m_sock.recv(buff, HANDSHAKE_SIZE);
+	n = recv(buff, HANDSHAKE_SIZE);
 	std::cout << "peer " << m_ip << " sent " << n << " bytes." << std::endl;
 	//wait for handshake response
 	struct handshake_s * hs_reply;
@@ -332,7 +332,7 @@ bool Peer::wait_handshake(){
 		m_state = Peer::p_state::HANDSHAKE_DONE;
 		return true;
 	}else{
-		m_sock.close();
+		close();
 		m_state = Peer::p_state::HANDSHAKE_FAIL;
 		return false;
 		// what about epoll??

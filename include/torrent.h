@@ -46,7 +46,7 @@ struct handshake_s{
 	char peer_id[PEER_ID_LENGTH];
 };
 
-class Peer{
+class Peer : public SocketTcp{
 	public:
 
 		Peer(std::vector<char> id, const std::string& ip, const std::string& port);
@@ -62,7 +62,6 @@ class Peer{
 		std::vector<char> m_id;
 		std::string m_ip;
 		std::string m_port;
-		SocketTcp m_sock;
 		std::vector<unsigned char> m_info_hash;
 };
 
