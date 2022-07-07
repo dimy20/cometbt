@@ -66,12 +66,6 @@ class Peer : public SocketTcp{
 		std::vector<unsigned char> m_info_hash;
 };
 
-struct peer_s{
-	std::vector<char> id;
-	std::string ip;
-	std::string port;
-};
-
 class Torrent{
 	public:
 		Torrent(const std::string& filename);
