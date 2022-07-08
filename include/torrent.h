@@ -19,6 +19,7 @@
 #include <string.h>
 #include <fcntl.h>
 #include <stdio.h>
+#include <memory>
 
 #include "bencode.h"
 #include "socketSSL.h"
@@ -86,11 +87,17 @@ class Peer : public SocketTcp{
 			MESSAGE_HANDLING = 8,
 			MESSAGE_FINISHED = 9
 		};
-		std::uint32_t m_state;
+		p_state m_state;
 		std::vector<char> m_id;
 		std::string m_ip;
 		std::string m_port;
 		std::vector<unsigned char> m_info_hash;
+		// maybe make a message class
+		int m_msg_len;
+		int m_total;
+		char m_buff[BUFF_SIZE];
+		char * m_bitfield;
+		bool m_choked;
 };
 
 class Torrent{
