@@ -24,10 +24,11 @@ class SocketTcp{
 		int get_fd() const;
 		virtual ~SocketTcp() = default;
 	public:
-		enum state_op{
-			CLOSED = 1,
+		enum class socket_state{
+			CONNECTED = 1,
+			CLOSED = 2
 		};
-		std::uint8_t m_state;
+		socket_state m_sock_state;
 	private:
 		int m_fd;
 

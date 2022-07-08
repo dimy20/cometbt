@@ -61,7 +61,7 @@ int SocketTcp::connect_to(const std::string& host, const std::string& port){
 		if(ret == -1){
 			::close(m_fd);
 			std::cerr << "Error : failed to connect to " << host << std::endl;
-			m_state |= state_op::CLOSED;
+			m_sock_state = socket_state::CLOSED;
 		}else break; /*connected*/
 	}
 
@@ -70,6 +70,7 @@ int SocketTcp::connect_to(const std::string& host, const std::string& port){
 		return -1;
 	}
 
+	m_sock_state = socket_state::CONNECTED;
 	return m_fd;
 };
 
