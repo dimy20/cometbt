@@ -44,6 +44,18 @@
 
 typedef struct info_file_s info_file_t;
 
+enum class message_id{
+	CHOKE = 0,
+	UNCHOKE,
+	INTERESTED,
+	NOTINTERESTED,
+	HAVE,
+	BITFIELD,
+	REQUEST,
+	PIECE,
+	CANCEL
+};
+
 struct info_file_s{
 	int length;
 	std::string path;
