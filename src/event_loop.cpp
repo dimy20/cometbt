@@ -12,7 +12,7 @@ void EventLoop::watch(SocketTcp * sock, ev_type ev, ev_cb cb){
 	memset(&sock_ev, 0, sizeof(sock_ev));
 
 	// in case connection failed
-	if((sock->m_state & SocketTcp::state_op::CLOSED) == 0){
+	if((sock->m_sock_state == SocketTcp::socket_state::CONNECTED)){
 		switch(ev){
 			case ev_type::READ:
 				sock_ev.events = EPOLLIN | EPOLLET;
