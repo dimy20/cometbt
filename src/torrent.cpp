@@ -52,6 +52,33 @@ static std::shared_ptr<struct req_message> create_request_message(int piece_inde
 	std::shared_ptr<struct req_message> msg_ptr(msg);
 	return msg_ptr;
 }
+static void read_cb(SocketTcp * sock){
+	Peer * peer = dynamic_cast<Peer *>(sock);
+	int n;
+	if(peer->wait_handshake()){
+		n = peer->recv(peer->m_buff + peer->m_total, BUFF_SIZE - peer->m_total);
+		peer->m_total += n;
+		if(peer->m_total == 0) std::cout << "keep-alive" << std::endl;
+		if(peer->m_total >= 4){
+			peer->m_msg_len = get_length(peer->m_buff, peer->m_total);
+			/*
+			std::cout << "*****************" << std::endl;
+			std::cout << "total : " << peer->m_total << std::endl;
+			std::cout << "message length : " << peer->m_msg_len << std::endl;
+			std::cout << "*****************" << std::endl;
+			*/
+			if(4 + peer->m_msg_len > peer->m_total) return;
+			else{
+				do_message(peer, peer->m_buff + 4, peer->m_msg_len);
+				//clear buffer to receive next message
+				memset(peer->m_buff, 0, peer->m_total);
+				peer->m_total = 0;
+			}
+
+		}
+	} else std::cout << "handshake failed " << std::endl;
+};
+
 static void die(const std::string& msg){
 	std::cerr << msg << std::endl;
 	exit(EXIT_FAILURE);
