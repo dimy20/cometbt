@@ -135,4 +135,8 @@ class Torrent{
 		std::vector<Peer> m_peers;
 };
 
+struct interested_message{
+	std::uint8_t length[MESSAGE_LENGTH_SIZE];
+	std::uint8_t id = static_cast<std::uint8_t>(message_id::INTERESTED);
+};
 

@@ -32,6 +32,13 @@ static void serialize_int(std::uint8_t * begin, std::uint8_t * end, int value){
 	begin[0] = value >> 24 & 0xff;
 };
 
+static std::shared_ptr<struct interested_message> create_interested_message(){
+	struct interested_message * msg = new struct interested_message;
+	serialize_int(msg->length, msg->length + 3, 1);
+	std::shared_ptr<struct interested_message> msg_ptr(msg);
+	return msg_ptr;
+};
+
 static std::shared_ptr<struct req_message> create_request_message(int piece_index, int block_offset, int block_length){
 	struct req_message * msg = new struct req_message;
 	memset(msg, 0, sizeof(struct req_message));
