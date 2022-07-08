@@ -23,6 +23,7 @@
 #include "bencode.h"
 #include "socketSSL.h"
 #include "tcp.h"
+#include "event_loop.h"
 
 #define BUFF_SIZE 1024*16
 #define HANDSHAKE_SIZE 68
@@ -95,6 +96,7 @@ class Torrent{
 		const std::vector<std::string>& get_announce_list();
 		const std::vector<info_file_t>& get_info_files();
 		const std::vector<Peer> get_peers();
+		void download_file();
 
 		std::vector<unsigned char> m_info_hash;
 		std::string m_id;						/*this peer id*/
