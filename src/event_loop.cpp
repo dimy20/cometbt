@@ -35,7 +35,10 @@ void EventLoop::run(){
 	int n;
 	while(1){
 		n = epoll_wait(m_efd, ev, m_sock_count, -1);
-		if(n == -1) perror("epoll_wait");
+		if(n == -1) {
+			perror("epoll_wait");
+			exit(EXIT_FAILURE);
+		}
 
 		for(int i = 0; i < n; i++){
 			if(ev[i].events & EPOLLIN){
