@@ -457,6 +457,9 @@ Peer::Peer(std::vector<char> id, const std::string& ip, const std::string& port)
 	m_id = std::move(id);
 	m_ip = std::move(ip);
 	m_port = std::move(port);
+	m_total = 0;
+	memset(m_buff, 0, BUFF_SIZE);
+	m_choked = true;
 };
 
 bool Peer::wait_handshake(){
