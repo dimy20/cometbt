@@ -108,6 +108,7 @@ class Torrent{
 		const std::vector<info_file_t>& get_info_files();
 		const std::vector<Peer> get_peers();
 		void download_file();
+	public:
 
 		std::vector<unsigned char> m_info_hash;
 		std::string m_id;						/*this peer id*/
@@ -146,6 +147,7 @@ class Torrent{
 		SocketSSL m_sock;
 
 		std::vector<Peer> m_peers;
+
 };
 
 struct interested_message{
@@ -153,3 +155,10 @@ struct interested_message{
 	std::uint8_t id = static_cast<std::uint8_t>(message_id::INTERESTED);
 };
 
+struct req_message{
+	std::uint8_t length[MESSAGE_LENGTH_SIZE]; /* prefix length*/
+	std::uint8_t id;						 /* message id aka REQUEST*/
+	std::uint8_t index[PIECE_INDEX_SIZE];    // index of the piece we're requesting
+	std::uint8_t block_offset[BLOCK_OFFSET_SIZE]; // block offset within the piece
+	std::uint8_t block_length[BLOCK_LENGTH_SIZE];  // length of the block
+};
