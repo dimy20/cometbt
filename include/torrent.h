@@ -25,7 +25,8 @@
 #include "tcp.h"
 #include "event_loop.h"
 
-#define BUFF_SIZE 1024*16
+#define BUFF_SIZE 1024*32
+/* handshake macros */
 #define HANDSHAKE_SIZE 68
 #define RESERVED_BYTES_LENGTH 8
 #define INFO_HASH_LENGTH 20
