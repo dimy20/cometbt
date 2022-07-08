@@ -2,6 +2,10 @@
 #include <stdio.h>
 #include <sstream>
 
+static bool is_little_endian(){
+	int num = 1;
+	return (*reinterpret_cast<char *>(&num) == 1);
+};
 static void die(const std::string& msg){
 	std::cerr << msg << std::endl;
 	exit(EXIT_FAILURE);
