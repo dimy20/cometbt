@@ -52,6 +52,55 @@ static std::shared_ptr<struct req_message> create_request_message(int piece_inde
 	std::shared_ptr<struct req_message> msg_ptr(msg);
 	return msg_ptr;
 }
+void static do_message(Peer * peer, const char * msg_buff, int payload_len){
+	std::cout << "processing message - payload : " << payload_len <<  std::endl;
+	message_id msg_id  = static_cast<message_id>(*msg_buff);
+	switch((msg_id)){
+		case message_id::BITFIELD:
+			{
+				msg_buff++;
+				peer->m_bitfield = new char[payload_len - 1];
+				memcpy(peer->m_bitfield, msg_buff, payload_len -1);
+				std::cout << "bitfield !! " << std::endl;
+
+				// send intrested message
+				if(peer->m_choked){
+					std::cout << "sending interested " << std::endl;
+					auto msg = create_interested_message();
+					int n = peer->send(reinterpret_cast<char *>(msg.get()), 5);
+				}
+				break;
+			}
+		case message_id::UNCHOKE:
+			{
+				peer->m_choked = false;
+				std::cout << "unchoke!" << std::endl;
+
+				int piece_index = 0; // test first piece
+				if(peer->has_piece(piece_index)){
+					std::cout << "asking for piece " << piece_index << std::endl;
+					auto msg = create_request_message(piece_index, 0, BLOCK_LENGTH);
+					peer->send(reinterpret_cast<char *>(msg.get()), sizeof(*msg.get()));
+				}else{
+					std::cout << "peer doesnt have piece with index : " << piece_index;
+					std::cout << std::endl;
+				}
+
+				break;
+			}
+
+		case message_id::CHOKE:
+			peer->m_choked = true;
+			std::cout << "choke" << std::endl;
+			break;
+		case message_id::PIECE:
+			std::cout << "received block" << std::endl;
+			break;
+		default:
+			std::cout << "msg id : " << *msg_buff << std::endl;
+	}
+};
+
 static void read_cb(SocketTcp * sock){
 	Peer * peer = dynamic_cast<Peer *>(sock);
 	int n;
