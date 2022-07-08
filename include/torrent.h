@@ -32,6 +32,16 @@
 #define PROTOCOL_ID_LENGTH 19
 #define PROTOCOL_ID "BitTorrent protocol"
 
+/* message macros*/
+
+#define MESSAGE_LENGTH_SIZE 4 // length prefix on every message
+#define MESSAGE_ID_SIZE 1
+#define BLOCK_LENGTH 1024 * 16
+#define PIECE_INDEX_SIZE 4
+#define BLOCK_OFFSET_SIZE 4
+#define BLOCK_LENGTH_SIZE 4
+
+
 typedef struct info_file_s info_file_t;
 
 struct info_file_s{
