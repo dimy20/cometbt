@@ -6,6 +6,24 @@ static bool is_little_endian(){
 	int num = 1;
 	return (*reinterpret_cast<char *>(&num) == 1);
 };
+
+static int get_length(const char * const buff, std::size_t size){
+	if(size < 4) return -1;
+	int ans;
+	if(is_little_endian()){
+		ans = static_cast<int>((unsigned char)buff[0] << 24 |
+							   (unsigned char)buff[1] << 16 |
+							   (unsigned char)buff[2] << 8  |
+							   (unsigned char)buff[3]);
+	}else{
+		ans = static_cast<int>((unsigned char)buff[3] << 24 |
+							   (unsigned char)buff[2] << 16 |
+							   (unsigned char)buff[1] << 8  |
+							   (unsigned char)buff[0]);
+	}
+	return ans;
+};
+
 static void die(const std::string& msg){
 	std::cerr << msg << std::endl;
 	exit(EXIT_FAILURE);
