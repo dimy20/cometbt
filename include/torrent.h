@@ -76,11 +76,14 @@ class Peer : public SocketTcp{
 		Peer(std::vector<char> id, const std::string& ip, const std::string& port);
 		void send_handshake(const std::vector<unsigned char>& info_hash, const std::string& id);
 		bool wait_handshake();
+		bool has_piece(int index);
 	public:
-		enum p_state{
+		enum class p_state{
 			HANDSHAKE_WAIT = 1, /*handshake sent and waiting for response*/
 			HANDSHAKE_DONE = 2,  /*Successful handshake response received*/
-			HANDSHAKE_FAIL = 4  /*Incorrenct handshake response received*/
+			HANDSHAKE_FAIL = 4,/*Incorrenct handshake response received*/
+			MESSAGE_HANDLING = 8,
+			MESSAGE_FINISHED = 9
 		};
 		std::uint32_t m_state;
 		std::vector<char> m_id;
