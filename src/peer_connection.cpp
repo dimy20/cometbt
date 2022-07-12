@@ -1,13 +1,13 @@
 #include "peer_connection.h"
 
-bool Peer::has_piece(int peer_index){
+bool PeerConnection::has_piece(int peer_index){
 	int byte_offset, bit_offset;
 	byte_offset = peer_index / 8;
 	bit_offset = peer_index % 8;
 	return ((*(m_bitfield + byte_offset)) >> bit_offset) & 1;
 };
 
-bool Peer::wait_handshake(){
+bool PeerConnection::wait_handshake(){
 	/* check if handshake has be done already*/
 	if(m_state == p_state::HANDSHAKE_DONE) return true;
 	else if(m_state == p_state::HANDSHAKE_WAIT){
@@ -29,11 +29,11 @@ bool Peer::wait_handshake(){
 			peer_id_match = true;
 
 		if(info_hash_match && peer_id_match){
-			m_state = Peer::p_state::HANDSHAKE_DONE;
+			m_state = PeerConnection::p_state::HANDSHAKE_DONE;
 			return true;
 		}else{
 			close();
-			m_state = Peer::p_state::HANDSHAKE_FAIL;
+			m_state = PeerConnection::p_state::HANDSHAKE_FAIL;
 			return false;
 			// what about epoll??
 		}
@@ -42,7 +42,7 @@ bool Peer::wait_handshake(){
 
 };
 
-Peer::Peer(std::vector<char> id, const std::string& ip, const std::string& port) : SocketTcp() {
+PeerConnection::PeerConnection(std::vector<char> id, const std::string& ip, const std::string& port) : SocketTcp() {
 	m_id = std::move(id);
 	m_ip = std::move(ip);
 	m_port = std::move(port);
@@ -51,7 +51,7 @@ Peer::Peer(std::vector<char> id, const std::string& ip, const std::string& port)
 	m_choked = true;
 };
 
-void Peer::send_handshake(const std::vector<unsigned char>& info_hash, const std::string& id){
+void PeerConnection::send_handshake(const std::vector<unsigned char>& info_hash, const std::string& id){
 	assert(get_fd() != -1);
 
 	struct handshake_s hs;

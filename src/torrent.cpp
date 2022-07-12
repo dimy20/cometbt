@@ -52,7 +52,7 @@ static std::shared_ptr<struct req_message> create_request_message(int piece_inde
 	std::shared_ptr<struct req_message> msg_ptr(msg);
 	return msg_ptr;
 }
-void static do_message(Peer * peer, const char * msg_buff, int payload_len){
+void static do_message(PeerConnection * peer, const char * msg_buff, int payload_len){
 	std::cout << "processing message - payload : " << payload_len <<  std::endl;
 	message_id msg_id  = static_cast<message_id>(*msg_buff);
 	switch((msg_id)){
@@ -102,7 +102,7 @@ void static do_message(Peer * peer, const char * msg_buff, int payload_len){
 };
 
 static void read_cb(SocketTcp * sock){
-	Peer * peer = dynamic_cast<Peer *>(sock);
+	PeerConnection * peer = dynamic_cast<PeerConnection *>(sock);
 	int n;
 	if(peer->wait_handshake()){
 		n = peer->recv(peer->m_buff + peer->m_total, BUFF_SIZE - peer->m_total);
@@ -374,7 +374,7 @@ static const char * get_body(const char * msg, const char * msg_end){
 	return msg + index + 4;
 }
 
-const std::vector<Peer> Torrent::get_peers(){
+const std::vector<PeerConnection> Torrent::get_peers(){
 	int err;
 
 	std::string host = get_host(m_announce);
@@ -403,10 +403,10 @@ const std::vector<Peer> Torrent::get_peers(){
 		auto ip = std::get<std::vector<char>>(peer_doc["ip"]->m_val);
 		auto port = std::get<long long>(peer_doc["port"]->m_val);
 		std::string ip_s(ip.data(), ip.size());
-		m_peers.push_back(Peer(id, ip_s, std::to_string(port)));
+		m_peers.push_back(PeerConnection(id, ip_s, std::to_string(port)));
 	}
 
-	return std::vector<Peer>(m_peers.begin(), m_peers.begin() + 1);
+	return std::vector<PeerConnection>(m_peers.begin(), m_peers.begin() + 1);
 };
 
 void Torrent::download_file(){
@@ -435,71 +435,4 @@ void Torrent::download_file(){
 
 	loop.run();
 	return;
-};
-
-void Peer::send_handshake(const std::vector<unsigned char>& info_hash, const std::string& id){
-	assert(get_fd() != -1);
-
-	struct handshake_s hs;
-	hs.proto_id_size = 19;
-	memset(&hs.protocol_id, 0, sizeof(hs) - 1);
-	memcpy(hs.protocol_id, PROTOCOL_ID, PROTOCOL_ID_LENGTH);
-	memcpy(hs.info_hash, info_hash.data(), INFO_HASH_LENGTH);
-	memcpy(hs.peer_id, id.c_str(), PEER_ID_LENGTH);
-
-	send(reinterpret_cast<char *>(&hs), HANDSHAKE_SIZE);
-	m_info_hash = info_hash; // copy to verify later when handshake response comes
-	m_state = p_state::HANDSHAKE_WAIT;
-};
-
-
-Peer::Peer(std::vector<char> id, const std::string& ip, const std::string& port) : SocketTcp() {
-	m_id = std::move(id);
-	m_ip = std::move(ip);
-	m_port = std::move(port);
-	m_total = 0;
-	memset(m_buff, 0, BUFF_SIZE);
-	m_choked = true;
-};
-
-bool Peer::wait_handshake(){
-	/* check if handshake has be done already*/
-	if(m_state == p_state::HANDSHAKE_DONE) return true;
-	else if(m_state == p_state::HANDSHAKE_WAIT){
-		char buff[HANDSHAKE_SIZE];
-		bool info_hash_match, peer_id_match;
-		info_hash_match = peer_id_match = false;
-		int n;
-
-		memset(buff, 0, HANDSHAKE_SIZE);
-		n = recv(buff, HANDSHAKE_SIZE);
-		std::cout << "peer " << m_ip << " sent " << n << " bytes." << std::endl;
-		//wait for handshake response
-		struct handshake_s * hs_reply;
-		hs_reply = reinterpret_cast<struct handshake_s *>(buff);
-
-		if(memcmp(hs_reply->info_hash, m_info_hash.data(), INFO_HASH_LENGTH) == 0)
-			info_hash_match = true;
-		if(memcmp(hs_reply->peer_id, m_id.data(), PEER_ID_LENGTH) == 0)
-			peer_id_match = true;
-
-		if(info_hash_match && peer_id_match){
-			m_state = Peer::p_state::HANDSHAKE_DONE;
-			return true;
-		}else{
-			close();
-			m_state = Peer::p_state::HANDSHAKE_FAIL;
-			return false;
-			// what about epoll??
-		}
-	// bitfield here?
-	}else return false;
-
-};
-
-bool Peer::has_piece(int peer_index){
-	int byte_offset, bit_offset;
-	byte_offset = peer_index / 8;
-	bit_offset = peer_index % 8;
-	return ((*(m_bitfield + byte_offset)) >> bit_offset) & 1;
 };

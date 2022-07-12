@@ -19,9 +19,9 @@
 #define BLOCK_OFFSET_SIZE 4
 #define BLOCK_LENGTH_SIZE 4
 
-class Peer : public SocketTcp{
+class PeerConnection : public SocketTcp{
 	public:
-		Peer(std::vector<char> id, const std::string& ip, const std::string& port);
+		PeerConnection(std::vector<char> id, const std::string& ip, const std::string& port);
 		void send_handshake(const std::vector<unsigned char>& info_hash, const std::string& id);
 		bool wait_handshake();
 		bool has_piece(int index);
