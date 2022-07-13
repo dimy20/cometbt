@@ -2,130 +2,9 @@
 #include <stdio.h>
 #include <sstream>
 
-static bool is_little_endian(){
-	int num = 1;
-	return (*reinterpret_cast<char *>(&num) == 1);
-};
-
-static int get_length(const char * const buff, std::size_t size){
-	if(size < 4) return -1;
-	int ans;
-	if(is_little_endian()){
-		ans = static_cast<int>((unsigned char)buff[0] << 24 |
-							   (unsigned char)buff[1] << 16 |
-							   (unsigned char)buff[2] << 8  |
-							   (unsigned char)buff[3]);
-	}else{
-		ans = static_cast<int>((unsigned char)buff[3] << 24 |
-							   (unsigned char)buff[2] << 16 |
-							   (unsigned char)buff[1] << 8  |
-							   (unsigned char)buff[0]);
-	}
-	return ans;
-};
-
-static void serialize_int(std::uint8_t * begin, std::uint8_t * end, int value){
-	if((end - begin + 1) < 4) return;
-	begin[3] = value & 0xff;
-	begin[2] = value >> 8 & 0xff;
-	begin[1] = value >> 16 & 0xff;
-	begin[0] = value >> 24 & 0xff;
-};
-
-static std::shared_ptr<struct interested_message> create_interested_message(){
-	struct interested_message * msg = new struct interested_message;
-	serialize_int(msg->length, msg->length + 3, 1);
-	std::shared_ptr<struct interested_message> msg_ptr(msg);
-	return msg_ptr;
-};
-
-static std::shared_ptr<struct req_message> create_request_message(int piece_index, int block_offset, int block_length){
-	struct req_message * msg = new struct req_message;
-	memset(msg, 0, sizeof(struct req_message));
-
-	serialize_int(msg->length, msg->length + 3, sizeof(*msg) - 4);
-	msg->id = static_cast<std::uint8_t>(message_id::REQUEST);
-	serialize_int(msg->index, msg->index + 3, piece_index);
-	serialize_int(msg->block_offset, msg->block_offset + 3, block_offset);
-	serialize_int(msg->block_length, msg->block_length + 3, block_length);
-
-	std::shared_ptr<struct req_message> msg_ptr(msg);
-	return msg_ptr;
-}
-void static do_message(PeerConnection * peer, const char * msg_buff, int payload_len){
-	std::cout << "processing message - payload : " << payload_len <<  std::endl;
-	message_id msg_id  = static_cast<message_id>(*msg_buff);
-	switch((msg_id)){
-		case message_id::BITFIELD:
-			{
-				msg_buff++;
-				peer->m_bitfield = new char[payload_len - 1];
-				memcpy(peer->m_bitfield, msg_buff, payload_len -1);
-				std::cout << "bitfield !! " << std::endl;
-
-				// send intrested message
-				if(peer->m_choked){
-					std::cout << "sending interested " << std::endl;
-					auto msg = create_interested_message();
-					int n = peer->send(reinterpret_cast<char *>(msg.get()), 5);
-				}
-				break;
-			}
-		case message_id::UNCHOKE:
-			{
-				peer->m_choked = false;
-				std::cout << "unchoke!" << std::endl;
-
-				int piece_index = 0; // test first piece
-				if(peer->has_piece(piece_index)){
-					std::cout << "asking for piece " << piece_index << std::endl;
-					auto msg = create_request_message(piece_index, 0, BLOCK_LENGTH);
-					peer->send(reinterpret_cast<char *>(msg.get()), sizeof(*msg.get()));
-				}else{
-					std::cout << "peer doesnt have piece with index : " << piece_index;
-					std::cout << std::endl;
-				}
-
-				break;
-			}
-
-		case message_id::CHOKE:
-			peer->m_choked = true;
-			std::cout << "choke" << std::endl;
-			break;
-		case message_id::PIECE:
-			std::cout << "received block" << std::endl;
-			break;
-		default:
-			std::cout << "msg id : " << *msg_buff << std::endl;
-	}
-};
-
 static void read_cb(SocketTcp * sock){
 	PeerConnection * peer = dynamic_cast<PeerConnection *>(sock);
-	int n;
-	if(peer->wait_handshake()){
-		n = peer->recv(peer->m_buff + peer->m_total, BUFF_SIZE - peer->m_total);
-		peer->m_total += n;
-		if(peer->m_total == 0) std::cout << "keep-alive" << std::endl;
-		if(peer->m_total >= 4){
-			peer->m_msg_len = get_length(peer->m_buff, peer->m_total);
-			/*
-			std::cout << "*****************" << std::endl;
-			std::cout << "total : " << peer->m_total << std::endl;
-			std::cout << "message length : " << peer->m_msg_len << std::endl;
-			std::cout << "*****************" << std::endl;
-			*/
-			if(4 + peer->m_msg_len > peer->m_total) return;
-			else{
-				do_message(peer, peer->m_buff + 4, peer->m_msg_len);
-				//clear buffer to receive next message
-				memset(peer->m_buff, 0, peer->m_total);
-				peer->m_total = 0;
-			}
-
-		}
-	} else std::cout << "handshake failed " << std::endl;
+	peer->on_receive_data();
 };
 
 static void die(const std::string& msg){
@@ -302,24 +181,6 @@ void Torrent::init_torrent_data(){
 
 };
 
-
-
-std::string Torrent::build_request(const std::string& host){
-	long long left = (m_info_pieces.size() / 20) * m_info_piecelen;
-
-	std::stringstream ss;
-	ss << "GET /announce?info_hash=" << m_infohash_hex << "&";
-	ss << "peer_id=" << m_id << "&";
-	ss << "uploaded=0&downloaded=0&";
-	ss << "left=" << std::to_string(left) << "&";
-	ss << "port=" << "443&" << "compact=1";
-	ss << " HTTP/1.1\r\n";
-	ss << "Host: " << host.c_str() << "\r\n\r\n";
-
-	std::string s =	ss.str();
-	return ss.str();
-};
-
 static std::string get_host(const std::string& url){
 	int n, count, i;
 
@@ -330,51 +191,7 @@ static std::string get_host(const std::string& url){
 	return url.substr(8, count);
 };
 
-static auto parse_header(const char * msg, std::size_t size){
-	std::unordered_map<std::string, std::string> header;
-
-	const char * start, * end, * msg_end;
-	start = end = msg;
-	msg_end = msg + size;
-
-	while(end != msg_end && *end != ' ') end++;
-	header["version"] = std::string(start, end);
-	while(end != msg_end && *end == ' ') end++; // trim spaces
-	start = end;
-	while(end != msg_end && *end != ' ') end++;
-	header["status"] = std::string(start, end);
-
-	while(end != msg_end && *end != '\r') end++;
-	end += 2; // skip \r\n
-
-
-	const char * colon, * value_start;
-	while(end != msg_end && *end != '\r'){
-		start = end;
-		while(end != msg_end && *end != '\r') end++;
-		colon = (const char *)memchr(start, ':', end-start);
-		if(!colon){
-			std::cout << "Error : Bad response" << std::endl;
-			exit(1);
-		}else{
-			value_start = colon + 1;
-			while(value_start != end && *value_start == ' ') value_start++;
-			header[std::string(start, colon)] = std::string(value_start, end);
-			start = end + 2;
-			end += 2;
-		}
-
-	};
-	return header;
-}
-
-static const char * get_body(const char * msg, const char * msg_end){
-	int index = find_pattern(std::vector<char>(msg, msg_end), {'\r', '\n', '\r', '\n'});
-	if(index == -1) std::cerr << "bad request" << std::endl;
-	return msg + index + 4;
-}
-
-const std::vector<PeerConnection> Torrent::get_peers(){
+void Torrent::get_peers(){
 	int err;
 
 	std::string host = get_host(m_announce);

@@ -26,26 +26,18 @@
 #include "tcp.h"
 #include "event_loop.h"
 #include "peer_connection.h"
+#include "peer_info.h"
+#include "http_parser.h"
+
 
 typedef struct info_file_s info_file_t;
 
-enum class message_id{
-	CHOKE = 0,
-	UNCHOKE,
-	INTERESTED,
-	NOTINTERESTED,
-	HAVE,
-	BITFIELD,
-	REQUEST,
-	PIECE,
-	CANCEL
-};
+;
 
 struct info_file_s{
 	int length;
 	std::string path;
 };
-
 
 
 class Torrent{
@@ -54,7 +46,7 @@ class Torrent{
 		const std::string& get_announce();
 		const std::vector<std::string>& get_announce_list();
 		const std::vector<info_file_t>& get_info_files();
-		const std::vector<PeerConnection> get_peers();
+		void get_peers();
 		void download_file();
 	public:
 
@@ -62,7 +54,6 @@ class Torrent{
 		std::string m_id;						/*this peer id*/
 
 	private:
-		std::string build_request(const std::string& host);
 		void init_torrent_data();
 
 	private:
@@ -93,20 +84,11 @@ class Torrent{
 		std::string m_infohash_hex; /*info dict's formatted sha1 hex for tracker*/
 
 		SocketSSL m_sock;
+		// TODO this will be gone from here
+		// over to session
+		//std::vector<PeerConnection> m_peers;
 
-		std::vector<PeerConnection> m_peers;
 
-};
+		std::vector<struct peer_info_s> m_peers_info;
 
-struct interested_message{
-	std::uint8_t length[MESSAGE_LENGTH_SIZE];
-	std::uint8_t id = static_cast<std::uint8_t>(message_id::INTERESTED);
-};
-
-struct req_message{
-	std::uint8_t length[MESSAGE_LENGTH_SIZE]; /* prefix length*/
-	std::uint8_t id;						 /* message id aka REQUEST*/
-	std::uint8_t index[PIECE_INDEX_SIZE];    // index of the piece we're requesting
-	std::uint8_t block_offset[BLOCK_OFFSET_SIZE]; // block offset within the piece
-	std::uint8_t block_length[BLOCK_LENGTH_SIZE];  // length of the block
 };
