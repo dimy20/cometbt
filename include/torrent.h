@@ -42,6 +42,7 @@ struct info_file_s{
 
 class Torrent{
 	public:
+		Torrent();
 		Torrent(const std::string& filename);
 		const std::string& get_announce();
 		const std::vector<std::string>& get_announce_list();

@@ -15,10 +15,18 @@ static std::string gen_peer_id(){
 	return ans;
 };
 
+Torrent::Torrent(){
+	m_announce_list = {};
+	m_comment = "";
+	m_created_by = "";
+	m_creation_date = 0;
+	m_encoding = "";
+	m_info_private = -1;
+	m_id = gen_peer_id();
+	m_sock = SocketSSL();
 };
 
 Torrent::Torrent(const std::string& filename){
-	m_buff = open_file(filename);
 	/*optional params*/
 	m_announce_list = {};
 	m_comment = "";
@@ -27,8 +35,6 @@ Torrent::Torrent(const std::string& filename){
 	m_encoding = "";
 	m_info_private = -1;
 	m_id = gen_peer_id();
-
-	init_torrent_data();
 	m_sock = SocketSSL();
 };
 
