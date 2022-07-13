@@ -15,17 +15,6 @@ static std::string gen_peer_id(){
 	return ans;
 };
 
-static std::vector<char> open_file(const std::string& filename){
-	std::vector<char> buff;
-	int size;
-
-	std::ifstream file(filename, std::ios::binary | std::ios::ate);
-	size = file.tellg();
-	file.seekg(0, std::ios::beg);
-	buff.resize(size);
-
-	file.read(buff.data(), size);
-	return buff;
 };
 
 Torrent::Torrent(const std::string& filename){
