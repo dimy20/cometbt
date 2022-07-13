@@ -181,7 +181,7 @@ static std::string get_host(const std::string& url){
 	return url.substr(8, count);
 };
 
-void Torrent::get_peers(){
+void Torrent::setup_peerinfo(){
 	int err;
 
 	//TODO remove this from here to a lower layer
@@ -236,5 +236,6 @@ void Torrent::get_peers(){
 	}
 };
 
+void Torrent::set(std::vector<char> && torrent){
+	m_buff = std::move(torrent);
 };
-

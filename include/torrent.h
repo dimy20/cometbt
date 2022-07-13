@@ -47,6 +47,10 @@ class Torrent{
 		const std::string& get_announce();
 		const std::vector<std::string>& get_announce_list();
 		const std::vector<info_file_t>& get_info_files();
+		void setup_peerinfo();
+		void init_torrent_data();
+		void set(std::vector<char> && torrent);
+		const std::vector<struct peer_info_s>& get_peers_infos(){return m_peers_info;};
 	public:
 
 		std::vector<unsigned char> m_info_hash;
