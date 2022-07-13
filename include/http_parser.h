@@ -35,4 +35,6 @@ namespace http_parser{
 							  const std::string& path,
 							  struct query_params_s& query);
 
+	// returns a pointer to the start of the body response
+	const char* get_body(const char * msg, const char * msg_end);
 };

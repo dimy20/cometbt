@@ -62,3 +62,32 @@ std::string http_parser::query_params_s::to_string(){
 	}
 	return ss.str();
 };
+
+//todo error checking
+const char* http_parser::get_body(const char * msg, const char * msg_end){
+	int n, j, body_offset;
+
+	n = msg_end - msg;
+	const int end_of_header_len = 4;
+	const char * end_of_header = "\r\n\r\n";
+
+	j = 0;
+	body_offset = -1;
+
+	for(int i = 0; i < n - end_of_header_len; i++){
+		if(msg[i] == end_of_header[j]){
+			j++;
+			if(j == end_of_header_len){
+				body_offset = i + 1;
+				break;
+			}
+		}else{
+			i -= j;
+			j = 0;
+			body_offset = -1;
+		}
+	}
+
+	if(body_offset == -1) return nullptr;
+	return msg + body_offset;
+};
