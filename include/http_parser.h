@@ -28,4 +28,11 @@ namespace http_parser{
 			std::vector<std::string> m_insert_order;
 
 	};
+
+	// build get request for host with specified path and query
+	// super minimal implementation for now.
+	std::string build_request(const std::string& host,
+							  const std::string& path,
+							  struct query_params_s& query);
+
 };

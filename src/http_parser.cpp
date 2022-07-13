@@ -36,6 +36,20 @@ http_parser::header_t http_parser::parse_header(const char * msg, std::size_t si
 	};
 	return header;
 }
+
+std::string http_parser::build_request(const std::string& host,
+									   const std::string& path,
+									   struct query_params_s& query){
+
+	std::stringstream ss;
+	ss << "GET " << path << "?";
+	ss << query.to_string();
+	ss << " HTTP/1.1\r\n";
+	ss << "Host: " << host.c_str() << "\r\n\r\n";
+
+	return ss.str();
+}
+
 std::string& http_parser::query_params_s::operator[](std::string key){
 	m_insert_order.push_back(key);
 	return m_values[key];
