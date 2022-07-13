@@ -246,30 +246,15 @@ void Torrent::get_peers(){
 	}
 };
 
+//this will be gone from torrent and probably moved to a session object.
 void Torrent::download_file(){
+	get_peers();//populate peers info (just for now)
 	EventLoop loop;
-	auto peers = get_peers();
-	int err;
-	for(auto& peer : peers){
-		err = peer.connect_to(peer.m_ip, peer.m_port);
-		if(err != -1){
-			peer.set_flags(O_NONBLOCK);
-			std::cout << " ip -> " << peer.m_ip << " port-> " << peer.m_port << std::endl;
-		}
-	}
-
-	// loop watch this sockets
-	for(auto& peer : peers){
-		loop.watch(&peer, EventLoop::ev_type::READ, read_cb);
-	};
-
-	// send handshake to all peers received by trackers
-	for(auto& peer : peers){
-		assert(peer.m_sock_state == SocketTcp::socket_state::CONNECTED);
-		std::cout << "sending handshake to : " << peer.m_ip << std::endl;
-		peer.send_handshake(m_info_hash, m_id);
-	}
-
+	auto peer_info = m_peers_info[0];
+	PeerConnection peer_conn(peer_info);
+	peer_conn.start();
+	loop.watch(&peer_conn, EventLoop::ev_type::READ, read_cb);
 	loop.run();
 	return;
 };
+
