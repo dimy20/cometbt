@@ -36,3 +36,15 @@ http_parser::header_t http_parser::parse_header(const char * msg, std::size_t si
 	};
 	return header;
 }
+std::string& http_parser::query_params_s::operator[](std::string key){
+	m_insert_order.push_back(key);
+	return m_values[key];
+};
+
+std::string http_parser::query_params_s::to_string(){
+	std::stringstream ss;
+	for(auto key : m_insert_order){
+		ss << key << "=" << m_values[key] << "&";
+	}
+	return ss.str();
+};
