@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.14)
 project(TorrentClient VERSION 1.0)
 
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_BUILD_TYPE Debug)
 
@@ -11,7 +11,14 @@ find_package(OpenSSL REQUIRED)
 add_library(decoder STATIC src/bencode.cpp)
 target_include_directories(decoder PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
 
-add_library(torrent STATIC src/torrent.cpp src/socketSSL.cpp src/tcp.cpp src/event_loop.cpp)
+add_library(torrent STATIC src/torrent.cpp
+						   src/socketSSL.cpp
+						   src/tcp.cpp
+						   src/event_loop.cpp
+						   src/buffer.cpp
+						   src/peer_connection.cpp
+						   src/serial.cpp
+						   src/http_parser.cpp)
 target_link_libraries(torrent decoder)
 target_include_directories(torrent PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
 
