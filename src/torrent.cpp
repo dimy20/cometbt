@@ -236,10 +236,14 @@ void Torrent::get_peers(){
 		auto ip = std::get<std::vector<char>>(peer_doc["ip"]->m_val);
 		auto port = std::get<long long>(peer_doc["port"]->m_val);
 		std::string ip_s(ip.data(), ip.size());
-		m_peers.push_back(PeerConnection(id, ip_s, std::to_string(port)));
-	}
 
-	return std::vector<PeerConnection>(m_peers.begin(), m_peers.begin() + 1);
+		m_peers_info.push_back({std::move(id),
+								std::move(ip_s),
+								std::to_string(port),
+								m_id,
+								m_info_hash});
+
+	}
 };
 
 void Torrent::download_file(){
