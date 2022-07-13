@@ -17,11 +17,9 @@
 class Session{
 	public:
 		Session(const std::string& filename);
-		void add_torrent(const std::string& filename);
 		void start();
 	private:
 		Torrent m_torrent; // make this better
 		std::vector<PeerConnection> m_peer_connections;
 		EventLoop m_main_loop; // main loop
-		int x;
 };
