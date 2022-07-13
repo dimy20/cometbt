@@ -194,18 +194,34 @@ static std::string get_host(const std::string& url){
 void Torrent::get_peers(){
 	int err;
 
+	//TODO remove this from here to a lower layer
 	std::string host = get_host(m_announce);
 	m_sock.connect_to(host, "443");
 
-	auto req = build_request(host); // build request for tracker
+	http_parser::query_params_s params;
+
+	long long left = (m_info_pieces.size() / 20) * m_info_piecelen;
+
+	params["info_hash"] = m_infohash_hex;
+	params["peer_id"] = m_id;
+	params["uploaded"] = "0";
+	params["downloaded"] = "0";
+	params["left"] = std::to_string(left);
+	params["port"] = "443";
+	params["compact"] = "1";
+	
+
+
+	auto req = http_parser::build_request(host, "/announce", params);
 	m_sock.send(req.data(), req.size());
 
 	char buff[BUFF_SIZE];
 	int n = m_sock.recv(buff, BUFF_SIZE);
 
-	auto headers = parse_header(buff, n);
+	auto headers = http_parser::parse_header(buff, n);
 	int content_len = std::stoi(headers["Content-Length"]);
-	const char * body = get_body(buff, buff + n);
+	const char * body = http_parser::get_body(buff, buff + n);
+
 
 
 	Bencode::Decoder decoder;
