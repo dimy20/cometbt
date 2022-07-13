@@ -2,11 +2,6 @@
 #include <stdio.h>
 #include <sstream>
 
-static void read_cb(SocketTcp * sock){
-	PeerConnection * peer = dynamic_cast<PeerConnection *>(sock);
-	peer->on_receive_data();
-};
-
 static void die(const std::string& msg){
 	std::cerr << msg << std::endl;
 	exit(EXIT_FAILURE);
@@ -246,15 +241,5 @@ void Torrent::get_peers(){
 	}
 };
 
-//this will be gone from torrent and probably moved to a session object.
-void Torrent::download_file(){
-	get_peers();//populate peers info (just for now)
-	EventLoop loop;
-	auto peer_info = m_peers_info[0];
-	PeerConnection peer_conn(peer_info);
-	peer_conn.start();
-	loop.watch(&peer_conn, EventLoop::ev_type::READ, read_cb);
-	loop.run();
-	return;
 };
 
