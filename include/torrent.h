@@ -46,15 +46,11 @@ class Torrent{
 		const std::string& get_announce();
 		const std::vector<std::string>& get_announce_list();
 		const std::vector<info_file_t>& get_info_files();
-		void get_peers();
-		void download_file();
 	public:
 
 		std::vector<unsigned char> m_info_hash;
 		std::string m_id;						/*this peer id*/
 
-	private:
-		void init_torrent_data();
 
 	private:
 
@@ -84,10 +80,6 @@ class Torrent{
 		std::string m_infohash_hex; /*info dict's formatted sha1 hex for tracker*/
 
 		SocketSSL m_sock;
-		// TODO this will be gone from here
-		// over to session
-		//std::vector<PeerConnection> m_peers;
-
 
 		std::vector<struct peer_info_s> m_peers_info;
 
