@@ -1,6 +1,9 @@
 #pragma once
-#include "tcp.h"
 #include <vector>
+#include <memory>
+#include "peer_info.h"
+#include "tcp.h"
+
 #define BUFF_SIZE 1024*32
 /* handshake macros */
 #define HANDSHAKE_SIZE 68
@@ -19,31 +22,65 @@
 #define BLOCK_OFFSET_SIZE 4
 #define BLOCK_LENGTH_SIZE 4
 
+enum class message_id{
+	CHOKE = 0,
+	UNCHOKE,
+	INTERESTED,
+	NOTINTERESTED,
+	HAVE,
+	BITFIELD,
+	REQUEST,
+	PIECE,
+	CANCEL
+};
+
+struct interested_message{
+	std::uint8_t length[MESSAGE_LENGTH_SIZE];
+	std::uint8_t id = static_cast<std::uint8_t>(message_id::INTERESTED);
+};
+
+
+struct req_message{
+	std::uint8_t length[MESSAGE_LENGTH_SIZE]; /* prefix length*/
+	std::uint8_t id;						 /* message id aka REQUEST*/
+	std::uint8_t index[PIECE_INDEX_SIZE];    // index of the piece we're requesting
+	std::uint8_t block_offset[BLOCK_OFFSET_SIZE]; // block offset within the piece
+	std::uint8_t block_length[BLOCK_LENGTH_SIZE];  // length of the block
+};
+
 class PeerConnection : public SocketTcp{
 	public:
-		PeerConnection(std::vector<char> id, const std::string& ip, const std::string& port);
+		PeerConnection(const struct peer_info_s& peer);
 		void send_handshake(const std::vector<unsigned char>& info_hash, const std::string& id);
 		bool wait_handshake();
 		bool has_piece(int index);
-public:
-	enum class p_state{
-		HANDSHAKE_WAIT = 1, /*handshake sent and waiting for response*/
-		HANDSHAKE_DONE = 2,  /*Successful handshake response received*/
-		HANDSHAKE_FAIL = 4,/*Incorrenct handshake response received*/
-		MESSAGE_HANDLING = 8,
-		MESSAGE_FINISHED = 9
-	};
-	p_state m_state;
-	std::vector<char> m_id;
-	std::string m_ip;
-	std::string m_port;
-	std::vector<unsigned char> m_info_hash;
-	// maybe make a message class
-	int m_msg_len;
-	int m_total;
-	char m_buff[BUFF_SIZE];
-	char * m_bitfield;
-	bool m_choked;
+		// starts connection and prepares receive buffer
+		// todo
+		void start();
+		void on_receive_data();
+	private:
+		void on_connection();
+
+	public:
+		enum class p_state{
+			HANDSHAKE_WAIT = 1, /*handshake sent and waiting for response*/
+			HANDSHAKE_DONE = 2,  /*Successful handshake response received*/
+			HANDSHAKE_FAIL = 4,/*Incorrenct handshake response received*/
+			MESSAGE_HANDLING = 8,
+			MESSAGE_FINISHED = 9
+		};
+		p_state m_state;
+		// maybe make a message class
+		int m_msg_len;
+		int m_total;
+		char m_buff[BUFF_SIZE];
+		char * m_bitfield;
+		bool m_choked;
+		
+	private:
+		// try to avoid this copy
+		// container to hold peer's info
+		struct peer_info_s m_peer_info;
 };
 
 struct handshake_s{
