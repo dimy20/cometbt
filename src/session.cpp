@@ -5,6 +5,7 @@ static void read_cb(SocketTcp * sock){
 	peer->on_receive_data();
 };
 
+// move to aux?
 static std::vector<char> open_file(const std::string& filename){
 	std::vector<char> buff;
 	int size;
@@ -24,7 +25,7 @@ Session::Session(const std::string& filename){
 	m_torrent.init_torrent_data();
 
 	// populates peers infos
-	m_torrent.get_peers();
+	m_torrent.setup_peerinfo();
 }
 
 // should only be responsible for handling main loop for now
