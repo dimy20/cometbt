@@ -6,6 +6,7 @@
 
 class Buffer{
 	public:
+		Buffer();
 		Buffer(std::size_t size);
 		Buffer(std::size_t size, char * src, std::size_t src_size); 
 		Buffer(Buffer && other);
