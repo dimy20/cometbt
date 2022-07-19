@@ -25,14 +25,12 @@ Session::Session(const std::string& filename){
 
 // should only be responsible for handling main loop for now
 void Session::start(){
-	// client hadles just one peer for now, this will change when buffer layers are
-	// added and bandwidth manager is implemented
+	// client hadles just one peer for now
 	
-	// add one connection
-	m_peer_connections.push_back(PeerConnection(m_torrent.get_peers_infos()[0]));
-	auto peer = m_peer_connections[0];
+	PeerConnection peer(m_torrent.get_peers_infos()[0], &m_main_loop);
+	m_peer_connections.push_back(std::move(peer));
+
 	peer.start();
-	// watch one connection
-	m_main_loop.watch(&peer, EventLoop::ev_type::READ, read_cb);
+
 	m_main_loop.run();
 };
