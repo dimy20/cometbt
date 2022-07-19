@@ -65,11 +65,12 @@ class PeerConnection : public SocketTcp{
 
 	public:
 		enum class p_state{
-			HANDSHAKE_WAIT = 1, /*handshake sent and waiting for response*/
-			HANDSHAKE_DONE = 2,  /*Successful handshake response received*/
-			HANDSHAKE_FAIL = 4,/*Incorrenct handshake response received*/
-			MESSAGE_HANDLING = 8,
-			MESSAGE_FINISHED = 9
+			READ_PROTOCOL_ID,
+			READ_INFO_HASH,
+			READ_PEER_ID,
+			READ_MESSAGE_SIZE,
+			READ_MESSAGE,
+			NOT_IMPLEMENTED_YET
 		};
 		p_state m_state;
 		// maybe make a message class
