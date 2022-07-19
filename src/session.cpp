@@ -1,10 +1,5 @@
 #include "session.h"
 
-static void read_cb(SocketTcp * sock){
-	PeerConnection * peer = dynamic_cast<PeerConnection *>(sock);
-	peer->on_receive_data();
-};
-
 // move to aux?
 static std::vector<char> open_file(const std::string& filename){
 	std::vector<char> buff;
