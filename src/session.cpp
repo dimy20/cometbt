@@ -27,7 +27,7 @@ Session::Session(const std::string& filename){
 void Session::start(){
 	// client hadles just one peer for now
 	
-	PeerConnectionCore peer(m_torrent.get_peers_infos()[0], &m_main_loop);
+	peer_connection peer(m_torrent.get_peers_infos()[0], &m_main_loop);
 	m_peer_connections.push_back(std::move(peer));
 
 	peer.start();
