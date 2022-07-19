@@ -59,7 +59,12 @@ class PeerConnection : public SocketTcp{
 		// starts connection and prepares receive buffer
 		// todo
 		void start();
-		void on_receive_data();
+
+		void on_receive_data(std::size_t received_bytes);
+
+
+		friend void read_cb(SocketTcp * sock, char * buff, std::size_t received_bytes);
+
 	private:
 		void on_connection();
 
