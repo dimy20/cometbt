@@ -122,8 +122,10 @@ bool PeerConnection::wait_handshake(){
 PeerConnection::PeerConnection(const struct peer_info_s& peer_info){
 	m_peer_info = peer_info;
 	m_total = 0;
-	memset(m_buff, 0, BUFF_SIZE);
 	m_choked = true;
+	m_loop = loop;
+};
+
 PeerConnection::PeerConnection(PeerConnection && other) : SocketTcp(std::move(other)){
 	m_recv_buffer = std::move(other.m_recv_buffer);
 	m_peer_info = other.m_peer_info;

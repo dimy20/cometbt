@@ -4,6 +4,7 @@
 #include "peer_info.h"
 #include "tcp.h"
 #include "recv_buffer.h"
+#include "event_loop.h"
 
 #define BUFF_SIZE 1024*32
 /* handshake macros */
@@ -51,7 +52,7 @@ struct req_message{
 
 class PeerConnection : public SocketTcp{
 	public:
-		PeerConnection(const struct peer_info_s& peer);
+		PeerConnection(const struct peer_info_s& peer, EventLoop * loop);
 		PeerConnection(PeerConnection && other);
 		void send_handshake(const std::vector<unsigned char>& info_hash, const std::string& id);
 		bool wait_handshake();
@@ -83,6 +84,8 @@ class PeerConnection : public SocketTcp{
 		// try to avoid this copy
 		// container to hold peer's info
 		struct peer_info_s m_peer_info;
+
+		EventLoop * m_loop; // ptr to the main loop
 };
 
 struct handshake_s{
