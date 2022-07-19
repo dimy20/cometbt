@@ -82,44 +82,7 @@ bool PeerConnection::has_piece(int peer_index){
 	return ((*(m_bitfield + byte_offset)) >> bit_offset) & 1;
 };
 
-bool PeerConnection::wait_handshake(){
-	/* check if handshake has be done already*/
-	if(m_state == p_state::HANDSHAKE_DONE) return true;
-	else if(m_state == p_state::HANDSHAKE_WAIT){
-		char buff[HANDSHAKE_SIZE];
-		bool info_hash_match, peer_id_match;
-		info_hash_match = peer_id_match = false;
-		int n;
-
-		memset(buff, 0, HANDSHAKE_SIZE);
-		n = recv(buff, HANDSHAKE_SIZE);
-		//std::cout << "peer " << m_ip << " sent " << n << " bytes." << std::endl;
-		//wait for handshake response
-		struct handshake_s * hs_reply;
-		hs_reply = reinterpret_cast<struct handshake_s *>(buff);
-
-		if(memcmp(hs_reply->info_hash,
-		    m_peer_info.m_info_hash.data(),
-			INFO_HASH_LENGTH) == 0)
-			info_hash_match = true;
-		if(memcmp(hs_reply->peer_id, m_peer_info.m_remote_id.data(), PEER_ID_LENGTH) == 0)
-			peer_id_match = true;
-
-		if(info_hash_match && peer_id_match){
-			m_state = PeerConnection::p_state::HANDSHAKE_DONE;
-			return true;
-		}else{
-			close();
-			m_state = PeerConnection::p_state::HANDSHAKE_FAIL;
-			return false;
-			// what about epoll??
-		}
-	// bitfield here?
-	}else return false;
-
-};
-
-PeerConnection::PeerConnection(const struct peer_info_s& peer_info){
+PeerConnection::PeerConnection(const struct peer_info_s& peer_info, EventLoop * loop){
 	m_peer_info = peer_info;
 	m_total = 0;
 	m_choked = true;
