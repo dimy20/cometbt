@@ -107,7 +107,7 @@ void PeerConnection::send_handshake(const std::vector<unsigned char>& info_hash,
 
 	send(reinterpret_cast<char *>(&hs), HANDSHAKE_SIZE);
 	//m_info_hash = info_hash; // copy to verify later when handshake response comes
-	m_state = p_state::HANDSHAKE_WAIT;
+	m_state = p_state::READ_PROTOCOL_ID;
 };
 
 
