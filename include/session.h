@@ -1,7 +1,7 @@
 #pragma once
 #include <vector>
 #include "event_loop.h"
-#include "peer_connection.h"
+#include "peer_connection_core.h"
 #include "torrent.h"
 
 // class responsible for managing the peer connections
@@ -20,6 +20,6 @@ class Session{
 		void start();
 	private:
 		Torrent m_torrent; // make this better
-		std::vector<PeerConnection> m_peer_connections;
+		std::vector<PeerConnectionCore> m_peer_connections;
 		EventLoop m_main_loop; // main loop
 };

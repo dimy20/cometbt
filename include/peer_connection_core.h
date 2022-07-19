@@ -50,10 +50,10 @@ struct req_message{
 	std::uint8_t block_length[BLOCK_LENGTH_SIZE];  // length of the block
 };
 
-class PeerConnection : public SocketTcp{
+class PeerConnectionCore : public SocketTcp{
 	public:
-		PeerConnection(const struct peer_info_s& peer, EventLoop * loop);
-		PeerConnection(PeerConnection && other);
+		PeerConnectionCore(const struct peer_info_s& peer, EventLoop * loop);
+		PeerConnectionCore(PeerConnectionCore && other);
 		void send_handshake(const std::vector<unsigned char>& info_hash, const std::string& id);
 		bool has_piece(int index);
 		// starts connection and prepares receive buffer

@@ -1,4 +1,4 @@
-#include "peer_connection_core.h"
+#include "peer_connection.h"
 #include "serial.h"
 
 void read_cb(SocketTcp * sock, char * buff, std::size_t received_bytes){

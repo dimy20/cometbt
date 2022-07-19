@@ -25,7 +25,7 @@
 #include "socketSSL.h"
 #include "tcp.h"
 #include "event_loop.h"
-#include "peer_connection.h"
+#include "peer_connection_core.h"
 #include "peer_info.h"
 #include "http_parser.h"
 
