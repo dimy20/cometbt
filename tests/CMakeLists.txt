@@ -19,5 +19,10 @@ target_link_libraries(test_bencode_decoder decoder gtest_main gmock_main)
 add_executable(test_buffer test_buffer.cpp)
 target_link_libraries(test_buffer torrent gtest_main)
 
+add_executable(test_recv_buffer test_recv_buffer.cpp)
+target_link_libraries(test_recv_buffer torrent gtest_main)
+
+
 add_test(bencode_decoder test_bencode_decoder)
 add_test(buffer test_buffer)
+add_test(recv_buffer test_recv_buffer)
