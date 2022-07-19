@@ -227,11 +227,15 @@ void Torrent::setup_peerinfo(){
 		auto port = std::get<long long>(peer_doc["port"]->m_val);
 		std::string ip_s(ip.data(), ip.size());
 
-		m_peers_info.push_back({std::move(id),
-								std::move(ip_s),
-								std::to_string(port),
-								m_id,
-								m_info_hash});
+		
+		struct peer_info_s peer_info;
+		peer_info.m_remote_id = std::move(id);
+		peer_info.m_remote_ip = std::move(ip_s);
+		peer_info.m_remote_port = std::to_string(port);
+		peer_info.m_id = m_id;
+		peer_info.m_info_hash = m_info_hash;
+
+		m_peers_info.push_back(std::move(peer_info));
 
 	}
 };
