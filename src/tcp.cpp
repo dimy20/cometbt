@@ -111,3 +111,9 @@ int SocketTcp::get_fd() const {
 void SocketTcp::close(){
 	::close(m_fd);
 }
+
+int SocketTcp::read_available(){
+	int ans;
+	ioctl(m_fd, FIONREAD, &ans);
+	return ans;
+}

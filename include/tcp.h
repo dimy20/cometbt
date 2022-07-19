@@ -3,6 +3,7 @@
 #include <iostream>
 #include <sys/socket.h>
 #include <sys/types.h>
+#include <sys/ioctl.h>
 #include <arpa/inet.h>
 #include <netdb.h>
 #include <unistd.h>
@@ -23,6 +24,7 @@ class SocketTcp{
 		void close();
 		int set_flags(int op);
 		int get_fd() const;
+		int read_available();
 		virtual ~SocketTcp() = default;
 	public:
 		enum class socket_state{
