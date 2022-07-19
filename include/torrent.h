@@ -32,7 +32,6 @@
 
 typedef struct info_file_s info_file_t;
 
-;
 
 struct info_file_s{
 	int length;
