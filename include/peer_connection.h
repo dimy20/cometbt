@@ -3,6 +3,7 @@
 #include <memory>
 #include "peer_info.h"
 #include "tcp.h"
+#include "recv_buffer.h"
 
 #define BUFF_SIZE 1024*32
 /* handshake macros */
@@ -74,10 +75,10 @@ class PeerConnection : public SocketTcp{
 		// maybe make a message class
 		int m_msg_len;
 		int m_total;
-		char m_buff[BUFF_SIZE];
 		char * m_bitfield;
 		bool m_choked;
 		
+		RecvBuffer m_recv_buffer;
 	private:
 		// try to avoid this copy
 		// container to hold peer's info
