@@ -66,6 +66,8 @@ class PeerConnection : public SocketTcp{
 		friend void read_cb(SocketTcp * sock, char * buff, std::size_t received_bytes);
 
 	private:
+
+		void on_receive_internal(int received_bytes);
 		void on_connection();
 
 	public:

@@ -238,4 +238,69 @@ void PeerConnection::on_receive_data(std::size_t received_bytes){
 
 };
 
+void PeerConnection::on_receive_internal(int received_bytes){
+	std::cout << "in read callback :" << received_bytes << std::endl;
+
+	assert(received_bytes <= m_recv_buffer.max_receive());
+			
+
+	// likely to be more data to read, grow buffer
+	bool grow = m_recv_buffer.max_receive() == received_bytes;
+	//acount for received bytes
+	m_recv_buffer.received(received_bytes);
+
+	//another reason to do this is because epoll wont notify us again for the bytes
+	//we didnt read  (edge mode)
+	if(grow){
+		std::cout << "asking for more bytes " << std::endl;
+
+		int available_bytes = read_available();
+
+		// bytes left out
+		if(available_bytes > 0){
+			auto[chunk, size] = m_recv_buffer.reserve(available_bytes);
+
+			int bytes = recv(chunk, size);
+					
+			assert(bytes > 0);
+
+			m_recv_buffer.received(bytes);
+			received_bytes += bytes;
+		}
+
+		std::cout << "received bytes : " << received_bytes << std::endl;
+	}
+
+
+
+	int total_bytes = received_bytes;
+	int passed_bytes;
+	do{
+		passed_bytes = m_recv_buffer.advance_pos(total_bytes);
+		std::cout << "passed bytes " << passed_bytes << std::endl;
+		//this will go to a derived class
+		on_receive_data(passed_bytes);
+		total_bytes -= passed_bytes;
+	}while(total_bytes > 0 && passed_bytes > 0);
+
+	// clean the processed chunks
+	m_recv_buffer.clean();
+
+	int max_receive = m_recv_buffer.max_receive();
+
+	if(max_receive > 0){
+		if(!m_recv_buffer.is_message_finished()){
+			// reserve a chunk of 'bytes left' size for the remaining part of the
+			// message we're currently receiving.
+			int bytes_left = m_recv_buffer.message_bytes_left();
+			auto [chunk, size] = m_recv_buffer.reserve(bytes_left);
+			m_loop->async_read(this, chunk, size);
+		}
+	}else if (max_receive == 0){
+		// figure out
+		exit(1);
+	}
+
+	assert(m_recv_buffer.pos_at_end());
+
 };
