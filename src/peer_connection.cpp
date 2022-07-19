@@ -123,6 +123,14 @@ void PeerConnection::start(){
 	if(err == -1) std::cerr << "failed to start peer connection" << std::endl;
 	set_flags(O_NONBLOCK);
 	send_handshake(m_peer_info.m_info_hash, m_peer_info.m_id);
+
+	auto [span, span_size] = m_recv_buffer.reserve(128);
+
+	m_loop->watch(this, EventLoop::ev_type::READ, read_cb);
+	m_loop->async_read(this, span, span_size);
+
+	// start waiting for comming protocol identifier
+	m_recv_buffer.reset(20);
 };
 
 void PeerConnection::on_receive_data(std::size_t received_bytes){
