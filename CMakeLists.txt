@@ -16,6 +16,7 @@ add_library(torrent STATIC src/torrent.cpp
 						   src/tcp.cpp
 						   src/event_loop.cpp
 						   src/buffer.cpp
+						   src/peer_connection_core.cpp
 						   src/peer_connection.cpp
 						   src/serial.cpp
 						   src/http_parser.cpp

@@ -55,22 +55,20 @@ class PeerConnectionCore : public SocketTcp{
 		PeerConnectionCore(const struct peer_info_s& peer, EventLoop * loop);
 		PeerConnectionCore(PeerConnectionCore && other);
 		void send_handshake(const std::vector<unsigned char>& info_hash, const std::string& id);
-		bool has_piece(int index);
+
 		// starts connection and prepares receive buffer
 		// todo
 		void start();
 
-		void on_receive_data(std::size_t received_bytes);
-
-
 		friend void read_cb(SocketTcp * sock, char * buff, std::size_t received_bytes);
 
-	private:
+		virtual void on_receive(int passed_bytes) = 0;
 
+	private:
 		void on_receive_internal(int received_bytes);
 		void on_connection();
 
-	public:
+	protected:
 		enum class p_state{
 			READ_PROTOCOL_ID,
 			READ_INFO_HASH,
@@ -79,20 +77,15 @@ class PeerConnectionCore : public SocketTcp{
 			READ_MESSAGE,
 			NOT_IMPLEMENTED_YET
 		};
+		struct peer_info_s m_peer_info;
 		p_state m_state;
-		// maybe make a message class
-		int m_msg_len;
-		int m_total;
-		char * m_bitfield;
-		bool m_choked;
-		
 		RecvBuffer m_recv_buffer;
+
 	private:
 		// try to avoid this copy
 		// container to hold peer's info
-		struct peer_info_s m_peer_info;
-
 		EventLoop * m_loop; // ptr to the main loop
+
 };
 
 struct handshake_s{
