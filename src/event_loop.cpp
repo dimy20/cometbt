@@ -43,8 +43,18 @@ void EventLoop::run(){
 		for(int i = 0; i < n; i++){
 			if(ev[i].events & EPOLLIN){
 				auto& io = m_iomap[ev[i].data.fd];
-				io.cb(io.sock);
+				int received_bytes = io.sock->recv(io.buff, io.size);
+				io.cb(io.sock, io.buff, received_bytes);
 			}
 		}
 	}
+};
+void EventLoop::async_read(SocketTcp * sock, char * buff, std::size_t size){
+	const int fd = sock->get_fd();
+	if(m_iomap.find(fd) != m_iomap.end()){
+		auto& io = m_iomap[sock->get_fd()];
+		io.buff = buff;
+		io.size = size;
+	}else std::cerr << "loop is not aware of this socket" << std::endl;
+
 };
