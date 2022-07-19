@@ -16,6 +16,7 @@
 class SocketTcp{
 	public:
 		SocketTcp();
+		SocketTcp(SocketTcp && other) = default;
 		int connect_to(const std::string& host, const std::string& port);
 		int recv(char * buff, int size);
 		int send(char * buff, int size);
