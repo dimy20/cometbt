@@ -124,6 +124,10 @@ PeerConnection::PeerConnection(const struct peer_info_s& peer_info){
 	m_total = 0;
 	memset(m_buff, 0, BUFF_SIZE);
 	m_choked = true;
+PeerConnection::PeerConnection(PeerConnection && other) : SocketTcp(std::move(other)){
+	m_recv_buffer = std::move(other.m_recv_buffer);
+	m_peer_info = other.m_peer_info;
+	m_loop = other.m_loop;
 };
 
 void PeerConnection::send_handshake(const std::vector<unsigned char>& info_hash, const std::string& id){

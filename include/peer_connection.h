@@ -51,6 +51,7 @@ struct req_message{
 class PeerConnection : public SocketTcp{
 	public:
 		PeerConnection(const struct peer_info_s& peer);
+		PeerConnection(PeerConnection && other);
 		void send_handshake(const std::vector<unsigned char>& info_hash, const std::string& id);
 		bool wait_handshake();
 		bool has_piece(int index);
