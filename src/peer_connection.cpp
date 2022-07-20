@@ -39,10 +39,8 @@ void peer_connection::do_message(const char * msg_buff, int payload_len){
 		case message_id::BITFIELD:
 			{
 				msg_buff++;
-				m_bitfield = new char[payload_len - 1];
-				memcpy(m_bitfield, msg_buff, payload_len -1);
 				std::cout << "bitfield !! " << std::endl;
-
+				m_bitfield = std::move(aux::bitfield(msg_buff, payload_len - 1));
 				// send intrested message
 				if(m_choked){
 					std::cout << "sending interested " << std::endl;
@@ -57,18 +55,17 @@ void peer_connection::do_message(const char * msg_buff, int payload_len){
 				std::cout << "unchoke!" << std::endl;
 
 				int piece_index = 0; // test first piece
-				if(has_piece(piece_index)){
+				if(m_bitfield.has_piece(piece_index)){
 					std::cout << "asking for piece " << piece_index << std::endl;
 					auto msg = create_request_message(piece_index, 0, BLOCK_LENGTH);
 					send(reinterpret_cast<char *>(msg.get()), sizeof(*msg.get()));
 				}else{
 					std::cout << "peer doesnt have piece with index : " << piece_index;
 					std::cout << std::endl;
-				}
+				};
 
 				break;
 			}
-
 		case message_id::CHOKE:
 			m_choked = true;
 			std::cout << "choke" << std::endl;
@@ -187,11 +184,4 @@ void peer_connection::on_receive(int passed_bytes){
 		exit(1);
 	}
 
-};
-
-bool peer_connection::has_piece(int peer_index){
-	int byte_offset, bit_offset;
-	byte_offset = peer_index / 8;
-	bit_offset = peer_index % 8;
-	return ((*(m_bitfield + byte_offset)) >> bit_offset) & 1;
 };

@@ -5,6 +5,7 @@
 #include "event_loop.h"
 #include "peer_info.h"
 #include "serial.h"
+#include "bitfield.h"
 
 // this class implements the protocol
 class peer_connection : public PeerConnectionCore{
@@ -22,6 +23,6 @@ class peer_connection : public PeerConnectionCore{
 	private:
 		int m_msg_len;
 		int m_total;
-		char * m_bitfield;
 		bool m_choked;
+		aux::bitfield m_bitfield;
 };
