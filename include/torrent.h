@@ -28,6 +28,7 @@
 #include "peer_connection_core.h"
 #include "peer_info.h"
 #include "http_parser.h"
+#include "info_hash.h"
 
 
 typedef struct info_file_s info_file_t;
@@ -52,7 +53,7 @@ class Torrent{
 		const std::vector<struct peer_info_s>& get_peers_infos(){return m_peers_info;};
 	public:
 
-		std::vector<unsigned char> m_info_hash;
+		aux::info_hash m_info_hash;
 		std::string m_id;						/*this peer id*/
 
 
@@ -79,9 +80,6 @@ class Torrent{
 
 		long long m_info_piecelen; /*size in bytes of each piece*/
 		std::vector<char> m_info_pieces; /*piece's sha1 hash*/
-
-
-		std::string m_infohash_hex; /*info dict's formatted sha1 hex for tracker*/
 
 		SocketSSL m_sock;
 

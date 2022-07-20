@@ -108,12 +108,29 @@ std::vector<unsigned char> info_hash(std::vector<char> bencode){
 	return sha1;
 };
 
+static int find_info_dict(const std::vector<char>& bencode, int& size){
+	int n, start, end, info_len;
+	n = bencode.size();
+	start = 0;
+
+	start = find_pattern(bencode, {'4',':','i', 'n', 'f', 'o', 'd'});
+	if(start == -1) die("Error : info dictionary not found in bencode.");
+	start += 6; // hash must start at info's value including 'd'
+
+	end = n-2;
+	info_len = end - start + 1;
+
+	size = info_len;
+	return start;
+};
+
 void Torrent::init_torrent_data(){
 	Bencode::Decoder decoder;
 	decoder.set_bencode(m_buff);
 
-	m_info_hash = std::move(info_hash(m_buff));
-	m_infohash_hex = hash_to_hex(m_info_hash);
+	int info_size, info_begin;
+	info_begin = find_info_dict(m_buff, info_size);
+	m_info_hash = std::move(aux::info_hash(m_buff.data() + info_begin, info_size));
 
 	auto data = decoder.decode();
 	auto document = std::get<Bencode::dict_t>(data->m_val);
@@ -192,7 +209,7 @@ void Torrent::setup_peerinfo(){
 
 	long long left = (m_info_pieces.size() / 20) * m_info_piecelen;
 
-	params["info_hash"] = m_infohash_hex;
+	params["info_hash"] = m_info_hash.hex_str();
 	params["peer_id"] = m_id;
 	params["uploaded"] = "0";
 	params["downloaded"] = "0";
