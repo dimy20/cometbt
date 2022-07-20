@@ -21,7 +21,8 @@ add_library(torrent STATIC src/torrent.cpp
 						   src/serial.cpp
 						   src/http_parser.cpp
 						   src/session.cpp
-						   src/recv_buffer.cpp)
+						   src/recv_buffer.cpp
+						   src/info_hash.cpp)
 target_link_libraries(torrent decoder)
 target_include_directories(torrent PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
 
