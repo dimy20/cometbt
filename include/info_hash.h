@@ -16,6 +16,7 @@ namespace aux{
 			info_hash(const info_hash & other);
 			~info_hash();
 			info_hash& operator=(const info_hash& other);
+			info_hash& operator=(info_hash && other);
 
 			
 			std::string hex_str();

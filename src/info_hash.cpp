@@ -64,3 +64,9 @@ void aux::info_hash::set(char * begin, std::size_t size){
 };
 
 aux::info_hash::info_hash(const info_hash & other){ *this = other; };
+
+aux::info_hash& aux::info_hash::operator=(aux::info_hash && other){
+	m_sha1_hash = other.m_sha1_hash;
+	other.m_sha1_hash = nullptr;
+	return *this;
+};
