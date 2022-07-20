@@ -18,14 +18,15 @@ PeerConnectionCore::PeerConnectionCore(PeerConnectionCore && other) : SocketTcp(
 };
 
 // part of this can be moved up to peer_connection
-void PeerConnectionCore::send_handshake(const std::vector<unsigned char>& info_hash, const std::string& id){
+void PeerConnectionCore::send_handshake(const aux::info_hash& info_hash, const std::string& id){
 	assert(get_fd() != -1);
+	assert(info_hash.get() != nullptr);
 
 	struct handshake_s hs;
 	hs.proto_id_size = 19;
 	memset(&hs.protocol_id, 0, sizeof(hs) - 1);
 	memcpy(hs.protocol_id, PROTOCOL_ID, PROTOCOL_ID_LENGTH);
-	memcpy(hs.info_hash, info_hash.data(), INFO_HASH_LENGTH);
+	memcpy(hs.info_hash, info_hash.get(), INFO_HASH_LENGTH);
 	memcpy(hs.peer_id, id.c_str(), PEER_ID_LENGTH);
 
 	send(reinterpret_cast<char *>(&hs), HANDSHAKE_SIZE);

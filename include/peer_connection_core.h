@@ -54,7 +54,7 @@ class PeerConnectionCore : public SocketTcp{
 	public:
 		PeerConnectionCore(const struct peer_info_s& peer, EventLoop * loop);
 		PeerConnectionCore(PeerConnectionCore && other);
-		void send_handshake(const std::vector<unsigned char>& info_hash, const std::string& id);
+		void send_handshake(const aux::info_hash& info_hash, const std::string& id);
 
 		// starts connection and prepares receive buffer
 		// todo

@@ -119,7 +119,10 @@ void peer_connection::on_receive(int passed_bytes){
 		// we dont support extensions for now, so skip these 8 bytes
 		chunk += 8;
 
-		if (memcmp(chunk, m_peer_info.m_info_hash.data(), INFO_HASH_LENGTH) != 0){
+		aux::info_hash received_hash;
+		received_hash.set(chunk, 20);
+
+		if(m_peer_info.m_info_hash != received_hash){
 			std::cerr << "Handshake failure : Bad info hash" << std::endl;
 			exit(EXIT_FAILURE);
 		}
