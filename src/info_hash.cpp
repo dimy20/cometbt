@@ -62,3 +62,5 @@ void aux::info_hash::set(char * begin, std::size_t size){
 		memcpy(m_sha1_hash, begin, SHA_DIGEST_LENGTH);
 	}
 };
+
+aux::info_hash::info_hash(const info_hash & other){ *this = other; };

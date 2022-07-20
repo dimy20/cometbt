@@ -13,6 +13,7 @@ namespace aux{
 			info_hash() = default;
 			info_hash(char * begin, std::size_t size);
 			info_hash(info_hash && other);
+			info_hash(const info_hash & other);
 			~info_hash();
 			info_hash& operator=(const info_hash& other);
 
