@@ -74,40 +74,6 @@ static int find_pattern(const std::vector<char>& buff, const std::vector<char>& 
 	return -1;
 };
 
-std::string hash_to_hex(std::vector<unsigned char> hash){
-	char sha1_hex[(SHA_DIGEST_LENGTH * 2) + 1];
-	for (int i = 0; i < SHA_DIGEST_LENGTH; i++){
-		sprintf(sha1_hex + (i * 2),"%02x\n", hash[i]);
-	}
-
-	sha1_hex[SHA_DIGEST_LENGTH * 2] = '\0';
-	std::string s = std::string(sha1_hex);
-
-	std::stringstream ss;
-	for(int i = 0; i < s.size(); i+=2){ /*Tracker requieres this */
-		ss << "%" << s[i] << s[i+1];
-	};
-
-	return ss.str();
-}
-
-std::vector<unsigned char> info_hash(std::vector<char> bencode){
-	std::vector<unsigned char> sha1(SHA_DIGEST_LENGTH);
-	int n, start, end, info_len;
-	n = bencode.size();
-	start = 0;
-
-	start = find_pattern(bencode, {'4',':','i', 'n', 'f', 'o', 'd'});
-	if(start == -1) die("Error : info dictionary not found in bencode.");
-	start += 6; // hash must start at info's value including 'd'
-
-	end = n-2;
-	info_len = end - start + 1;
-
-	SHA1(reinterpret_cast<unsigned char*>(&bencode[start]), info_len, sha1.data());
-	return sha1;
-};
-
 static int find_info_dict(const std::vector<char>& bencode, int& size){
 	int n, start, end, info_len;
 	n = bencode.size();
