@@ -16,12 +16,14 @@ class peer_connection : public PeerConnectionCore{
 		virtual void on_receive(int passed_bytes);
 	private:
 		int get_length(const char * const buff, std::size_t size);
-		bool has_piece(int index);
 		//change this to work directly with the receive buffer
 		void do_message();
 
 		// message handlers
 		void handle_bitfield(char * begin, std::size_t size);
+		void handle_unchoke();
+		void handle_choke();
+		void handle_piece();
 
 	private:
 		int m_msg_len;

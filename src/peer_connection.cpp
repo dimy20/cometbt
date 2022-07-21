@@ -45,33 +45,39 @@ void peer_connection::do_message(){
 				handle_bitfield(recv_buffer, size - 1);
 				break;
 			}
-		case message_id::UNCHOKE:
-			{
-				m_choked = false;
-				std::cout << "unchoke!" << std::endl;
-
-				int piece_index = 0; // test first piece
-				if(m_bitfield.has_piece(piece_index)){
-					std::cout << "asking for piece " << piece_index << std::endl;
-					auto msg = create_request_message(piece_index, 0, BLOCK_LENGTH);
-					send(reinterpret_cast<char *>(msg.get()), sizeof(*msg.get()));
-				}else{
-					std::cout << "peer doesnt have piece with index : " << piece_index;
-					std::cout << std::endl;
-				};
-
-				break;
-			}
-		case message_id::CHOKE:
-			m_choked = true;
-			std::cout << "choke" << std::endl;
-			break;
-		case message_id::PIECE:
-			std::cout << "received block" << std::endl;
-			break;
-		default:
-			std::cout << "msg id : " << *msg_buff << std::endl;
+		case message_id::UNCHOKE: handle_unchoke(); break;
+		case message_id::CHOKE:   handle_choke();   break;
+		case message_id::PIECE:   handle_piece();   break;
+		default: std::cout << "msg id : " << *msg_buff << std::endl;
+			
 	}
+};
+
+void peer_connection::handle_unchoke(){
+	std::cout << "unchoke!" << std::endl;
+	m_choked = false;
+	int piece_index = 0; // test first piece
+	if(m_bitfield.has_piece(piece_index)){
+		std::cout << "asking for piece " << piece_index << std::endl;
+		auto msg = create_request_message(piece_index, 0, BLOCK_LENGTH);
+		send(reinterpret_cast<char *>(msg.get()), sizeof(*msg.get()));
+		m_state = p_state::READ_MESSAGE_SIZE;
+		m_recv_buffer.reset(4);
+	}else{
+		std::cout << "peer doesnt have piece with index : " << piece_index;
+		std::cout << std::endl;
+	};
+
+};
+
+void peer_connection::handle_choke(){
+	m_choked = true;
+	std::cout << "choked" << std::endl;
+};
+
+void peer_connection::handle_piece(){
+	std::cout << "received block, exiting..." << std::endl;
+	exit(1); // just for now
 };
 
 void peer_connection::on_receive(int passed_bytes){
@@ -188,5 +194,8 @@ void peer_connection::handle_bitfield(char * begin, std::size_t size){
 		std::cout << "sending interested " << std::endl;
 		auto msg = create_interested_message();
 		int n = send(reinterpret_cast<char *>(msg.get()), 5);
+
+		m_state = p_state::READ_MESSAGE_SIZE; // wait for unchoke message
+		m_recv_buffer.reset(4);
 	}
 };
