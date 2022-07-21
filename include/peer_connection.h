@@ -18,7 +18,10 @@ class peer_connection : public PeerConnectionCore{
 		int get_length(const char * const buff, std::size_t size);
 		bool has_piece(int index);
 		//change this to work directly with the receive buffer
-		void do_message(const char * msg_buff, int payload_len);
+		void do_message();
+
+		// message handlers
+		void handle_bitfield(char * begin, std::size_t size);
 
 	private:
 		int m_msg_len;

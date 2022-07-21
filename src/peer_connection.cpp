@@ -32,7 +32,8 @@ static std::shared_ptr<struct interested_message> create_interested_message(){
 	return msg_ptr;
 };
 
-void peer_connection::do_message(const char * msg_buff, int payload_len){
+void peer_connection::do_message(){
+	auto [msg_buff, payload_len] = m_recv_buffer.get();
 	std::cout << "processing message - payload : " << payload_len <<  std::endl;
 	message_id msg_id  = static_cast<message_id>(*msg_buff);
 	switch((msg_id)){
@@ -40,13 +41,8 @@ void peer_connection::do_message(const char * msg_buff, int payload_len){
 			{
 				msg_buff++;
 				std::cout << "bitfield !! " << std::endl;
-				m_bitfield = std::move(aux::bitfield(msg_buff, payload_len - 1));
-				// send intrested message
-				if(m_choked){
-					std::cout << "sending interested " << std::endl;
-					auto msg = create_interested_message();
-					int n = send(reinterpret_cast<char *>(msg.get()), 5);
-				}
+				auto[recv_buffer, size] = m_recv_buffer.get();
+				handle_bitfield(recv_buffer, size - 1);
 				break;
 			}
 		case message_id::UNCHOKE:
@@ -175,7 +171,7 @@ void peer_connection::on_receive(int passed_bytes){
 		}else{
 			std::cout << "received full message " << std::endl;
 			auto [chunk, size] = m_recv_buffer.get();
-			do_message(chunk, size);
+			do_message();
 			m_state = p_state::NOT_IMPLEMENTED_YET;
 		}
 	}
@@ -184,4 +180,13 @@ void peer_connection::on_receive(int passed_bytes){
 		exit(1);
 	}
 
+};
+
+void peer_connection::handle_bitfield(char * begin, std::size_t size){
+	m_bitfield = std::move(aux::bitfield(begin, size - 1));
+	if(m_choked){
+		std::cout << "sending interested " << std::endl;
+		auto msg = create_interested_message();
+		int n = send(reinterpret_cast<char *>(msg.get()), 5);
+	}
 };
