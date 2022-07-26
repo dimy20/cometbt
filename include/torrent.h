@@ -51,6 +51,7 @@ class Torrent{
 		void init_torrent_data();
 		void set(std::vector<char> && torrent);
 		const std::vector<struct peer_info_s>& get_peers_infos(){return m_peers_info;};
+		std::vector<char>& get_pieces_hash() { return m_info_pieces; };
 	public:
 
 		aux::info_hash m_info_hash;
