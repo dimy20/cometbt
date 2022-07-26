@@ -12,7 +12,10 @@ namespace aux{
 			bitfield& operator=(bitfield && other);
 			bitfield(bitfield && other);
 			~bitfield();
-			bool has_piece(int index);
+			bool has_piece(int index) const;
+			bool empty() const { return m_bitfield == nullptr; };
+			std::size_t size() const { return m_size; };
+
 		private:
 			char * m_bitfield = nullptr;
 			std::size_t m_size = 0;
