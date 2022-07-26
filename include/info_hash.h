@@ -19,7 +19,7 @@ namespace aux{
 			info_hash& operator=(info_hash && other);
 
 			
-			std::string hex_str();
+			std::string hex_str() const;
 			bool operator==(const info_hash& other);
 			bool operator!=(const info_hash& other);
 

@@ -7,7 +7,7 @@ aux::info_hash::info_hash(char * begin, std::size_t size){
 };
 
 
-std::string aux::info_hash::hex_str(){
+std::string aux::info_hash::hex_str() const {
 	if(m_sha1_hash == nullptr) return "";
 	char sha1_hex[(SHA_DIGEST_LENGTH * 2) + 1];
 	for (int i = 0; i < SHA_DIGEST_LENGTH; i++){
