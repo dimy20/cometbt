@@ -10,10 +10,11 @@ class piece{
 		piece(int index, aux::info_hash piece_hash);
 
 		const aux::info_hash& hash() const { return m_piece_hash; };
+		piece&operator=(piece && other);
 		//piece(int index, const aux::info_hash& piece_hash);
 	private:
 		int m_index; // piece index
-		int piece_length;
+		int m_piece_length;
 		int m_count; // count of how many peers have this piece
 		int m_block_size;
 		// vector of pointer to the peers who have it
