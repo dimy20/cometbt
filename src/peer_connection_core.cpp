@@ -90,6 +90,11 @@ void PeerConnectionCore::on_receive_internal(int received_bytes){
 		total_bytes -= passed_bytes;
 	}while(total_bytes > 0 && passed_bytes > 0);
 
+	if(m_disconnect){
+		close();
+		return;
+	};
+
 	// clean the processed chunks
 	m_recv_buffer.clean();
 

@@ -7,6 +7,7 @@
 #include "event_loop.h"
 
 #define BUFF_SIZE 1024*32
+
 /* handshake macros */
 #define HANDSHAKE_SIZE 68
 #define RESERVED_BYTES_LENGTH 8
@@ -80,12 +81,12 @@ class PeerConnectionCore : public SocketTcp{
 		struct peer_info_s m_peer_info;
 		p_state m_state;
 		RecvBuffer m_recv_buffer;
+		bool m_disconnect = false;
 
 	private:
 		// try to avoid this copy
 		// container to hold peer's info
 		EventLoop * m_loop; // ptr to the main loop
-
 };
 
 struct handshake_s{
