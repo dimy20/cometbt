@@ -26,11 +26,20 @@ Session::Session(const std::string& filename){
 // should only be responsible for handling main loop for now
 void Session::start(){
 	// client hadles just one peer for now
+	m_piece_manager = std::move(piece_manager(m_torrent.get_pieces_hash()));
 	
-	peer_connection peer(m_torrent.get_peers_infos()[0], &m_main_loop);
-	m_peer_connections.push_back(std::move(peer));
+	int n;
+	n = m_torrent.get_peers_infos().size();
+	for(int i = 0; i < n; i++){
+		peer_connection peer(m_torrent.get_peers_infos()[i], &m_main_loop,
+				&m_piece_manager);
 
-	peer.start();
+		m_peer_connections.push_back(std::move(peer));
+	};
+
+	for(int i = 0; i < m_peer_connections.size(); i++){
+		m_peer_connections[i].start();
+	}
 
 	m_main_loop.run();
 };

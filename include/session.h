@@ -4,7 +4,6 @@
 #include "peer_connection.h"
 #include "torrent.h"
 #include "piece_manager.h"
-
 // class responsible for managing the peer connections
 // holds event loop
 // this class will stand high in the layer hierarchy
@@ -15,6 +14,7 @@
 // Peer connection need peer_info to populate its internal fields, how to get
 // that from torrent?
 // session now only supports one torrent and one set of peers for that torrent
+class peer_connection;
 class Session{
 	public:
 		Session(const std::string& filename);
