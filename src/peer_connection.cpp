@@ -1,14 +1,16 @@
 #include "peer_connection.h"
+#include "session.h"
 
 int peer_connection::get_length(const char * const buff, std::size_t size){
 	return aux::deserialize_int(buff, buff + size);
 };
 
-peer_connection::peer_connection(const struct peer_info_s & p_info, EventLoop * loop) 
-	:PeerConnectionCore(p_info, loop)
+peer_connection::peer_connection(const struct peer_info_s & p_info, EventLoop * loop,
+		piece_manager * pm) : PeerConnectionCore(p_info, loop)
 {
 	m_total = 0;
 	m_choked = true;
+	m_piece_manager = pm;
 }
 
 static std::shared_ptr<struct req_message> create_request_message(int piece_index, int block_offset, int block_length){
@@ -54,8 +56,10 @@ void peer_connection::do_message(){
 };
 
 void peer_connection::handle_unchoke(){
+	//piece_finder(m_bitfield);
 	std::cout << "unchoke!" << std::endl;
 	m_choked = false;
+	auto rarest = m_piece_manager->rarest_first();
 	int piece_index = 0; // test first piece
 	if(m_bitfield.has_piece(piece_index)){
 		std::cout << "asking for piece " << piece_index << std::endl;
@@ -67,7 +71,6 @@ void peer_connection::handle_unchoke(){
 		std::cout << "peer doesnt have piece with index : " << piece_index;
 		std::cout << std::endl;
 	};
-
 };
 
 void peer_connection::handle_choke(){
@@ -77,7 +80,7 @@ void peer_connection::handle_choke(){
 
 void peer_connection::handle_piece(){
 	std::cout << "received block, exiting..." << std::endl;
-	exit(1); // just for now
+	return;
 };
 
 void peer_connection::on_receive(int passed_bytes){
@@ -95,8 +98,8 @@ void peer_connection::on_receive(int passed_bytes){
 		if(protocol_size != PROTOCOL_ID_LENGTH ||
 				memcmp(chunk + 1, PROTOCOL_ID, protocol_size)){
 			std::cerr << "Error : Unknown protocol identifier." << std::endl;
-			close();
-			exit(1);
+			m_disconnect = true;
+			return;
 		};
 
 		// protocol id good, ready to read next step of handshake
@@ -123,7 +126,8 @@ void peer_connection::on_receive(int passed_bytes){
 
 		if(m_peer_info.m_info_hash != received_hash){
 			std::cerr << "Handshake failure : Bad info hash" << std::endl;
-			exit(EXIT_FAILURE);
+			m_disconnect = true;
+			return;
 		}
 
 		m_state = p_state::READ_PEER_ID;
@@ -149,20 +153,19 @@ void peer_connection::on_receive(int passed_bytes){
 	}
 
 	if(m_state == p_state::READ_MESSAGE_SIZE){
+
 		assert(m_recv_buffer.message_size() == 4);
 
 		if(!m_recv_buffer.is_message_finished()) return;
-
 
 		auto [chunk, size] = m_recv_buffer.get();
 		int message_len = get_length(chunk, size);
 
 		if(message_len == 0){
 			std::cout << "keep alive message" << std::endl;
-			exit(1);
+			return;
 		}
 		else if (message_len > 0){
-			std::cout << "MESSAGE -> " << m_recv_buffer.message_size() << std::endl;
 			m_recv_buffer.reset(message_len);
 			std::cout << "message incoming of size : " << message_len << std::endl;
 			m_state = p_state::READ_MESSAGE;
@@ -172,20 +175,13 @@ void peer_connection::on_receive(int passed_bytes){
 
 	if(m_state == p_state::READ_MESSAGE){
 		if(!m_recv_buffer.is_message_finished()){
-			std::cout << "message not finished" << std::endl;
 			return;
 		}else{
 			std::cout << "received full message " << std::endl;
 			auto [chunk, size] = m_recv_buffer.get();
 			do_message();
-			m_state = p_state::NOT_IMPLEMENTED_YET;
 		}
 	}
-
-	if(m_state == p_state::NOT_IMPLEMENTED_YET){
-		exit(1);
-	}
-
 };
 
 void peer_connection::handle_bitfield(char * begin, std::size_t size){
@@ -197,5 +193,6 @@ void peer_connection::handle_bitfield(char * begin, std::size_t size){
 
 		m_state = p_state::READ_MESSAGE_SIZE; // wait for unchoke message
 		m_recv_buffer.reset(4);
+		m_piece_manager->update(this, m_bitfield);
 	}
 };

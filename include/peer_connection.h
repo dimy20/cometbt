@@ -6,13 +6,15 @@
 #include "peer_info.h"
 #include "serial.h"
 #include "bitfield.h"
+#include "piece_manager.h"
 
+class piece_manager;
 // this class implements the protocol
 class peer_connection : public PeerConnectionCore{
-
 	public:
 		peer_connection();
-		peer_connection(const struct peer_info_s& peer, EventLoop * loop);
+		peer_connection(const struct peer_info_s& peer, EventLoop * loop,
+				piece_manager * pm);
 		virtual void on_receive(int passed_bytes);
 	private:
 		int get_length(const char * const buff, std::size_t size);
@@ -26,6 +28,7 @@ class peer_connection : public PeerConnectionCore{
 		void handle_piece();
 
 	private:
+		piece_manager * m_piece_manager;
 		int m_msg_len;
 		int m_total;
 		bool m_choked;
