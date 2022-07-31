@@ -4,6 +4,9 @@
 piece::piece(int index, aux::info_hash piece_hash){
 	m_index = index;
 	m_piece_hash = piece_hash;
+	m_count = 0;
+};
+
 piece::piece(const piece& other){
 	 m_index = other.m_index; // piece index
 	 m_piece_length = other.m_piece_length;
@@ -35,12 +38,6 @@ piece_manager::piece_manager(std::vector<char>& piece_hashes){
 		m_pieces[i] = std::move(piece(i, std::move(piece_hash)));
 		offset += SHA_DIGEST_LENGTH;
 	}
-
-	for(const auto& piece : m_pieces){
-		const auto& hash = piece.hash();
-		std::cout << hash.hex_str() << std::endl;
-	}
-
 };
 
 piece_manager& piece_manager::operator=(piece_manager && other){
