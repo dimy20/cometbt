@@ -32,10 +32,12 @@ class piece_manager{
 		piece_manager() = default;
 		piece_manager(std::vector<char>& piece_hashes);
 		piece_manager& operator=(piece_manager && other);
-		//void update(const piece_connection& conn, const aux::bitfield& bf);
-
+		//updates all pieces for this peer.
+		void update(const peer_connection * conn, const aux::bitfield& bf);
+		std::vector<piece> rarest_first();
 	private:
 		std::vector<piece> m_pieces;
+		std::priority_queue<int, std::vector<int>, std::greater<int>> m_heap;
 };
 
 // whenever a bitfiled arrives at a peer, the peer will notify the pice manager
