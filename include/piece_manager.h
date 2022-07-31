@@ -8,6 +8,7 @@ class piece{
 	public:
 		piece() = default;
 		piece(int index, aux::info_hash piece_hash);
+		piece(const piece& other);
 
 		const aux::info_hash& hash() const { return m_piece_hash; };
 		piece&operator=(piece && other);
