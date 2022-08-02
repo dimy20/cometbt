@@ -74,8 +74,12 @@ void EventLoop::poll_io(int timeout){
 void EventLoop::run(){
 	while(1){
 		int timeout = compute_next_timeout();
+		// poll for io
 		poll_io(timeout);
+		// update global time
 		update_time();
+		// run due timers
+		run_timers();
 	}
 };
 
