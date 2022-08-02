@@ -96,3 +96,16 @@ int EventLoop::compute_next_timeout(){
 	return diff > INT_MAX ? INT_MAX : diff;
 
 };
+
+std::uint64_t EventLoop::update_time(){
+	m_time = get_ms_time();
+	return m_time;
+};
+
+void EventLoop::set_timer(timer t){
+	// add timers to some stagin area?
+	// and only when run fires push all of them to the timer hep?
+	int time = update_time();
+	t.start(time);
+	m_timers.push(t);
+};

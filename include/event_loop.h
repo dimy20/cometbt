@@ -29,6 +29,9 @@ class EventLoop{
 		void watch(SocketTcp * sock, ev_type ev, ev_cb cb);
 		void run();
 		void async_read(SocketTcp * sock, char * buff, std::size_t);
+
+		void set_timer(timer t);
+		std::uint64_t update_time();
 	private:
 		uint64_t get_ms_time(void);
 		int compute_next_timeout();
@@ -37,6 +40,8 @@ class EventLoop{
 		int m_efd;
 		int m_sock_count;
 		std::unordered_map<int, struct io_s> m_iomap; // fd -> peer
+
+		uint64_t m_time; // global time since start of loop
 		heap_timer_t m_timers; // min heap of timers
 
 };
