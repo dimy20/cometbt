@@ -47,24 +47,32 @@ void EventLoop::watch(SocketTcp * sock, ev_type ev, ev_cb cb){
 	}
 };
 
-void EventLoop::run(){
+void EventLoop::poll_io(int timeout){
     struct epoll_event ev[m_sock_count];
 	memset(ev, 0, sizeof(struct epoll_event) * m_sock_count); 
 	int n;
-	while(1){
-		n = epoll_wait(m_efd, ev, m_sock_count, -1);
-		if(n == -1) {
-			perror("epoll_wait");
-			exit(EXIT_FAILURE);
-		}
 
-		for(int i = 0; i < n; i++){
-			if(ev[i].events & EPOLLIN){
-				auto& io = m_iomap[ev[i].data.fd];
-				int received_bytes = io.sock->recv(io.buff, io.size);
-				io.cb(io.sock, io.buff, received_bytes);
-			}
+	n = epoll_wait(m_efd, ev, m_sock_count, timeout);
+	if(n == -1) {
+		perror("epoll_wait");
+		exit(EXIT_FAILURE);
+	}
+
+	for(int i = 0; i < n; i++){
+		if(ev[i].events & EPOLLIN){
+			auto& io = m_iomap[ev[i].data.fd];
+			int received_bytes = io.sock->recv(io.buff, io.size);
+			io.cb(io.sock, io.buff, received_bytes);
 		}
+	}
+};
+
+
+void EventLoop::run(){
+	while(1){
+		int timeout = compute_next_timeout();
+		poll_io(timeout);
+		update_time();
 	}
 };
 

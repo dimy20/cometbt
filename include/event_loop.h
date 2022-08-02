@@ -37,6 +37,8 @@ class EventLoop{
 		int compute_next_timeout();
 		// run all due timers and execute their callbacks
 		void run_timers();
+		// poll for io
+		void poll_io(int timeout);
 
 	private:
 		int m_efd;
