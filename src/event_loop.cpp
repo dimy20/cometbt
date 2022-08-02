@@ -52,7 +52,10 @@ void EventLoop::poll_io(int timeout){
 	memset(ev, 0, sizeof(struct epoll_event) * m_sock_count); 
 	int n;
 
-	n = epoll_wait(m_efd, ev, m_sock_count, timeout);
+	do{
+		n = epoll_wait(m_efd, ev, m_sock_count, timeout);
+	}while(n < 0 && errno == EINTR);
+
 	if(n == -1) {
 		perror("epoll_wait");
 		exit(EXIT_FAILURE);
