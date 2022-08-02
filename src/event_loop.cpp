@@ -1,5 +1,17 @@
 #include "event_loop.h"
 
+uint64_t EventLoop::get_ms_time(void){
+	int ret;
+	int err;
+	struct timeval tv;
+
+	memset(&tv, 0, sizeof(tv));
+	err = gettimeofday(&tv, nullptr );
+	if(err < 0) return err;
+	
+	ret = tv.tv_sec * 1000 + tv.tv_usec / 1000;
+	return ret;
+};
 EventLoop::EventLoop(){
 	m_efd = epoll_create1(0);
 	if(m_efd == -1) perror("epoll_create");
