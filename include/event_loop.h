@@ -3,6 +3,7 @@
 #include <unordered_map>
 #include <sys/time.h>
 #include <queue>
+#include <climits>
 #include "tcp.h"
 #include "timer.h"
 
@@ -30,6 +31,7 @@ class EventLoop{
 		void async_read(SocketTcp * sock, char * buff, std::size_t);
 	private:
 		uint64_t get_ms_time(void);
+		int compute_next_timeout();
 
 	private:
 		int m_efd;

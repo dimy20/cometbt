@@ -77,3 +77,22 @@ void EventLoop::async_read(SocketTcp * sock, char * buff, std::size_t size){
 	}else std::cerr << "loop is not aware of this socket" << std::endl;
 
 };
+
+int EventLoop::compute_next_timeout(){
+	uint64_t diff = 0;
+
+	if(m_timers.empty()) return -1; // block indefinetly
+
+	auto timer = m_timers.top();
+
+	auto clamped_timeout = timer.get_expiry();
+
+	// timer expired, return inmediatly
+	if(clamped_timeout <= m_time) return 0;
+
+	// this is how log we should block
+	diff = clamped_timeout - m_time;
+	
+	return diff > INT_MAX ? INT_MAX : diff;
+
+};
