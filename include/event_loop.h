@@ -2,7 +2,9 @@
 #include <sys/epoll.h>
 #include <unordered_map>
 #include <sys/time.h>
+#include <queue>
 #include "tcp.h"
+#include "timer.h"
 
 typedef void(* ev_cb)(SocketTcp * sock, char * buff, std::size_t );
 
@@ -13,7 +15,11 @@ struct io_s{
 	std::size_t size;
 };
 
+
+bool compare(timer a, timer b);
+
 class EventLoop{
+	typedef std::priority_queue<timer, std::vector<timer>,decltype(&compare)> heap_timer_t;
 	public:
 		enum ev_type{
 			READ = 1
@@ -29,4 +35,6 @@ class EventLoop{
 		int m_efd;
 		int m_sock_count;
 		std::unordered_map<int, struct io_s> m_iomap; // fd -> peer
+		heap_timer_t m_timers; // min heap of timers
+
 };
