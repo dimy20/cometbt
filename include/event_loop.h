@@ -35,6 +35,8 @@ class EventLoop{
 	private:
 		uint64_t get_ms_time(void);
 		int compute_next_timeout();
+		// run all due timers and execute their callbacks
+		void run_timers();
 
 	private:
 		int m_efd;

@@ -109,3 +109,27 @@ void EventLoop::set_timer(timer t){
 	t.start(time);
 	m_timers.push(t);
 };
+
+void EventLoop::run_timers(){
+	while(1){
+		if(m_timers.empty()) break;
+		auto timer = m_timers.top();
+
+		//still running
+		if(timer.get_expiry() > m_time) break;
+
+		//timer is due
+		timer.run_callback();
+
+		//delete
+		m_timers.pop();
+
+		//maybe repeat
+		int loop_time = update_time();
+		if(timer.repeat()){
+			timer.start(loop_time);
+			m_timers.push(timer);
+		}
+	};
+};
+
