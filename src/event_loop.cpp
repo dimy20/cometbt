@@ -12,10 +12,16 @@ uint64_t EventLoop::get_ms_time(void){
 	ret = tv.tv_sec * 1000 + tv.tv_usec / 1000;
 	return ret;
 };
+
+bool compare(timer a, timer b){
+	return a.m_clamped_timeout > b.m_clamped_timeout;
+};
+
 EventLoop::EventLoop(){
 	m_efd = epoll_create1(0);
 	if(m_efd == -1) perror("epoll_create");
 	m_sock_count = 0;
+	m_timers = heap_timer_t(compare);
 };
 
 void EventLoop::watch(SocketTcp * sock, ev_type ev, ev_cb cb){
@@ -61,6 +67,7 @@ void EventLoop::run(){
 		}
 	}
 };
+
 void EventLoop::async_read(SocketTcp * sock, char * buff, std::size_t size){
 	const int fd = sock->get_fd();
 	if(m_iomap.find(fd) != m_iomap.end()){
