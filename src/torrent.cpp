@@ -38,17 +38,17 @@ torrent::torrent(const std::string& filename){
 	m_sock = SocketSSL();
 };
 
-static std::string info_file_path(Bencode::dict_t& d){
-	auto list_node = std::get<Bencode::list_t>(d["path"]->m_val)[0];
+static std::string info_file_path(bencode::dict_t& d){
+	auto list_node = std::get<bencode::list_t>(d["path"]->m_val)[0];
 	auto buff = std::get<std::vector<char>>(list_node->m_val);
 	return std::string(buff.data(), buff.data() + buff.size());
 };
 
-static std::vector<info_file_t> extract_info_files(Bencode::dict_t& info){
+static std::vector<info_file_t> extract_info_files(bencode::dict_t& info){
 	int length;
 	std::vector<info_file_t> info_files;
-	for(auto elem : std::get<Bencode::list_t>(info["files"]->m_val)){
-		auto file = std::get<Bencode::dict_t>(elem->m_val);
+	for(auto elem : std::get<bencode::list_t>(info["files"]->m_val)){
+		auto file = std::get<bencode::dict_t>(elem->m_val);
 		length = std::get<long long>(file["length"]->m_val);
 		info_files.push_back({length, std::move(info_file_path(file))});
 	}
@@ -91,22 +91,22 @@ static int find_info_dict(const std::vector<char>& bencode, int& size){
 };
 
 void torrent::init_torrent_data(){
-	Bencode::Decoder decoder;
-	decoder.set_bencode(m_buff);
+	bencode::decoder b_decoder;
+	b_decoder.set_bencode(m_buff);
 
 	int info_size, info_begin;
 	info_begin = find_info_dict(m_buff, info_size);
 	m_info_hash = std::move(aux::info_hash(m_buff.data() + info_begin, info_size));
 
-	auto data = decoder.decode();
-	auto document = std::get<Bencode::dict_t>(data->m_val);
+	auto data = b_decoder.decode();
+	auto document = std::get<bencode::dict_t>(data->m_val);
 
 	auto buff_tmp = std::get<std::vector<char>>(document["announce"]->m_val);
 	m_announce = std::string(&buff_tmp[0], buff_tmp.data() + buff_tmp.size());
 
 	if(document["announce-list"] != nullptr){ /*optional*/
-		for(auto elem: std::get<Bencode::list_t>(document["announce-list"]->m_val)){
-			auto elem_list = std::get<Bencode::list_t>(elem->m_val);
+		for(auto elem: std::get<bencode::list_t>(document["announce-list"]->m_val)){
+			auto elem_list = std::get<bencode::list_t>(elem->m_val);
 			auto announce = std::get<std::vector<char>>(elem_list[0]->m_val);
 			m_announce_list.push_back(std::string(&announce[0], &announce[announce.size()]));
 		};
@@ -132,7 +132,7 @@ void torrent::init_torrent_data(){
 	}
 
 	/*info dict*/
-	m_info = std::get<Bencode::dict_t>(document["info"]->m_val);
+	m_info = std::get<bencode::dict_t>(document["info"]->m_val);
 
 	buff_tmp = std::get<std::vector<char>>(m_info["name"]->m_val);
 	m_info_name = std::string(buff_tmp.data(), buff_tmp.data() + buff_tmp.size());
@@ -197,14 +197,14 @@ void torrent::setup_peerinfo(){
 
 
 
-	Bencode::Decoder decoder;
-	decoder.set_bencode(std::vector<char>(body, body + content_len));
-	auto response = decoder.decode();
-	auto document = std::get<Bencode::dict_t>(response->m_val);
-	auto peers = std::get<Bencode::list_t>(document["peers"]->m_val);
+	bencode::decoder b_decoder;
+	b_decoder.set_bencode(std::vector<char>(body, body + content_len));
+	auto response = b_decoder.decode();
+	auto document = std::get<bencode::dict_t>(response->m_val);
+	auto peers = std::get<bencode::list_t>(document["peers"]->m_val);
 
 	for(auto peer : peers){
-		auto peer_doc = std::get<Bencode::dict_t>(peer->m_val);
+		auto peer_doc = std::get<bencode::dict_t>(peer->m_val);
 		auto id = std::get<std::vector<char>>(peer_doc["peer id"]->m_val);
 		auto ip = std::get<std::vector<char>>(peer_doc["ip"]->m_val);
 		auto port = std::get<long long>(peer_doc["port"]->m_val);

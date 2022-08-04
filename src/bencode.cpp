@@ -9,33 +9,33 @@ static void die(const std::string& msg){
 	exit(EXIT_FAILURE);
 }
 
-char Bencode::Decoder::peek(){
+char bencode::decoder::peek(){
 	if(m_index == m_bencode.size()) return EOF;
 	return m_bencode[m_index];
 };
 
-void Bencode::Decoder::step(int step_count){
+void bencode::decoder::step(int step_count){
 	if(m_index + step_count <= m_bencode.size()){
 		m_index += step_count;
 	}
 };
 
-Bencode::Decoder::Decoder(){
+bencode::decoder::decoder(){
 	m_index = 0;
 	m_node = nullptr;
 };
 
-Bencode::Decoder::Decoder(std::vector<char> bencode){
+bencode::decoder::decoder(std::vector<char> bencode){
 	m_bencode = bencode;
 	m_index = 0;
 }
 
-void Bencode::Decoder::set_bencode(const std::vector<char>& bencode){
+void bencode::decoder::set_bencode(const std::vector<char>& bencode){
 	m_bencode = bencode;
 	m_index = 0;
 };
 
-std::shared_ptr<struct Bencode::Bnode> Bencode::Decoder::decode_string(long long n){
+std::shared_ptr<struct bencode::Bnode> bencode::decoder::decode_string(long long n){
 	std::vector<char> ans(n);
 	int j = 0;
 	if(m_index + n <= m_bencode.size()){
@@ -51,7 +51,7 @@ std::shared_ptr<struct Bencode::Bnode> Bencode::Decoder::decode_string(long long
 	} else throw std::invalid_argument("Unexpected end of string.");
 }
 
-std::shared_ptr<struct Bencode::Bnode> Bencode::Decoder::decode_int(){
+std::shared_ptr<struct bencode::Bnode> bencode::decoder::decode_int(){
 	int char_count;
 	long long ans;
 
@@ -77,11 +77,11 @@ std::shared_ptr<struct Bencode::Bnode> Bencode::Decoder::decode_int(){
 	return node;
 }
 
-std::shared_ptr<struct Bencode::Bnode> Bencode::Decoder::decode_list(){
+std::shared_ptr<struct bencode::Bnode> bencode::decoder::decode_list(){
 	list_t ans;
 	int len;
 
-	while(m_index < m_bencode.size() && m_bencode[m_index] != Bencode::token_type::END_TOKEN){
+	while(m_index < m_bencode.size() && m_bencode[m_index] != bencode::token_type::END_TOKEN){
 		std::shared_ptr<struct Bnode> node = decode();
 		ans.push_back(node);
 	};
@@ -94,7 +94,7 @@ std::shared_ptr<struct Bencode::Bnode> Bencode::Decoder::decode_list(){
 	return list_node;
 }
 
-std::shared_ptr<struct Bencode::Bnode> Bencode::Decoder::decode_dict(){
+std::shared_ptr<struct bencode::Bnode> bencode::decoder::decode_dict(){
 	dict_t d;
 	int len;
 	std::shared_ptr<struct Bnode> key_node;
@@ -117,7 +117,7 @@ std::shared_ptr<struct Bencode::Bnode> Bencode::Decoder::decode_dict(){
 	return dict_node;
 }
 
-std::shared_ptr<struct Bencode::Bnode> Bencode::Decoder::decode(){
+std::shared_ptr<struct bencode::Bnode> bencode::decoder::decode(){
 	int n;
 	n = m_bencode.size();
 	char token = peek();
@@ -125,21 +125,21 @@ std::shared_ptr<struct Bencode::Bnode> Bencode::Decoder::decode(){
 	if(token == EOF || m_index >= n) return NULL;
 
 	switch(token){
-		case Bencode::token_type::INT_TOKEN:
+		case bencode::token_type::INT_TOKEN:
 			{
 				step(1);
 				m_node  = decode_int();
 				step(1);
 				return m_node;
 			}
-		case Bencode::token_type::LIST_TOKEN:
+		case bencode::token_type::LIST_TOKEN:
 			{
 				step(1); // skip token
 				m_node = decode_list();
 				step(1); // skip end token
 				return m_node;
 			}
-		case Bencode::token_type::DICT_TOKEN:
+		case bencode::token_type::DICT_TOKEN:
 			{
 				step(1);
 				m_node = decode_dict();
@@ -160,9 +160,9 @@ std::shared_ptr<struct Bencode::Bnode> Bencode::Decoder::decode(){
 	return m_node;
 }
 
-long long Bencode::Decoder::get_str_len(){
+long long bencode::decoder::get_str_len(){
 	long long ans = 0;
-	while(m_bencode[m_index] != Bencode::token_type::SDEL_TOKEN){
+	while(m_bencode[m_index] != bencode::token_type::SDEL_TOKEN){
 		if(m_index == m_bencode.size())
 			throw std::invalid_argument("Unexpected end of string.");
 
@@ -180,7 +180,7 @@ long long Bencode::Decoder::get_str_len(){
 	return ans;
 }
 
-std::string Bencode::Decoder::dict_to_string(dict_t& dict){
+std::string bencode::decoder::dict_to_string(dict_t& dict){
 	std::string ans = "dict { ";
 	std::string value = "";
 	int i = 0;
@@ -195,7 +195,7 @@ std::string Bencode::Decoder::dict_to_string(dict_t& dict){
 	return ans;
 }
 
-std::string Bencode::Decoder::list_to_string(list_t& becode_list){
+std::string bencode::decoder::list_to_string(list_t& becode_list){
 	int n;
 	n = becode_list.size();
 	std::string ans = "list [";
@@ -208,7 +208,7 @@ std::string Bencode::Decoder::list_to_string(list_t& becode_list){
 	return ans;
 }
 
-std::string Bencode::Decoder::node_to_string(std::shared_ptr<struct Bnode> node){
+std::string bencode::decoder::node_to_string(std::shared_ptr<struct Bnode> node){
 	int i = node->m_val.index();
 	std::string ans;
 	if(std::holds_alternative<long long>(node->m_val))
@@ -224,6 +224,6 @@ std::string Bencode::Decoder::node_to_string(std::shared_ptr<struct Bnode> node)
 	return ans;
 };
 
-std::string Bencode::Decoder::to_string(){
+std::string bencode::decoder::to_string(){
 	return node_to_string(m_node) + "\n";
 }

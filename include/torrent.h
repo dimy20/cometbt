@@ -71,7 +71,7 @@ class torrent{
 		std::string m_encoding;                   /*optional*/
 
 
-		Bencode::dict_t m_info;
+		bencode::dict_t m_info;
 		int m_info_private;                       /*optional*/
 
 		std::vector<info_file_t> m_info_files; /*only in multiple file mode*/

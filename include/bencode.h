@@ -6,7 +6,7 @@
 #include <memory>
 #include <climits>
 
-namespace Bencode{
+namespace bencode{
 
 	struct Bnode;
 
@@ -25,10 +25,10 @@ namespace Bencode{
 		SDEL_TOKEN = ':'
 	};
 
-	class Decoder{
+	class decoder{
 		public:
-			Decoder(std::vector<char> bencode);
-			Decoder();
+			decoder(std::vector<char> bencode);
+			decoder();
 			std::shared_ptr<struct Bnode> decode(void);
 			std::string to_string(void);
 			void set_bencode(const std::vector<char>& bencode);
