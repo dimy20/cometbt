@@ -1,7 +1,7 @@
 #include "peer_connection.h"
 #include "serial.h"
 
-void read_cb(SocketTcp * sock, char * buff, std::size_t received_bytes){
+void read_cb(socket_tcp * sock, char * buff, std::size_t received_bytes){
 	peer_connection_core * peer = dynamic_cast<peer_connection_core *>(sock);
 	peer->on_receive_internal(received_bytes);
 };
@@ -11,7 +11,7 @@ peer_connection_core::peer_connection_core(const struct peer_info_s& peer_info, 
 	m_loop = loop;
 };
 
-peer_connection_core::peer_connection_core(peer_connection_core && other) : SocketTcp(std::move(other)){
+peer_connection_core::peer_connection_core(peer_connection_core && other) : socket_tcp(std::move(other)){
 	m_recv_buffer = std::move(other.m_recv_buffer);
 	m_peer_info = other.m_peer_info;
 	m_loop = other.m_loop;

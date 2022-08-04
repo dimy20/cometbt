@@ -17,11 +17,11 @@ static int new_socket(int family, int socktype, int protocol){
 	return fd;
 };
 
-SocketTcp::SocketTcp(){
+socket_tcp::socket_tcp(){
 	m_fd = -1;
 };
 
-int SocketTcp::set_flags(int flags){
+int socket_tcp::set_flags(int flags){
 	if(m_fd == -1) die("Bad fd");
 	int m_flags, ret;
 
@@ -36,7 +36,7 @@ int SocketTcp::set_flags(int flags){
 	return m_flags;
 };
 
-int SocketTcp::connect_to(const std::string& host, const std::string& port){
+int socket_tcp::connect_to(const std::string& host, const std::string& port){
 	struct addrinfo hints, * servinfo, * p;
     memset(&hints,0,sizeof(hints));
 
@@ -74,7 +74,7 @@ int SocketTcp::connect_to(const std::string& host, const std::string& port){
 	return m_fd;
 };
 
-int SocketTcp::recv(char * buff, int size){
+int socket_tcp::recv(char * buff, int size){
 	int total, n;
 	total = 0;
 	while(1){
@@ -89,7 +89,7 @@ int SocketTcp::recv(char * buff, int size){
 	return total;
 };
 
-int SocketTcp::send(char * buff, int size){
+int socket_tcp::send(char * buff, int size){
 	int total, n;
 	total = 0;
 	while(1){
@@ -104,15 +104,15 @@ int SocketTcp::send(char * buff, int size){
 	return total;
 };
 
-int SocketTcp::get_fd() const {
+int socket_tcp::get_fd() const {
 	return m_fd;
 }
 
-void SocketTcp::close(){
+void socket_tcp::close(){
 	::close(m_fd);
 }
 
-int SocketTcp::read_available(){
+int socket_tcp::read_available(){
 	int ans;
 	ioctl(m_fd, FIONREAD, &ans);
 	return ans;

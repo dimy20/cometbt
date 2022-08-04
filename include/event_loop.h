@@ -7,10 +7,10 @@
 #include "tcp.h"
 #include "timer.h"
 
-typedef void(* ev_cb)(SocketTcp * sock, char * buff, std::size_t );
+typedef void(* ev_cb)(socket_tcp * sock, char * buff, std::size_t );
 
 struct io_s{
-	SocketTcp * sock;
+	socket_tcp * sock;
 	ev_cb cb;
 	char * buff;
 	std::size_t size;
@@ -26,9 +26,9 @@ class event_loop{
 			READ = 1
 		};
 		event_loop();
-		void watch(SocketTcp * sock, ev_type ev, ev_cb cb);
+		void watch(socket_tcp * sock, ev_type ev, ev_cb cb);
 		void run();
-		void async_read(SocketTcp * sock, char * buff, std::size_t);
+		void async_read(socket_tcp * sock, char * buff, std::size_t);
 
 		void set_timer(timer t);
 		std::uint64_t update_time();

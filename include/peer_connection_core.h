@@ -51,7 +51,7 @@ struct req_message{
 	std::uint8_t block_length[BLOCK_LENGTH_SIZE];  // length of the block
 };
 
-class peer_connection_core : public SocketTcp{
+class peer_connection_core : public socket_tcp{
 	public:
 		peer_connection_core(const struct peer_info_s& peer, event_loop * loop);
 		peer_connection_core(peer_connection_core && other);
@@ -61,7 +61,7 @@ class peer_connection_core : public SocketTcp{
 		// todo
 		void start();
 
-		friend void read_cb(SocketTcp * sock, char * buff, std::size_t received_bytes);
+		friend void read_cb(socket_tcp* sock, char * buff, std::size_t received_bytes);
 
 		virtual void on_receive(int passed_bytes) = 0;
 

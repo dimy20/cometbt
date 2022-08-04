@@ -24,13 +24,13 @@ event_loop::event_loop(){
 	m_timers = heap_timer_t(compare);
 };
 
-void event_loop::watch(SocketTcp * sock, ev_type ev, ev_cb cb){
+void event_loop::watch(socket_tcp * sock, ev_type ev, ev_cb cb){
 	struct epoll_event sock_ev;
 	int ret;
 	memset(&sock_ev, 0, sizeof(sock_ev));
 
 	// in case connection failed
-	if((sock->m_sock_state == SocketTcp::socket_state::CONNECTED)){
+	if((sock->m_sock_state == socket_tcp::socket_state::CONNECTED)){
 		switch(ev){
 			case ev_type::READ:
 				sock_ev.events = EPOLLIN | EPOLLET;
@@ -82,7 +82,7 @@ void event_loop::run(){
 	}
 };
 
-void event_loop::async_read(SocketTcp * sock, char * buff, std::size_t size){
+void event_loop::async_read(socket_tcp * sock, char * buff, std::size_t size){
 	const int fd = sock->get_fd();
 	if(m_iomap.find(fd) != m_iomap.end()){
 		auto& io = m_iomap[sock->get_fd()];

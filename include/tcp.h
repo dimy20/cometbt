@@ -14,10 +14,10 @@
 #include <assert.h>
 #include <fcntl.h>
 
-class SocketTcp{
+class socket_tcp{
 	public:
-		SocketTcp();
-		SocketTcp(SocketTcp && other) = default;
+		socket_tcp();
+		socket_tcp(socket_tcp && other) = default;
 		int connect_to(const std::string& host, const std::string& port);
 		int recv(char * buff, int size);
 		int send(char * buff, int size);
@@ -25,7 +25,7 @@ class SocketTcp{
 		int set_flags(int op);
 		int get_fd() const;
 		int read_available();
-		virtual ~SocketTcp() = default;
+		virtual ~socket_tcp() = default;
 	public:
 		enum class socket_state{
 			CONNECTED = 1,
