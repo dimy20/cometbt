@@ -53,7 +53,7 @@ struct req_message{
 
 class PeerConnectionCore : public SocketTcp{
 	public:
-		PeerConnectionCore(const struct peer_info_s& peer, EventLoop * loop);
+		PeerConnectionCore(const struct peer_info_s& peer, event_loop * loop);
 		PeerConnectionCore(PeerConnectionCore && other);
 		void send_handshake(const aux::info_hash& info_hash, const std::string& id);
 
@@ -86,7 +86,7 @@ class PeerConnectionCore : public SocketTcp{
 	private:
 		// try to avoid this copy
 		// container to hold peer's info
-		EventLoop * m_loop; // ptr to the main loop
+		event_loop * m_loop; // ptr to the main loop
 };
 
 struct handshake_s{

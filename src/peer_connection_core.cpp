@@ -6,7 +6,7 @@ void read_cb(SocketTcp * sock, char * buff, std::size_t received_bytes){
 	peer->on_receive_internal(received_bytes);
 };
 
-PeerConnectionCore::PeerConnectionCore(const struct peer_info_s& peer_info, EventLoop * loop){
+PeerConnectionCore::PeerConnectionCore(const struct peer_info_s& peer_info, event_loop * loop){
 	m_peer_info = peer_info;
 	m_loop = loop;
 };
@@ -42,9 +42,9 @@ void PeerConnectionCore::start(){
 	set_flags(O_NONBLOCK);
 	send_handshake(m_peer_info.m_info_hash, m_peer_info.m_id);
 
-	auto [span, span_size] = m_recv_buffer.reserve(128);
+	auto [span, span_size] = m_recv_buffer.reserve(1024 * 16);
 
-	m_loop->watch(this, EventLoop::ev_type::READ, read_cb);
+	m_loop->watch(this, event_loop::ev_type::READ, read_cb);
 	m_loop->async_read(this, span, span_size);
 
 	// start waiting for comming protocol identifier
@@ -101,9 +101,9 @@ void PeerConnectionCore::on_receive_internal(int received_bytes){
 
 	int max_receive = m_recv_buffer.max_receive();
 
-	if(max_receive == 0){
-		std::cout << "should grow?" << std::endl;
-	}
+	if(!max_receive) m_recv_buffer.grow();
+
+	max_receive = m_recv_buffer.max_receive();
 	auto [chunk, size] = m_recv_buffer.reserve(max_receive);
 	m_loop->async_read(this, chunk, size);
 

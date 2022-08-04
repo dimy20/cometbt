@@ -22,6 +22,6 @@ class Session{
 	private:
 		Torrent m_torrent; // make this better
 		std::vector<peer_connection> m_peer_connections;
-		EventLoop m_main_loop; // main loop
+		event_loop m_main_loop; // main loop
 		piece_manager m_piece_manager;
 };

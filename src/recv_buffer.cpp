@@ -25,12 +25,13 @@ std::pair<char *, std::size_t> RecvBuffer::reserve(int size){
 	return {m_buff.data() + m_recv_end, size};
 }
 
-void RecvBuffer::grow(int limit){
+void RecvBuffer::grow(){
 	int current_size = m_buff.size();
 
 	// grow 50%
-	int new_size = (current_size < m_message_size) ? m_message_size: 
-		std::min(current_size * 3/2, limit);
+	int new_size;
+	new_size = (current_size < m_message_size) ? m_message_size : current_size * 3/2;
+		
 
 	Buffer new_buffer(new_size, m_buff.data(), m_recv_end);
 	m_buff = std::move(new_buffer);

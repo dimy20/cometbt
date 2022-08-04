@@ -4,10 +4,10 @@
 
 typedef void(*timer_cb_t)(void);
 
-class EventLoop;
+class event_loop;
 
 class timer{
-	friend class EventLoop;
+	friend class event_loop;
 	public:
 		timer(int timeout_ms, timer_cb_t cb);
 		timer(int timeout_ms, timer_cb_t cb, int repeat);

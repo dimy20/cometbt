@@ -29,7 +29,7 @@ class RecvBuffer{
 
 		//reserve size bytes for a messsage, and return this chunk
 		std::pair<char *, std::size_t > reserve(int size);
-		void grow(int limit);
+		void grow();
 
 		// account for received bytes
 		void received(int bytes_received){

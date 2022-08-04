@@ -13,7 +13,7 @@ class piece_manager;
 class peer_connection : public PeerConnectionCore{
 	public:
 		peer_connection();
-		peer_connection(const struct peer_info_s& peer, EventLoop * loop,
+		peer_connection(const struct peer_info_s& peer, event_loop * loop,
 				piece_manager * pm);
 		virtual void on_receive(int passed_bytes);
 	private:
