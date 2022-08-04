@@ -15,7 +15,7 @@ static std::string gen_peer_id(){
 	return ans;
 };
 
-Torrent::Torrent(){
+torrent::torrent(){
 	m_announce_list = {};
 	m_comment = "";
 	m_created_by = "";
@@ -26,7 +26,7 @@ Torrent::Torrent(){
 	m_sock = SocketSSL();
 };
 
-Torrent::Torrent(const std::string& filename){
+torrent::torrent(const std::string& filename){
 	/*optional params*/
 	m_announce_list = {};
 	m_comment = "";
@@ -90,7 +90,7 @@ static int find_info_dict(const std::vector<char>& bencode, int& size){
 	return start;
 };
 
-void Torrent::init_torrent_data(){
+void torrent::init_torrent_data(){
 	Bencode::Decoder decoder;
 	decoder.set_bencode(m_buff);
 
@@ -164,7 +164,7 @@ static std::string get_host(const std::string& url){
 	return url.substr(8, count);
 };
 
-void Torrent::setup_peerinfo(){
+void torrent::setup_peerinfo(){
 	int err;
 
 	//TODO remove this from here to a lower layer
@@ -223,6 +223,6 @@ void Torrent::setup_peerinfo(){
 	}
 };
 
-void Torrent::set(std::vector<char> && torrent){
+void torrent::set(std::vector<char> && torrent){
 	m_buff = std::move(torrent);
 };

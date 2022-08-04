@@ -40,10 +40,10 @@ struct info_file_s{
 };
 
 
-class Torrent{
+class torrent{
 	public:
-		Torrent();
-		Torrent(const std::string& filename);
+		torrent();
+		torrent(const std::string& filename);
 		const std::string& get_announce();
 		const std::vector<std::string>& get_announce_list();
 		const std::vector<info_file_t>& get_info_files();
