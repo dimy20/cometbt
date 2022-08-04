@@ -1,12 +1,12 @@
 #include "buffer.h"
 #include <string.h>
 
-Buffer::Buffer(){
+buffer::buffer(){
 	m_begin = nullptr;
 	m_size = 0;
 };
 
-Buffer::Buffer(std::size_t size){
+buffer::buffer(std::size_t size){
 	assert(size < INT_MAX);
 	if(size == 0) return;
 	m_begin = static_cast<char*>(std::malloc(sizeof(char) * size));
@@ -15,7 +15,7 @@ Buffer::Buffer(std::size_t size){
 	m_size = size;
 };
 
-Buffer::Buffer(std::size_t size, char * src, std::size_t src_size){
+buffer::buffer(std::size_t size, char * src, std::size_t src_size){
 	assert(src_size <= size);
 	m_begin = static_cast<char *>(std::malloc(size));
 	m_size = size;
@@ -25,12 +25,12 @@ Buffer::Buffer(std::size_t size, char * src, std::size_t src_size){
 	}
 }
 
-Buffer::Buffer(Buffer && other): m_begin(other.m_begin), m_size(other.m_size){
+buffer::buffer(buffer && other): m_begin(other.m_begin), m_size(other.m_size){
 	other.m_begin = nullptr;
 	other.m_size = 0;
 }
 
-Buffer& Buffer::operator=(Buffer && other){
+buffer& buffer::operator=(buffer && other){
 	if(&other == this) return *this;
 	std::free(m_begin);
 	m_begin = other.m_begin;
@@ -40,51 +40,51 @@ Buffer& Buffer::operator=(Buffer && other){
 	return *this;
 };
 
-Buffer::~Buffer(){
+buffer::~buffer(){
 	if(m_begin != nullptr)
 		std::free(m_begin);
 }
 
-char * Buffer::data(){
+char * buffer::data(){
 	return m_begin;
 }
 
 /*
-char const * Buffer::data() const{
+char const * buffer::data() const{
 	return m_begin;
 }
 */
 
-std::size_t Buffer::size(){
+std::size_t buffer::size(){
 	return m_size;
 }
 
-bool Buffer::empty(){
+bool buffer::empty(){
 	return m_size == 0;
 }
 
-char const& Buffer::operator[](std::size_t index) const{
+char const& buffer::operator[](std::size_t index) const{
 	assert(index <= m_size - 1);
 	return m_begin[index];
 }
 
-char& Buffer::operator[](std::size_t index){
+char& buffer::operator[](std::size_t index){
 	assert(index <= m_size - 1);
 	return m_begin[index];
 
 }
 
-char const * Buffer::begin() const {
+char const * buffer::begin() const {
 	return m_begin;
 }
 
-char * Buffer::begin(){
+char * buffer::begin(){
 	return m_begin;
 }
 
-char * Buffer::end(){
+char * buffer::end(){
 	return m_begin + m_size;
 }
-char const * Buffer::end() const{
+char const * buffer::end() const{
 	return m_begin + m_size;
 }

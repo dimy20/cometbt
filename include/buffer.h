@@ -4,13 +4,13 @@
 #include <climits>
 #include <assert.h>
 
-class Buffer{
+class buffer{
 	public:
-		Buffer();
-		Buffer(std::size_t size);
-		Buffer(std::size_t size, char * src, std::size_t src_size); 
-		Buffer(Buffer && other);
-		Buffer& operator=(Buffer && other);
+		buffer();
+		buffer(std::size_t size);
+		buffer(std::size_t size, char * src, std::size_t src_size); 
+		buffer(buffer && other);
+		buffer& operator=(buffer && other);
 		char * data();
 		char const * data() const;
 		std::size_t size();
@@ -23,7 +23,7 @@ class Buffer{
 		char const * begin() const;
 		char * end();
 		char const * end() const;
-		~Buffer();
+		~buffer();
 	private:
 		std::size_t m_size;
 		char * m_begin;

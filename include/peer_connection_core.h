@@ -80,7 +80,7 @@ class peer_connection_core : public socket_tcp{
 		};
 		struct peer_info_s m_peer_info;
 		p_state m_state;
-		RecvBuffer m_recv_buffer;
+		recv_buffer m_recv_buffer;
 		bool m_disconnect = false;
 
 	private:

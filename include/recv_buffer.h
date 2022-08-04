@@ -1,7 +1,7 @@
 #pragma once
 #include "buffer.h"
 #include <iostream>
-class RecvBuffer{
+class recv_buffer{
 	public:
 		int message_size() const { return m_message_size; };
 
@@ -58,7 +58,7 @@ class RecvBuffer{
 
 	private:
 		// the underlying buffer where the data will be written to from the socket.
-		Buffer m_buff; 
+		buffer m_buff; 
 		// start of protocol message.
 		int m_recv_start = 0;
 		// end of protocol message

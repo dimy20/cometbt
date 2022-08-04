@@ -3,12 +3,12 @@
 
 
 // the maximum i can receive right now
-int RecvBuffer::max_receive(){
+int recv_buffer::max_receive(){
 	return static_cast<int>(m_buff.size()) - m_recv_end;
 }
 
 // reserve size bytes
-std::pair<char *, std::size_t> RecvBuffer::reserve(int size){
+std::pair<char *, std::size_t> recv_buffer::reserve(int size){
 	assert(m_recv_start == 0);
 	assert(size > 0);
 	assert(m_recv_pos >= 0);
@@ -18,14 +18,14 @@ std::pair<char *, std::size_t> RecvBuffer::reserve(int size){
 	if(static_cast<int>(m_recv_end + size > m_buff.size())){
 		int new_size;
 		new_size = std::max(m_recv_end + size, m_message_size);
-		Buffer new_buffer(new_size, m_buff.data(), m_recv_end);
+		buffer new_buffer(new_size, m_buff.data(), m_recv_end);
 		m_buff = std::move(new_buffer);
 	};
 
 	return {m_buff.data() + m_recv_end, size};
 }
 
-void RecvBuffer::grow(){
+void recv_buffer::grow(){
 	int current_size = m_buff.size();
 
 	// grow 50%
@@ -33,11 +33,11 @@ void RecvBuffer::grow(){
 	new_size = (current_size < m_message_size) ? m_message_size : current_size * 3/2;
 		
 
-	Buffer new_buffer(new_size, m_buff.data(), m_recv_end);
+	buffer new_buffer(new_size, m_buff.data(), m_recv_end);
 	m_buff = std::move(new_buffer);
 };
 
-int RecvBuffer::advance_pos(int bytes){
+int recv_buffer::advance_pos(int bytes){
 	int limit;
 	// as much as possible
 	limit = m_message_size > m_recv_pos ? m_message_size - m_recv_pos : m_message_size;
@@ -48,7 +48,7 @@ int RecvBuffer::advance_pos(int bytes){
 	return advance_amount;
 };
 
-void RecvBuffer::cut(int size, int next_message_size, int offset){
+void recv_buffer::cut(int size, int next_message_size, int offset){
 	assert(size >= 0);
 	assert(m_buff.size() >= size);
 	assert(m_buff.size() >= m_recv_pos);
@@ -80,14 +80,14 @@ void RecvBuffer::cut(int size, int next_message_size, int offset){
 	m_message_size = next_message_size;
 };
 
-std::pair<char *, std::size_t> RecvBuffer::get(){
+std::pair<char *, std::size_t> recv_buffer::get(){
 	if(m_buff.empty()){
 		return {nullptr, 0};
 	};
 	return {m_buff.data() + m_recv_start, m_recv_pos};
 };
 
-void RecvBuffer::reset(int next_message_size){
+void recv_buffer::reset(int next_message_size){
 	assert(m_recv_end <= m_buff.size());
 	assert(next_message_size > 0);
 
@@ -107,7 +107,7 @@ void RecvBuffer::reset(int next_message_size){
 
 };
 
-void RecvBuffer::clean(){
+void recv_buffer::clean(){
 	if(m_recv_end > m_recv_start && m_recv_start > 0){
 		int const size = m_recv_end - m_recv_start;
 		memmove(m_buff.data(), m_buff.data() + m_recv_start, size);
