@@ -10,7 +10,7 @@
 
 class piece_manager;
 // this class implements the protocol
-class peer_connection : public PeerConnectionCore{
+class peer_connection : public peer_connection_core{
 	public:
 		peer_connection();
 		peer_connection(const struct peer_info_s& peer, event_loop * loop,

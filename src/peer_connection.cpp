@@ -6,7 +6,7 @@ int peer_connection::get_length(const char * const buff, std::size_t size){
 };
 
 peer_connection::peer_connection(const struct peer_info_s & p_info, event_loop * loop,
-		piece_manager * pm) : PeerConnectionCore(p_info, loop)
+		piece_manager * pm) : peer_connection_core(p_info, loop)
 {
 	m_total = 0;
 	m_choked = true;

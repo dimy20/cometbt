@@ -2,23 +2,23 @@
 #include "serial.h"
 
 void read_cb(SocketTcp * sock, char * buff, std::size_t received_bytes){
-	PeerConnectionCore * peer = dynamic_cast<PeerConnectionCore *>(sock);
+	peer_connection_core * peer = dynamic_cast<peer_connection_core *>(sock);
 	peer->on_receive_internal(received_bytes);
 };
 
-PeerConnectionCore::PeerConnectionCore(const struct peer_info_s& peer_info, event_loop * loop){
+peer_connection_core::peer_connection_core(const struct peer_info_s& peer_info, event_loop * loop){
 	m_peer_info = peer_info;
 	m_loop = loop;
 };
 
-PeerConnectionCore::PeerConnectionCore(PeerConnectionCore && other) : SocketTcp(std::move(other)){
+peer_connection_core::peer_connection_core(peer_connection_core && other) : SocketTcp(std::move(other)){
 	m_recv_buffer = std::move(other.m_recv_buffer);
 	m_peer_info = other.m_peer_info;
 	m_loop = other.m_loop;
 };
 
 // part of this can be moved up to peer_connection
-void PeerConnectionCore::send_handshake(const aux::info_hash& info_hash, const std::string& id){
+void peer_connection_core::send_handshake(const aux::info_hash& info_hash, const std::string& id){
 	assert(get_fd() != -1);
 	assert(info_hash.get() != nullptr);
 
@@ -35,7 +35,7 @@ void PeerConnectionCore::send_handshake(const aux::info_hash& info_hash, const s
 };
 
 
-void PeerConnectionCore::start(){
+void peer_connection_core::start(){
 	int err;
 	err = connect_to(m_peer_info.m_remote_ip, m_peer_info.m_remote_port);
 	if(err == -1) std::cerr << "failed to start peer connection" << std::endl;
@@ -51,7 +51,7 @@ void PeerConnectionCore::start(){
 	m_recv_buffer.reset(20);
 };
 
-void PeerConnectionCore::on_receive_internal(int received_bytes){
+void peer_connection_core::on_receive_internal(int received_bytes){
 	assert(received_bytes <= m_recv_buffer.max_receive());
 			
 	// likely to be more data to read, grow buffer

@@ -51,10 +51,10 @@ struct req_message{
 	std::uint8_t block_length[BLOCK_LENGTH_SIZE];  // length of the block
 };
 
-class PeerConnectionCore : public SocketTcp{
+class peer_connection_core : public SocketTcp{
 	public:
-		PeerConnectionCore(const struct peer_info_s& peer, event_loop * loop);
-		PeerConnectionCore(PeerConnectionCore && other);
+		peer_connection_core(const struct peer_info_s& peer, event_loop * loop);
+		peer_connection_core(peer_connection_core && other);
 		void send_handshake(const aux::info_hash& info_hash, const std::string& id);
 
 		// starts connection and prepares receive buffer
