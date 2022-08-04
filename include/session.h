@@ -15,9 +15,9 @@
 // that from torrent?
 // session now only supports one torrent and one set of peers for that torrent
 class peer_connection;
-class Session{
+class session{
 	public:
-		Session(const std::string& filename);
+		session(const std::string& filename);
 		void start();
 	private:
 		torrent m_torrent; // make this better

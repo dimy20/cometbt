@@ -1,5 +1,7 @@
 #include "session.h"
-
+void callback(void){
+	std::cout << "THIS IS A CALLBACK " << std::endl;
+};
 // move to aux?
 static std::vector<char> open_file(const std::string& filename){
 	std::vector<char> buff;
@@ -14,7 +16,7 @@ static std::vector<char> open_file(const std::string& filename){
 	return buff;
 };
 
-Session::Session(const std::string& filename){
+session::session(const std::string& filename){
 	auto torrent_file = open_file(filename);
 	m_torrent.set(std::move(torrent_file));
 	m_torrent.init_torrent_data();
@@ -24,13 +26,13 @@ Session::Session(const std::string& filename){
 }
 
 // should only be responsible for handling main loop for now
-void Session::start(){
+void session::start(){
 	// client hadles just one peer for now
 	m_piece_manager = std::move(piece_manager(m_torrent.get_pieces_hash()));
 	
 	int n;
 	n = m_torrent.get_peers_infos().size();
-	for(int i = 0; i < n; i++){
+	for(int i = 0; i < 1; i++){
 		peer_connection peer(m_torrent.get_peers_infos()[i], &m_main_loop,
 				&m_piece_manager);
 
@@ -40,6 +42,9 @@ void Session::start(){
 	for(int i = 0; i < m_peer_connections.size(); i++){
 		m_peer_connections[i].start();
 	}
+
+	timer t(2000, callback);
+	m_main_loop.set_timer(t);
 
 	m_main_loop.run();
 };
