@@ -11,6 +11,8 @@ class buffer{
 		buffer(std::size_t size, char * src, std::size_t src_size); 
 		buffer(buffer && other);
 		buffer& operator=(buffer && other);
+		buffer& operator=(const buffer&  other);
+
 		char * data();
 		char const * data() const;
 		std::size_t size();

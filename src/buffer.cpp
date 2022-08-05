@@ -40,6 +40,21 @@ buffer& buffer::operator=(buffer && other){
 	return *this;
 };
 
+buffer& buffer::operator=(const buffer& other){
+	if(other.m_begin != nullptr && other.m_size > 0){
+		m_begin = static_cast<char*>(std::malloc(other.m_size));
+		if(!m_begin){
+			throw(std::bad_alloc());
+		}
+		memcpy(m_begin, other.m_begin, other.m_size);
+		m_size = other.m_size;
+		return *this;
+	};
+	m_begin = nullptr;
+	m_size = 0;
+	return *this;
+};
+
 buffer::~buffer(){
 	if(m_begin != nullptr)
 		std::free(m_begin);
