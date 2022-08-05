@@ -22,7 +22,10 @@ target_link_libraries(test_buffer torrent gtest_main)
 add_executable(test_recv_buffer test_recv_buffer.cpp)
 target_link_libraries(test_recv_buffer torrent gtest_main)
 
+add_executable(test_hash test_hash.cpp)
+target_link_libraries(test_hash torrent crypto gtest_main)
 
 add_test(bencode_decoder test_bencode_decoder)
 add_test(buffer test_buffer)
 add_test(recv_buffer test_recv_buffer)
+add_test(hash, test_hash)
