@@ -9,7 +9,7 @@ timer::timer(int timeout_ms, timer_cb_t cb){
 timer::timer(int timeout_ms, timer_cb_t cb, int repeat){
 	m_timeout_ms = timeout_ms;
 	m_cb = cb;
-	m_repeat = repeat < 0 ? 0 : repeat;
+	m_repeat = repeat <= 0 ? 0 : repeat - 1;
 };
 
 int timer::start(int loop_time){
