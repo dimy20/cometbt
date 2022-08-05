@@ -25,12 +25,13 @@ std::string aux::info_hash::hex_str() const {
 	return ss.str();
 };
 
-bool aux::info_hash::operator==(const info_hash& other){
+bool aux::info_hash::operator==(const info_hash& other) const {
+	if(other.get() == nullptr || this->get() == nullptr) return false;
 	return memcmp(m_sha1_hash, other.m_sha1_hash, SHA_DIGEST_LENGTH) == 0;
 };
 
-bool aux::info_hash::operator!=(const info_hash& other){
-	return memcmp(m_sha1_hash, other.m_sha1_hash, SHA_DIGEST_LENGTH) != 0;
+bool aux::info_hash::operator!=(const info_hash& other) const{
+	return !(*this == other);
 }
 
 aux::info_hash::~info_hash(){

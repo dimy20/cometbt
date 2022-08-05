@@ -20,8 +20,8 @@ namespace aux{
 
 			
 			std::string hex_str() const;
-			bool operator==(const info_hash& other);
-			bool operator!=(const info_hash& other);
+			bool operator==(const info_hash& other) const;
+			bool operator!=(const info_hash& other) const;
 
 			// populates buffer with pre-computed sha1 hash, if buffer contains
 			// a sha1 digest already it will be overwritten.
