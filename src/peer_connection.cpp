@@ -75,21 +75,7 @@ void peer_connection::do_message(){
 };
 
 void peer_connection::handle_unchoke(){
-	//piece_finder(m_bitfield);
-	std::cout << "unchoke!" << std::endl;
 	m_choked = false;
-	auto rarest = m_piece_manager->rarest_first();
-	int piece_index = 0; // test first piece
-	if(m_bitfield.has_piece(piece_index)){
-		std::cout << "asking for piece " << piece_index << std::endl;
-		auto msg = create_request_message(piece_index, 0, BLOCK_LENGTH);
-		send(reinterpret_cast<char *>(msg.get()), sizeof(*msg.get()));
-		m_state = p_state::READ_MESSAGE_SIZE;
-		m_recv_buffer.reset(4);
-	}else{
-		std::cout << "peer doesnt have piece with index : " << piece_index;
-		std::cout << std::endl;
-	};
 };
 
 
