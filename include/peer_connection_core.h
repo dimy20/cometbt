@@ -69,6 +69,9 @@ class peer_connection_core : public socket_tcp{
 		void on_connection();
 
 	protected:
+		void setup_receive();
+
+	protected:
 		enum class p_state{
 			READ_PROTOCOL_ID,
 			READ_INFO_HASH,

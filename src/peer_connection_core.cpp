@@ -97,12 +97,18 @@ void peer_connection_core::on_receive_internal(int received_bytes){
 		return;
 	};
 
+	setup_receive();
+};
+
+void peer_connection_core::setup_receive(){
 	// clean the processed chunks
 	m_recv_buffer.clean();
 
-
 	int max_receive = m_recv_buffer.max_receive();
 
+	if(max_receive == 0){
+		m_recv_buffer.grow();
+	}
 	if(!max_receive) m_recv_buffer.grow();
 
 	max_receive = m_recv_buffer.max_receive();
