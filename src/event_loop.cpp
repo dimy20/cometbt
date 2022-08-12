@@ -52,6 +52,8 @@ void event_loop::poll_io(int timeout){
 	memset(ev, 0, sizeof(struct epoll_event) * m_sock_count); 
 	int n;
 
+	if(m_sock_count == 0) return;
+
 	do{
 		n = epoll_wait(m_efd, ev, m_sock_count, timeout);
 	}while(n < 0 && errno == EINTR);
@@ -71,7 +73,7 @@ void event_loop::poll_io(int timeout){
 };
 
 void event_loop::run(){
-	while(1){
+	while(!m_timers.empty() || m_sock_count > 0){
 		int timeout = compute_next_timeout();
 		// poll for io
 		poll_io(timeout);
