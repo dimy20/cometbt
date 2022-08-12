@@ -185,7 +185,8 @@ void peer_connection::on_receive(int passed_bytes){
 
 		if(memcmp(chunk, m_peer_info.m_remote_id.data(), PEER_ID_LENGTH) != 0){
 			std::cerr << "Error: failed to verify remote peer id" << std::endl;
-			exit(EXIT_FAILURE);
+			m_disconnect = true;
+			return;
 		}else std::cout << "verified peer id, handshake complete" << std::endl;
 
 		m_state = p_state::READ_MESSAGE_SIZE;
