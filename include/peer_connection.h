@@ -15,6 +15,8 @@ class peer_connection : public peer_connection_core{
 		peer_connection();
 		peer_connection(const struct peer_info_s& peer, event_loop * loop,
 				piece_manager * pm);
+		peer_connection(const struct peer_info_s& peer, piece_manager * pm);
+		peer_connection(peer_connection && other);
 		virtual void on_receive(int passed_bytes);
 	private:
 		int get_length(const char * const buff, std::size_t size);

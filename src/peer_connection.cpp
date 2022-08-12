@@ -5,13 +5,32 @@ int peer_connection::get_length(const char * const buff, std::size_t size){
 	return aux::deserialize_int(buff, buff + size);
 };
 
-peer_connection::peer_connection(const struct peer_info_s & p_info, event_loop * loop,
-		piece_manager * pm) : peer_connection_core(p_info, loop)
+peer_connection::peer_connection(const struct peer_info_s & p_info, piece_manager * pm)
+: peer_connection_core(p_info)
 {
 	m_total = 0;
 	m_choked = true;
 	m_piece_manager = pm;
 }
+
+peer_connection::peer_connection(peer_connection && other)
+: peer_connection_core(std::move(other)){
+
+	m_piece_manager = other.m_piece_manager;
+	m_msg_len = other.m_msg_len;
+	m_total = other.m_total;
+	m_choked = other.m_choked;
+	m_bitfield = std::move(m_bitfield);
+//	memcpy(&m_sem_choked, &other.m_sem_choked, sizeof(sem_t));
+};
+
+peer_connection& peer_connection::operator=(const peer_connection& other){
+	m_piece_manager = other.m_piece_manager;
+	m_msg_len = other.m_msg_len;
+	m_total = other.m_total;
+	//m_bitfield = other.m_bitfield;
+	return *this;
+};
 
 static std::shared_ptr<struct req_message> create_request_message(int piece_index, int block_offset, int block_length){
 	struct req_message * msg = new struct req_message;
