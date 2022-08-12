@@ -14,12 +14,14 @@ class piece;
 class peer_connection : public peer_connection_core{
 	public:
 		peer_connection();
-		peer_connection(const struct peer_info_s& peer, event_loop * loop,
-				piece_manager * pm);
 		peer_connection(const struct peer_info_s& peer, piece_manager * pm);
 		peer_connection(peer_connection && other);
+		peer_connection& operator=(const peer_connection& other);
+
 		virtual void on_receive(int passed_bytes);
 		void fetch_piece(piece& p);
+
+		bool choked() { return m_choked; };
 
 	private:
 		int get_length(const char * const buff, std::size_t size);
@@ -32,6 +34,7 @@ class peer_connection : public peer_connection_core{
 		void handle_choke();
 		void handle_piece();
 
+
 	private:
 		piece_manager * m_piece_manager;
 		int m_msg_len;
@@ -39,3 +42,4 @@ class peer_connection : public peer_connection_core{
 		bool m_choked;
 		aux::bitfield m_bitfield;
 };
+
