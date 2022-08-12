@@ -53,13 +53,12 @@ struct req_message{
 
 class peer_connection_core : public socket_tcp{
 	public:
-		peer_connection_core(const struct peer_info_s& peer, event_loop * loop);
+		peer_connection_core(const struct peer_info_s& peer);
 		peer_connection_core(peer_connection_core && other);
 		void send_handshake(const aux::info_hash& info_hash, const std::string& id);
 
 		// starts connection and prepares receive buffer
-		// todo
-		void start();
+		void start(event_loop * loop);
 
 		friend void read_cb(socket_tcp* sock, char * buff, std::size_t received_bytes);
 

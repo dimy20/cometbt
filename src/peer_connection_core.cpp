@@ -6,9 +6,8 @@ void read_cb(socket_tcp * sock, char * buff, std::size_t received_bytes){
 	peer->on_receive_internal(received_bytes);
 };
 
-peer_connection_core::peer_connection_core(const struct peer_info_s& peer_info, event_loop * loop){
+peer_connection_core::peer_connection_core(const struct peer_info_s& peer_info){
 	m_peer_info = peer_info;
-	m_loop = loop;
 };
 
 peer_connection_core::peer_connection_core(peer_connection_core && other) : socket_tcp(std::move(other)){
@@ -35,8 +34,11 @@ void peer_connection_core::send_handshake(const aux::info_hash& info_hash, const
 };
 
 
-void peer_connection_core::start(){
+void peer_connection_core::start(event_loop * loop){
+	assert(loop != nullptr);
 	int err;
+
+	m_loop = loop;
 	err = connect_to(m_peer_info.m_remote_ip, m_peer_info.m_remote_port);
 	if(err == -1) std::cerr << "failed to start peer connection" << std::endl;
 	set_flags(O_NONBLOCK);
