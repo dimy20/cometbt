@@ -19,11 +19,13 @@ class piece{
 		int count() const { return m_count; };
 
 		// update list of peers who have this piece
-		void add_peer(const peer_connection * peer){
-			m_peers.push_back(peer);
-			m_count++;
-		};
+		void add_peer(peer_connection * peer);
+
+		
+		std::vector<peer_connection *>& peers() { return m_peers; };
+		bool m_in_transit = false;
 	private :
+
 		int m_index; // piece index
 		int m_piece_length;
 		int m_count; // count of how many peers have this piece
@@ -32,6 +34,6 @@ class piece{
 		aux::info_hash m_piece_hash; // ;
 	protected:
 		// vector of pointer to the peers who have it
-		std::vector<const peer_connection *> m_peers;
+		std::vector<peer_connection *> m_peers;
 		
 };

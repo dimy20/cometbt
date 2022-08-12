@@ -15,6 +15,7 @@ piece::piece(const piece& other){
 	 // each block that make up the piece 16 blocks
 	 m_piece_blocks = other.m_piece_blocks;
 	 m_piece_hash = other.m_piece_hash;
+	 m_peers = other.m_peers;
 };
 
 piece& piece::operator=(piece && other){
@@ -26,4 +27,9 @@ piece& piece::operator=(piece && other){
 	m_piece_blocks = std::move(other.m_piece_blocks);
 	m_piece_hash = std::move(other.m_piece_hash);
 	return *this;
+};
+
+void piece::add_peer(peer_connection * peer){
+	m_peers.push_back(peer);
+	m_count++;
 };
