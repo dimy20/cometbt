@@ -88,7 +88,7 @@ class peer_connection_core : public socket_tcp{
 	private:
 		// try to avoid this copy
 		// container to hold peer's info
-		event_loop * m_loop; // ptr to the main loop
+		event_loop * m_loop = nullptr;// ptr to the main loop
 };
 
 struct handshake_s{
