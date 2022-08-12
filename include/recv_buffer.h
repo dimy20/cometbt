@@ -2,7 +2,12 @@
 #include "buffer.h"
 #include <iostream>
 class recv_buffer{
+
 	public:
+		recv_buffer(recv_buffer && other);
+		recv_buffer() = default;
+		recv_buffer& operator = (recv_buffer && other);
+
 		int message_size() const { return m_message_size; };
 
 		// how many messsage bytes are yet unprocessed
