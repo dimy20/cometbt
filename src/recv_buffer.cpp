@@ -115,3 +115,16 @@ void recv_buffer::clean(){
 	m_recv_end -= m_recv_start;
 	m_recv_start = 0;
 }
+
+recv_buffer::recv_buffer(recv_buffer && other){
+	*this = std::move(other);
+};
+
+recv_buffer& recv_buffer::operator=(recv_buffer && other){
+	m_buff = std::move(other.m_buff);
+	m_recv_start = other.m_recv_start;
+	m_recv_end = other.m_recv_end;
+	m_recv_pos = other.m_recv_pos;
+	m_message_size = other.m_message_size;
+	return *this;
+};
