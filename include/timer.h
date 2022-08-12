@@ -2,15 +2,15 @@
 #include <cstdint>
 #include <cassert>
 
-typedef void(*timer_cb_t)(void);
+typedef void(*timer_cb_t)(void *);
 
 class event_loop;
 
 class timer{
 	friend class event_loop;
 	public:
-		timer(int timeout_ms, timer_cb_t cb);
-		timer(int timeout_ms, timer_cb_t cb, int repeat);
+		timer(int timeout_ms, timer_cb_t cb, void * cb_arg);
+		timer(int timeout_ms, timer_cb_t cb, int repeat, void * cb_arg);
 		timer(const timer& other) = default;
 		//timer& operator=(const timer& other);
 		//timer(timer && other);
@@ -29,7 +29,7 @@ class timer{
 		bool repeat();
 		void run_callback(){ 
 			assert(m_cb != nullptr);
-			m_cb();
+			m_cb(m_cb_arg);
 		};
 
 	private:
@@ -38,6 +38,7 @@ class timer{
 		int m_timeout_ms = 0;
 		int m_repeat = 0;
 		uint8_t m_flags = 0; // what for?
+		void * m_cb_arg;
 
 		//cometev::loop * m_loop = nullptr;
 };
