@@ -92,6 +92,27 @@ void peer_connection::handle_unchoke(){
 	};
 };
 
+
+void peer_connection::fetch_piece(piece& p){
+	//pthread_mutex_lock(&m_mutex);
+	if(!m_bitfield.empty() && !m_bitfield.has_piece(p.index())) return;
+	if(p.m_in_transit) return;
+
+	std::cout << "asking for piece " << p.hash().hex_str();
+	std::cout << " " << p.index() << std::endl;
+
+	auto msg = create_request_message(p.index(), 0, BLOCK_LENGTH);
+	send(reinterpret_cast<char *>(msg.get()), sizeof(*msg.get()));
+	m_state = p_state::READ_MESSAGE_SIZE;
+	m_recv_buffer.reset(4);
+
+	// setup lower layer to received message
+	setup_receive();
+
+	p.m_in_transit = true;
+	//pthread_mutex_unlock(&m_mutex);
+};
+
 void peer_connection::handle_choke(){
 	m_choked = true;
 	std::cout << "choked" << std::endl;

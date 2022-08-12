@@ -9,6 +9,7 @@
 #include "piece_manager.h"
 
 class piece_manager;
+class piece;
 // this class implements the protocol
 class peer_connection : public peer_connection_core{
 	public:
@@ -18,6 +19,8 @@ class peer_connection : public peer_connection_core{
 		peer_connection(const struct peer_info_s& peer, piece_manager * pm);
 		peer_connection(peer_connection && other);
 		virtual void on_receive(int passed_bytes);
+		void fetch_piece(piece& p);
+
 	private:
 		int get_length(const char * const buff, std::size_t size);
 		//change this to work directly with the receive buffer
