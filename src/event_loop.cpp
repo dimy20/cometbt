@@ -43,6 +43,29 @@ void event_loop::watch(socket_tcp * sock, ev_type ev, ev_cb cb){
 		if(ret == -1) perror("epoll_ctl");
 
 		m_iomap[sock->get_fd()] = {sock, cb}; // add entry
+void event_loop::watch(socket_tcp * sock, std::uint32_t events, ev_cb cb){
+	struct epoll_event ev;
+	int err, fd;
+	memset(&ev, 0, sizeof(struct epoll_event));
+
+	fd = sock->get_fd();
+	ev.data.fd = fd;
+	ev.events = events;
+	err = epoll_ctl(m_efd, EPOLL_CTL_ADD, fd, &ev);
+
+	if(err == -1){
+		// we should have an entry for this fd
+		assert(m_iomap.find(fd) != m_iomap.end());
+		if(errno == EEXIST){
+			err = epoll_ctl(m_efd, EPOLL_CTL_MOD, fd, &ev);
+			if(err == -1)
+				perror("epoll_ctl");
+		}else{
+			perror("epoll_ctl");
+			return;
+		}
+	}else{
+		m_iomap[fd] = {sock, cb};
 		m_sock_count++;
 	}
 };
