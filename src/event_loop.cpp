@@ -171,3 +171,11 @@ void event_loop::run_timers(){
 	};
 };
 
+
+std::uint32_t event_loop::get_sock_events(socket_tcp * sock){
+	assert(sock != nullptr);
+	int fd = sock->get_fd();
+	if(m_iomap.find(fd) == m_iomap.end()) return 0;
+	auto& io = m_iomap[fd];
+	return io.events;
+};

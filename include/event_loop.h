@@ -33,6 +33,8 @@ class event_loop{
 
 		void set_timer(timer t);
 		std::uint64_t update_time();
+
+		std::uint32_t get_sock_events(socket_tcp * sock);
 	private:
 		uint64_t get_ms_time(void);
 		int compute_next_timeout();
