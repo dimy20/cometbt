@@ -95,6 +95,31 @@ void event_loop::async_read(socket_tcp * sock, char * buff, std::size_t size){
 
 };
 
+void event_loop::async_write(socket_tcp * sock, char * buff, int size){
+	if(buff == nullptr || size == 0) return;
+
+
+	const int fd = sock->get_fd();
+	int err;
+	// try to write
+	int n = sock->send(buff, size, err);
+
+	if(err == -1){
+		if(errno == EAGAIN || errno == EWOULDBLOCK){
+			std::uint32_t events = 0;
+			if(m_iomap.find(fd) != m_iomap.end()){
+				events = get_sock_events(sock);
+			}
+			events |= EPOLLOUT;
+			event_ctl(sock, events);
+			assert(m_iomap.find(fd) != m_iomap.end());
+
+			auto& io = m_iomap[fd];
+			io.write_queue.push({buff + n, size - n});
+		}else perror("epoll_ctl");
+	}
+};
+
 int event_loop::compute_next_timeout(){
 	uint64_t diff = 0;
 

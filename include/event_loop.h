@@ -11,9 +11,10 @@ typedef void(* ev_cb)(socket_tcp * sock, char * buff, std::size_t );
 
 struct io_s{
 	socket_tcp * sock;
-	ev_cb cb;
+	ev_cb read_cb;
 	char * buff;
 	std::size_t size;
+	std::queue<std::pair<char *, int>> write_queue;
 	std::uint32_t events;
 };
 
@@ -30,6 +31,7 @@ class event_loop{
 		void event_ctl(socket_tcp * sock, std::uint32_t events);
 		void run();
 		void async_read(socket_tcp * sock, char * buff, std::size_t);
+		void async_write(socket_tcp * sock, char * buff, int size);
 
 		void set_timer(timer t);
 		std::uint64_t update_time();
