@@ -27,7 +27,7 @@ class event_loop{
 			READ = 1
 		};
 		event_loop();
-		void watch(socket_tcp * sock, std::uint32_t events, ev_cb cb);
+		void event_ctl(socket_tcp * sock, std::uint32_t events);
 		void run();
 		void async_read(socket_tcp * sock, char * buff, std::size_t);
 

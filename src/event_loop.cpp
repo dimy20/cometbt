@@ -24,50 +24,28 @@ event_loop::event_loop(){
 	m_timers = heap_timer_t(compare);
 };
 
-void event_loop::watch(socket_tcp * sock, ev_type ev, ev_cb cb){
-	struct epoll_event sock_ev;
-	int ret;
-	memset(&sock_ev, 0, sizeof(sock_ev));
-
-	// in case connection failed
-	if((sock->m_sock_state == socket_tcp::socket_state::CONNECTED)){
-		switch(ev){
-			case ev_type::READ:
-				sock_ev.events = EPOLLIN | EPOLLET;
-				break;
-		}
-
-		sock_ev.data.fd = sock->get_fd();
-		ret = epoll_ctl(m_efd, EPOLL_CTL_ADD, sock->get_fd(), &sock_ev);
-
-		if(ret == -1) perror("epoll_ctl");
-
-		m_iomap[sock->get_fd()] = {sock, cb}; // add entry
-void event_loop::watch(socket_tcp * sock, std::uint32_t events, ev_cb cb){
+void event_loop::event_ctl(socket_tcp * sock, std::uint32_t events){
 	struct epoll_event ev;
 	int err, fd;
+	fd = sock->get_fd();
+	if(m_iomap.find(fd) == m_iomap.end()) return;
+
 	memset(&ev, 0, sizeof(struct epoll_event));
 
-	fd = sock->get_fd();
 	ev.data.fd = fd;
-	ev.events = events;
+	ev.events = events | EPOLLET; // use edge triggered mode
+
 	err = epoll_ctl(m_efd, EPOLL_CTL_ADD, fd, &ev);
 
 	if(err == -1){
-		// we should have an entry for this fd
-		assert(m_iomap.find(fd) != m_iomap.end());
 		if(errno == EEXIST){
 			err = epoll_ctl(m_efd, EPOLL_CTL_MOD, fd, &ev);
-			if(err == -1)
-				perror("epoll_ctl");
+			if(err == -1) perror("epoll_ctl");
 		}else{
 			perror("epoll_ctl");
-			return;
 		}
-	}else{
-		m_iomap[fd] = {sock, cb};
-		m_sock_count++;
-	}
+
+	};
 };
 
 void event_loop::poll_io(int timeout){
