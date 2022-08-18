@@ -54,10 +54,11 @@ void piece::add_block(block * b){
 	
 	m_piece_blocks[i] = b;
 	m_received_count++;
+	std::cout << "received count ->" << m_received_count << std::endl;
 }
 
 bool piece::complete(){
-	std::cout << "received count ->" << m_received_count << std::endl;
+	//std::cout << "received count ->" << m_received_count << std::endl;
 	if(m_received_count < m_piece_blocks.size()) return false;
 	assert(m_received_count == m_piece_blocks.size());
 	int total = 0;
@@ -65,8 +66,10 @@ bool piece::complete(){
 		assert(block != nullptr);
 		total += block->m_buffer.size();
 	};
+	/*
 	std::cout << total << std::endl;
 	std::cout << m_piece_length << std::endl;
+	*/
 	return total == m_piece_length;
 };
 
