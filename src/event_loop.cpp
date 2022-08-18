@@ -1,5 +1,17 @@
 #include "event_loop.h"
 
+void event_loop::set_socket(socket_tcp * sock, ev_cb read_cb){
+	int fd = sock->get_fd();
+	if(m_iomap.find(fd) != m_iomap.end()){
+		auto& io = m_iomap[fd];
+		assert(io.read_cb != nullptr);
+		assert(io.sock == sock);
+		return;
+	}else{
+		m_iomap[fd] = {sock, read_cb, nullptr, 0};
+		m_sock_count++;
+	}
+}
 uint64_t event_loop::get_ms_time(void){
 	int ret;
 	int err;

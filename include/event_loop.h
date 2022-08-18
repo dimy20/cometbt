@@ -34,6 +34,8 @@ class event_loop{
 		void async_write(socket_tcp * sock, char * buff, int size);
 
 		void set_timer(timer t);
+		void set_socket(socket_tcp * sock, ev_cb);
+
 		std::uint64_t update_time();
 
 		std::uint32_t get_sock_events(socket_tcp * sock);
