@@ -57,13 +57,13 @@ static std::shared_ptr<struct interested_message> create_interested_message(){
 
 void peer_connection::do_message(){
 	auto [msg_buff, payload_len] = m_recv_buffer.get();
-	std::cout << "processing message - payload : " << payload_len <<  std::endl;
+	//std::cout << "processing message - payload : " << payload_len <<  std::endl;
 	message_id msg_id  = static_cast<message_id>(*msg_buff);
 	switch((msg_id)){
 		case message_id::BITFIELD:
 			{
 				msg_buff++;
-				std::cout << "bitfield !! " << std::endl;
+				//std::cout << "bitfield !! " << std::endl;
 				auto[recv_buffer, size] = m_recv_buffer.get();
 				handle_bitfield(recv_buffer, size - 1);
 				break;
@@ -156,6 +156,7 @@ void peer_connection::handle_piece(){
 };
 
 void peer_connection::on_receive(int passed_bytes){
+	int message_len;
 
 	if(m_state == p_state::READ_PROTOCOL_ID){
 		if(!m_recv_buffer.is_message_finished()) return;
@@ -232,7 +233,7 @@ void peer_connection::on_receive(int passed_bytes){
 		if(!m_recv_buffer.is_message_finished()) return;
 
 		auto [chunk, size] = m_recv_buffer.get();
-		int message_len = get_length(chunk, size);
+		message_len = get_length(chunk, size);
 
 		if(message_len == 0){
 			std::cout << "keep alive message" << std::endl;
@@ -240,7 +241,7 @@ void peer_connection::on_receive(int passed_bytes){
 		}
 		else if (message_len > 0){
 			m_recv_buffer.reset(message_len);
-			std::cout << "message incoming of size : " << message_len << std::endl;
+			//std::cout << "message incoming of size : " << message_len << std::endl;
 			m_state = p_state::READ_MESSAGE;
 		}
 
@@ -251,7 +252,6 @@ void peer_connection::on_receive(int passed_bytes){
 			return;
 		}else{
 			std::cout << "received full message " << std::endl;
-			auto [chunk, size] = m_recv_buffer.get();
 			do_message();
 		}
 	}
@@ -262,10 +262,10 @@ void peer_connection::handle_bitfield(char * begin, std::size_t size){
 	if(m_choked){
 		std::cout << "sending interested " << std::endl;
 		auto msg = create_interested_message();
-		int n = send(reinterpret_cast<char *>(msg.get()), 5);
+		int err;
+		int n = send(reinterpret_cast<char *>(msg.get()), 5, err);
 
 		m_state = p_state::READ_MESSAGE_SIZE; // wait for unchoke message
 		m_recv_buffer.reset(4);
-		m_piece_manager->update(this, m_bitfield);
 	}
 };
