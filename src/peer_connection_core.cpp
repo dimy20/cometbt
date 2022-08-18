@@ -48,7 +48,7 @@ void peer_connection_core::start(event_loop * loop){
 
 	auto [span, span_size] = m_recv_buffer.reserve(1024 * 16);
 
-	std::uint32_t events = EPOLLIN | EPOLLET;
+	std::uint32_t events = EPOLLIN;
 	m_loop->set_socket(this, read_cb);
 	m_loop->event_ctl(this, events);
 	m_loop->async_read(this, span, span_size);
