@@ -107,7 +107,27 @@ void peer_connection::handle_choke(){
 };
 
 void peer_connection::handle_piece(){
-	std::cout << "received block, exiting..." << std::endl;
+	auto[chunk, size] = m_recv_buffer.get();
+	int block_size = size - 9;
+	chunk++; // skip msg id
+	int index = aux::deserialize_int(chunk, chunk + 4);
+	chunk += 4;
+	int offset = aux::deserialize_int(chunk, chunk + 4);
+	chunk += 4;
+
+	block * piece_block = new block(chunk, block_size, index, offset);
+	m_piece_manager->push_block(piece_block);
+
+	if(m_backlog > 0)
+		m_backlog--; // allow send
+
+	//int block_length = get_length(chunk, 4) - 9;
+	std::cout << "received block of size : " << size - 9<< std::endl;
+	std::cout << "index :  " << index << std::endl;
+	std::cout << "offset in piece:  " << offset << std::endl;
+
+	m_state = p_state::READ_MESSAGE_SIZE;
+	m_recv_buffer.reset(4);
 	return;
 };
 
