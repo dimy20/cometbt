@@ -9,6 +9,8 @@ class block{
 		block(const block& other);
 		block& operator=(block && other);
 		block& operator=(const block& other);
+
+		block(char * buffer, int size, int index, int offset);
 	private:
 		buffer m_block_buffer;
 };
