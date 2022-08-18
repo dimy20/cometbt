@@ -24,9 +24,6 @@ bool compare(timer a, timer b);
 class event_loop{
 	typedef std::priority_queue<timer, std::vector<timer>,decltype(&compare)> heap_timer_t;
 	public:
-		enum ev_type{
-			READ = 1
-		};
 		event_loop();
 		void event_ctl(socket_tcp * sock, std::uint32_t events);
 		void run();
