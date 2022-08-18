@@ -30,8 +30,8 @@ void peer_connection_core::send_handshake(const aux::info_hash& info_hash, const
 	memcpy(hs.info_hash, info_hash.get(), INFO_HASH_LENGTH);
 	memcpy(hs.peer_id, id.c_str(), PEER_ID_LENGTH);
 
-	send(reinterpret_cast<char *>(&hs), HANDSHAKE_SIZE);
-	//m_info_hash = info_hash; // copy to verify later when handshake response comes
+	int err;
+	m_loop->async_write(this, reinterpret_cast<char *>(&hs), HANDSHAKE_SIZE);
 	m_state = p_state::READ_PROTOCOL_ID;
 };
 
