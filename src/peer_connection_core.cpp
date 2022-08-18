@@ -88,7 +88,7 @@ void peer_connection_core::on_receive_internal(int received_bytes){
 
 	}
 
-	std::cout << "received bytes : " << received_bytes << std::endl;
+	//std::cout << "received bytes : " << received_bytes << std::endl;
 	int total_bytes = received_bytes;
 	int passed_bytes;
 	do{
