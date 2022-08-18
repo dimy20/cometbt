@@ -89,16 +89,19 @@ int socket_tcp::recv(char * buff, int size){
 	return total;
 };
 
-int socket_tcp::send(char * buff, int size){
+int socket_tcp::send(char * buff, int size, int& err){
 	int total, n;
-	total = 0;
+	total = 0, err = 0;
 	while(1){
 		n = ::send(m_fd, buff + total, size - total, 0);
 		if(n > 0){
 			total += n;
 		}else if(n == -1){
 			if(errno != EAGAIN && errno != EWOULDBLOCK) die("send");
-			else break;  // socket out buffer is full right now
+			else{// out of space in send buffer, set epollout
+				err = -1;
+				break;
+			}
 		}else break;
 	}
 	return total;
