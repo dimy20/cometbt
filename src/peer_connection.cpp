@@ -30,7 +30,7 @@ peer_connection& peer_connection::operator=(const peer_connection& other){
 	m_piece_manager = other.m_piece_manager;
 	m_msg_len = other.m_msg_len;
 	m_total = other.m_total;
-	//m_bitfield = other.m_bitfield;
+	m_bitfield = other.m_bitfield;
 	return *this;
 };
 

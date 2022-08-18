@@ -22,10 +22,17 @@ bool aux::bitfield::has_piece(int piece_index) const{
 aux::bitfield::bitfield(bitfield && other){ *this = std::move(other); };
 
 aux::bitfield& aux::bitfield::operator=(bitfield && other){
-	std::cout << "called" << std::endl;
 	m_bitfield = other.m_bitfield;
 	m_size = other.m_size;
 	other.m_bitfield = nullptr;
 	other.m_size = 0;
 	return *this;
 };
+
+aux::bitfield& aux::bitfield::operator=(const bitfield& other){
+	m_size = other.m_size;
+	memcpy(&m_bitfield, &other.m_bitfield, m_size);
+	return *this;
+};
+
+aux::bitfield::bitfield(const bitfield& other){ *this = other; };
