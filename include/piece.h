@@ -9,7 +9,7 @@ class piece{
 	friend bool compare_pieces(const piece& a, const piece& b);
 	public:
 		piece() = default;
-		piece(int index, aux::info_hash piece_hash);
+		piece(int index, aux::info_hash piece_hash, long long piece_length);
 		piece(const piece& other);
 
 		const aux::info_hash& hash() const { return m_piece_hash; };

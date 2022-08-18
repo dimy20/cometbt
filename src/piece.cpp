@@ -1,10 +1,13 @@
 #include "piece.h"
 
-piece::piece(int index, aux::info_hash piece_hash){
+piece::piece(int index, aux::info_hash piece_hash, long long piece_length){
 	m_index = index;
 	m_piece_hash = piece_hash;
 	m_count = 0;
 	m_block_size = 1024 * 16;
+	m_piece_length = piece_length;
+	m_piece_blocks = std::vector<block *>(piece_length / m_block_size, nullptr);
+	m_received_count = 0;
 };
 
 piece::piece(const piece& other){
@@ -16,6 +19,7 @@ piece::piece(const piece& other){
 	 m_piece_blocks = other.m_piece_blocks;
 	 m_piece_hash = other.m_piece_hash;
 	 m_peers = other.m_peers;
+	 m_received_count = other.m_received_count;
 };
 
 piece& piece::operator=(piece && other){
@@ -26,6 +30,7 @@ piece& piece::operator=(piece && other){
 	//m_peers = std::move(other.m_peers);
 	m_piece_blocks = std::move(other.m_piece_blocks);
 	m_piece_hash = std::move(other.m_piece_hash);
+	m_received_count = other.m_received_count;
 	return *this;
 };
 
