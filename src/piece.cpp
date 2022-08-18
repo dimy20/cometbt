@@ -38,3 +38,20 @@ void piece::add_peer(peer_connection * peer){
 	m_peers.push_back(peer);
 	m_count++;
 };
+
+void piece::add_block(block * b){
+	assert(b->index() == m_index);
+	int i = b->offset() / (16 * 1024);
+	int n = m_piece_blocks.size();
+
+	assert(i <= n-1);
+	assert(m_received_count <= n);
+
+	if(m_piece_blocks[i] != nullptr){
+		std::cerr << "Error : Already received this block" << std::endl;
+		exit(EXIT_FAILURE);
+	}
+	
+	m_piece_blocks[i] = b;
+	m_received_count++;
+}

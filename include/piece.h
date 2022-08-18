@@ -20,7 +20,7 @@ class piece{
 
 		// update list of peers who have this piece
 		void add_peer(peer_connection * peer);
-
+		void add_block(block * b);
 		
 		std::vector<peer_connection *>& peers() { return m_peers; };
 	public:
