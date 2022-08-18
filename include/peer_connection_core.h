@@ -1,6 +1,7 @@
 #pragma once
 #include <vector>
 #include <memory>
+#include <pthread.h>
 #include "peer_info.h"
 #include "tcp.h"
 #include "recv_buffer.h"
@@ -64,12 +65,15 @@ class peer_connection_core : public socket_tcp{
 
 		virtual void on_receive(int passed_bytes) = 0;
 
+		void lock() { pthread_mutex_lock(&m_mutex); };
+		void unlock() { pthread_mutex_unlock(&m_mutex); };
 	private:
 		void on_receive_internal(int received_bytes);
 		void on_connection();
 
 	protected:
 		void setup_receive();
+
 
 	protected:
 		enum class p_state{
@@ -85,10 +89,12 @@ class peer_connection_core : public socket_tcp{
 		recv_buffer m_recv_buffer;
 		bool m_disconnect = false;
 
+		event_loop * m_loop = nullptr;// ptr to the main loop
 	private:
+		pthread_mutex_t m_mutex;
 		// try to avoid this copy
 		// container to hold peer's info
-		event_loop * m_loop = nullptr;// ptr to the main loop
+
 };
 
 struct handshake_s{

@@ -8,12 +8,14 @@ void read_cb(socket_tcp * sock, char * buff, std::size_t received_bytes){
 
 peer_connection_core::peer_connection_core(const struct peer_info_s& peer_info){
 	m_peer_info = peer_info;
+	pthread_mutex_init(&m_mutex, nullptr);
 };
 
 peer_connection_core::peer_connection_core(peer_connection_core && other) : socket_tcp(std::move(other)){
 	m_recv_buffer = std::move(other.m_recv_buffer);
 	m_peer_info = other.m_peer_info;
 	m_loop = other.m_loop;
+	memcpy(&m_mutex, &other.m_mutex, sizeof(pthread_mutex_t));
 };
 
 // part of this can be moved up to peer_connection
@@ -54,6 +56,7 @@ void peer_connection_core::start(event_loop * loop){
 };
 
 void peer_connection_core::on_receive_internal(int received_bytes){
+	lock();
 	assert(received_bytes <= m_recv_buffer.max_receive());
 			
 	// likely to be more data to read, grow buffer
@@ -92,12 +95,14 @@ void peer_connection_core::on_receive_internal(int received_bytes){
 		total_bytes -= passed_bytes;
 	}while(total_bytes > 0 && passed_bytes > 0);
 
+	// TODO: remove socket from event loop (iomap)
 	if(m_disconnect){
 		close();
 		return;
 	};
 
 	setup_receive();
+	unlock();
 };
 
 void peer_connection_core::setup_receive(){
