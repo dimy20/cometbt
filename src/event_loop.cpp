@@ -80,8 +80,32 @@ void event_loop::poll_io(int timeout){
 		if(ev[i].events & EPOLLIN){
 			auto& io = m_iomap[ev[i].data.fd];
 			int received_bytes = io.sock->recv(io.buff, io.size);
-			io.cb(io.sock, io.buff, received_bytes);
+			io.read_cb(io.sock, io.buff, received_bytes);
 		}
+
+		if(ev[i].events & EPOLLOUT){
+			std::cout << "EPOLL OUT!" << std::endl;
+			auto& io = m_iomap[ev[i].data.fd];
+			while(!io.write_queue.empty()){
+				auto& [buff, size] = io.write_queue.front();
+				int err;
+				int total = io.sock->send(buff, size, err);
+				if(err == 0){
+					io.write_queue.pop();
+				}
+				else{
+					io.write_queue.push({buff + n, size - n});
+					break;
+				}
+			};
+			if(io.write_queue.empty()){
+				// desable epollout
+				auto events = get_sock_events(io.sock);
+				events = events & ~EPOLLOUT;
+				event_ctl(io.sock, events);
+			}
+		}
+
 	}
 };
 
