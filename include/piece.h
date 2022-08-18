@@ -1,5 +1,7 @@
 #pragma once
 #include <vector>
+#include <memory>
+#include <iostream>
 #include "block.h"
 #include "info_hash.h"
 
@@ -21,6 +23,7 @@ class piece{
 		// update list of peers who have this piece
 		void add_peer(peer_connection * peer);
 		void add_block(block * b);
+		bool complete();
 		
 		std::vector<peer_connection *>& peers() { return m_peers; };
 	public:
