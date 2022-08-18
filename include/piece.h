@@ -23,17 +23,25 @@ class piece{
 
 		
 		std::vector<peer_connection *>& peers() { return m_peers; };
-		bool m_in_transit = false;
-	private :
+	public:
 
-		int m_index; // piece index
-		int m_piece_length;
-		int m_count; // count of how many peers have this piece
+	private :
+		// piece index
+		int m_index;
+		// piece length in bytes
+		long long m_piece_length;
+		// count of how many peers have this piece
+		int m_count;
+		// each block size
 		int m_block_size;
-		std::vector<block> m_piece_blocks; //each block that make up the piece 16 blocks
-		aux::info_hash m_piece_hash; // ;
+		//each block that make up the piece 16 blocks
+		std::vector<block *> m_piece_blocks;
+		// the piece hash to verify once we get all the blocks
+		aux::info_hash m_piece_hash;
+		// blocks received so far
+		int m_received_count;
 	protected:
 		// vector of pointer to the peers who have it
 		std::vector<peer_connection *> m_peers;
-		
+
 };
