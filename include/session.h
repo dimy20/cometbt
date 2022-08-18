@@ -16,10 +16,11 @@
 // session now only supports one torrent and one set of peers for that torrent
 class peer_connection;
 class session{
+		friend void * io_worker(void * arg);
 	public:
 		session(const std::string& filename);
 		void start();
-	private:
+//	private:
 		torrent m_torrent; // make this better
 		std::vector<peer_connection> m_peer_connections;
 		event_loop m_main_loop; // main loop
