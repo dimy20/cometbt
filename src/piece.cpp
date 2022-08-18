@@ -70,3 +70,19 @@ bool piece::complete(){
 	return total == m_piece_length;
 };
 
+bool piece::verify_integrity(){
+	char received_buff[m_piece_length];
+	memset(received_buff, 0, sizeof(char) * m_piece_length);
+	int curr_off = 0;
+	for(auto block : m_piece_blocks){
+		memcpy(received_buff + curr_off,block->m_buffer.data(),block->m_buffer.size());
+		curr_off += block->m_buffer.size();
+	};
+
+
+	aux::info_hash received_hash(received_buff, m_piece_length);
+
+	std::cout << m_piece_hash.hex_str() << std::endl;
+	std::cout << received_hash.hex_str() << std::endl;
+	return received_hash == m_piece_hash;
+};

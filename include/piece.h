@@ -19,11 +19,13 @@ class piece{
 		//piece(int index, const aux::info_hash& piece_hash);
 		int index() const { return m_index; };
 		int count() const { return m_count; };
+		int length() const { return m_piece_length; };
 
 		// update list of peers who have this piece
 		void add_peer(peer_connection * peer);
 		void add_block(block * b);
 		bool complete();
+		bool verify_integrity();
 		
 		std::vector<peer_connection *>& peers() { return m_peers; };
 	public:
