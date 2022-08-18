@@ -11,6 +11,8 @@ peer_connection::peer_connection(const struct peer_info_s & p_info, piece_manage
 	m_total = 0;
 	m_choked = true;
 	m_piece_manager = pm;
+	m_backlog = 0;
+	m_total_requested = 0;
 }
 
 peer_connection::peer_connection(peer_connection && other)
