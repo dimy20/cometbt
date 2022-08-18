@@ -14,6 +14,8 @@ class piece_manager{
 		piece_manager(long long piece_len, std::vector<char>& piece_hashes);
 		piece_manager& operator=(piece_manager && other);
 		std::vector<piece> m_pieces;
+		void push_block(block * piece_block);
+
 		std::queue<piece *> get_work_queue() { return m_work_queue; };
 
 	private:
