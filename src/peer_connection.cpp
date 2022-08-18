@@ -78,15 +78,23 @@ void peer_connection::do_message(){
 
 void peer_connection::handle_unchoke(){
 	m_choked = false;
+	m_state = p_state::READ_MESSAGE_SIZE;
+	m_recv_buffer.reset(4);
 };
 
 
 void peer_connection::fetch_piece(piece& p){
-
-	if(!m_bitfield.empty() && !m_bitfield.has_piece(p.index())) return;
-	if(m_backlog == MAX_BACKLOG) return; // max oustanding request at this moment
-
+	lock();
+	if(!m_bitfield.empty() && !m_bitfield.has_piece(p.index())){
+		unlock();
+		return;
+	}
+	if(m_backlog == MAX_BACKLOG){
+		unlock();
+		return; // max oustanding request at this moment
+	}
 	/*
+
 	std::cout << "asking for piece " << p.hash().hex_str();
 	std::cout << " " << p.index() << std::endl;
 	*/
@@ -94,8 +102,6 @@ void peer_connection::fetch_piece(piece& p){
 	int size;
 	int piece_length = p.length();
 	//int total_requested = 0; // offset
-
-	lock();
 
 	if(p.complete()){
 		std::cout << "Piece donwload finished." << std::endl;
@@ -105,7 +111,6 @@ void peer_connection::fetch_piece(piece& p){
 	}
 	// make m_backlog oustanding requests!
 	while(m_backlog < MAX_BACKLOG && m_total_requested < piece_length){
-		std::cout << "hello" << std::endl;
 		// last block might be smaller
 		if(m_total_requested + BLOCK_LENGTH > piece_length){
 			size = piece_length - m_total_requested;
@@ -117,9 +122,6 @@ void peer_connection::fetch_piece(piece& p){
 		m_backlog++;
 		m_total_requested += size;
 	};
-
-	m_state = p_state::READ_MESSAGE_SIZE;
-	m_recv_buffer.reset(4);
 	// setup lower layer to received message
 	setup_receive();
 	unlock();
@@ -142,13 +144,12 @@ void peer_connection::handle_piece(){
 	block * piece_block = new block(chunk, block_size, index, offset);
 	m_piece_manager->push_block(piece_block);
 
-	if(m_backlog > 0)
-		m_backlog--; // allow send
+	m_backlog--; // allow send
 
 	//int block_length = get_length(chunk, 4) - 9;
 	std::cout << "received block of size : " << size - 9<< std::endl;
-	std::cout << "index :  " << index << std::endl;
-	std::cout << "offset in piece:  " << offset << std::endl;
+	//std::cout << "index :  " << index << std::endl;
+	//std::cout << "offset in piece:  " << offset << std::endl;
 
 	m_state = p_state::READ_MESSAGE_SIZE;
 	m_recv_buffer.reset(4);
@@ -236,7 +237,7 @@ void peer_connection::on_receive(int passed_bytes){
 		message_len = get_length(chunk, size);
 
 		if(message_len == 0){
-			std::cout << "keep alive message" << std::endl;
+			//std::cout << "keep alive message" << std::endl;
 			return;
 		}
 		else if (message_len > 0){

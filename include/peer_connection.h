@@ -8,7 +8,7 @@
 #include "bitfield.h"
 #include "piece_manager.h"
 
-#define MAX_BACKLOG 1 // pipeline messages
+#define MAX_BACKLOG 5 // pipeline messages
 
 class piece_manager;
 class piece;
