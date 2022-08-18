@@ -218,3 +218,11 @@ std::uint32_t event_loop::get_sock_events(socket_tcp * sock){
 	auto& io = m_iomap[fd];
 	return io.events;
 };
+
+void event_loop::remove_socket(socket_tcp * sock){
+	assert(sock != nullptr);
+	int fd = sock->get_fd();
+	if(m_iomap.find(fd) != m_iomap.end()){
+		m_iomap.erase(fd);
+	}
+};

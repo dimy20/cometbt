@@ -32,6 +32,7 @@ class event_loop{
 
 		void set_timer(timer t);
 		void set_socket(socket_tcp * sock, ev_cb);
+		void remove_socket(socket_tcp * sock);
 
 		std::uint64_t update_time();
 

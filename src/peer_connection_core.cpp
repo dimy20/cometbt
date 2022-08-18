@@ -97,9 +97,9 @@ void peer_connection_core::on_receive_internal(int received_bytes){
 		total_bytes -= passed_bytes;
 	}while(total_bytes > 0 && passed_bytes > 0);
 
-	// TODO: remove socket from event loop (iomap)
 	if(m_disconnect){
 		close();
+		m_loop->remove_socket(this);
 		return;
 	};
 
