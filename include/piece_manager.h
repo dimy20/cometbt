@@ -11,14 +11,17 @@ class peer_connection;
 class piece_manager{
 	public:
 		piece_manager() = default;
-		piece_manager(std::vector<char>& piece_hashes);
+		piece_manager(long long piece_len, std::vector<char>& piece_hashes);
 		piece_manager& operator=(piece_manager && other);
 		//updates all pieces for this peer.
 		void update(const peer_connection * conn, const aux::bitfield& bf);
 		std::vector<piece> rarest_first();
 	private:
 		std::vector<piece> m_pieces;
-		std::priority_queue<int, std::vector<int>, std::greater<int>> m_heap;
+		std::queue<piece *> get_work_queue() { return m_work_queue; };
+
+	private:
+		std::queue<piece *> m_work_queue;
 };
 
 // whenever a bitfiled arrives at a peer, the peer will notify the pice manager
