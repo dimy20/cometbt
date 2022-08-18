@@ -25,6 +25,19 @@ session::session(const std::string& filename){
 	m_torrent.setup_peerinfo();
 }
 
+void * io_worker(void * arg){
+
+	event_loop ev_loop;
+	session * s = reinterpret_cast<session*>(arg);
+
+	for(auto& peer_conn: s->m_peer_connections){
+		peer_conn.start(&ev_loop);
+	};
+
+	ev_loop.run();
+
+	return nullptr;
+};
 // should only be responsible for handling main loop for now
 void session::start(){
 	// client hadles just one peer for now
