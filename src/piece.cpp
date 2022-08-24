@@ -45,23 +45,6 @@ void piece::add_peer(peer_connection * peer){
 	m_peers.push_back(peer);
 	m_count++;
 };
-/*
-
-bool piece::complete(){
-	//std::cout << "received count ->" << m_received_count << std::endl;
-	if(m_received_count < m_piece_blocks.size()) return false;
-	assert(m_received_count == m_piece_blocks.size());
-	int total = 0;
-	for(auto block : m_piece_blocks){
-		assert(block != nullptr);
-		total += block->m_buffer.size();
-	};
-	/*
-	std::cout << total << std::endl;
-	std::cout << m_piece_length << std::endl;
-	*/
-	return total == m_piece_length;
-};
 
 bool piece::verify_integrity(){
 	char received_buff[m_piece_length];

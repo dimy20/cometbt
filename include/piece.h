@@ -23,7 +23,7 @@ class piece{
 
 		// update list of peers who have this piece
 		void add_peer(peer_connection * peer);
-		bool complete();
+		bool download_finished() { return m_received_count == 16; };
 		bool verify_integrity();
 		
 		std::vector<peer_connection *>& peers() { return m_peers; };
