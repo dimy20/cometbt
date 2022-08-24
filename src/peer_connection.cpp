@@ -103,7 +103,7 @@ void peer_connection::fetch_piece(piece& p){
 	int piece_length = p.length();
 	//int total_requested = 0; // offset
 
-	if(p.complete()){
+	if(p.download_finished()){
 		std::cout << "Piece donwload finished." << std::endl;
 		if(p.verify_integrity())
 			std::cout << "Integrity verified!" << std::endl;
@@ -141,15 +141,17 @@ void peer_connection::handle_piece(){
 	int offset = aux::deserialize_int(chunk, chunk + 4);
 	chunk += 4;
 
-	block * piece_block = new block(chunk, block_size, index, offset);
-	m_piece_manager->push_block(piece_block);
+	block_t new_block;
+	new_block.m_data = chunk;
+	new_block.m_size = block_size;
+	new_block.m_index = index;
+	new_block.m_offset = offset;
 
+	auto& piece = m_piece_manager->get_piece(index);
+	piece.incoming_block(new_block);
 	m_backlog--; // allow send
 
-	//int block_length = get_length(chunk, 4) - 9;
 	std::cout << "received block of size : " << size - 9<< std::endl;
-	//std::cout << "index :  " << index << std::endl;
-	//std::cout << "offset in piece:  " << offset << std::endl;
 
 	m_state = p_state::READ_MESSAGE_SIZE;
 	m_recv_buffer.reset(4);
