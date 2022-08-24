@@ -42,6 +42,10 @@ class piece{
 		aux::info_hash m_piece_hash;
 		// blocks received so far
 		int m_received_count;
+		// received so far
+		int m_received_bytes = 0;
+		// piece data
+		char * m_data = nullptr;
 	protected:
 		// vector of pointer to the peers who have it
 		std::vector<peer_connection *> m_peers;

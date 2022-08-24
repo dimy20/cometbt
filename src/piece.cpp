@@ -7,6 +7,10 @@ piece::piece(int index, aux::info_hash piece_hash, long long piece_length){
 	m_block_size = 1024 * 16;
 	m_piece_length = piece_length;
 	m_received_count = 0;
+	m_data = static_cast<char*>(std::malloc(sizeof(char) * piece_length));
+	if(!m_data) throw(std::bad_alloc());
+	memset(m_data, 0, m_piece_length);
+	m_received_bytes = 0;
 };
 
 piece::piece(const piece& other){
@@ -18,6 +22,8 @@ piece::piece(const piece& other){
 	 m_piece_hash = other.m_piece_hash;
 	 m_peers = other.m_peers;
 	 m_received_count = other.m_received_count;
+	 memcpy(m_data, other.m_data, m_piece_length);
+	 m_received_bytes = other.m_received_bytes;
 };
 
 piece& piece::operator=(piece && other){
@@ -28,6 +34,10 @@ piece& piece::operator=(piece && other){
 	//m_peers = std::move(other.m_peers);
 	m_piece_hash = std::move(other.m_piece_hash);
 	m_received_count = other.m_received_count;
+
+	m_data = other.m_data;
+	other.m_data = nullptr;
+	m_received_bytes = other.m_received_bytes;
 	return *this;
 };
 
