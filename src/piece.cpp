@@ -61,4 +61,10 @@ bool piece::verify_integrity(){
 	std::cout << m_piece_hash.hex_str() << std::endl;
 	std::cout << received_hash.hex_str() << std::endl;
 	return received_hash == m_piece_hash;
+void piece::incoming_block(block_t& b){
+	m_received_bytes += b.m_size;
+	memcpy(m_data + b.m_offset, b.m_data, b.m_size);
+	std::cout << "offset - >" << b.m_offset << std::endl;
+	std::cout << "size - > " << b.m_size << std::endl;
+	m_received_count++;
 };
