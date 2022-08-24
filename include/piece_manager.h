@@ -15,6 +15,7 @@ class piece_manager{
 		piece_manager& operator=(piece_manager && other);
 		std::vector<piece> m_pieces;
 		std::queue<piece *> get_work_queue() { return m_work_queue; };
+		piece& get_piece(int index);
 
 	private:
 		std::queue<piece *> m_work_queue;

@@ -27,3 +27,8 @@ piece_manager& piece_manager::operator=(piece_manager && other){
 	return *this;
 };
 
+piece& piece_manager::get_piece(int index){
+	int n = m_pieces.size();
+	assert(index >= 0 && index <= n);
+	return m_pieces[index];
+}
