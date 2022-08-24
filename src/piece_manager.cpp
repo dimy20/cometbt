@@ -8,7 +8,8 @@ piece_manager::piece_manager(long long piece_length, std::vector<char>& piece_ha
 	int offset = 0;
 	// build pieces base
 	for(int i = 0; i < n; i++){
-		aux::info_hash piece_hash(piece_hashes.data() + offset, SHA_DIGEST_LENGTH);
+		aux::info_hash piece_hash;
+		piece_hash.set(piece_hashes.data() + offset, SHA_DIGEST_LENGTH);
 		m_pieces[i] = std::move(piece(i, std::move(piece_hash), piece_length));
 		offset += SHA_DIGEST_LENGTH;
 	}
