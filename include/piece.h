@@ -23,7 +23,6 @@ class piece{
 
 		// update list of peers who have this piece
 		void add_peer(peer_connection * peer);
-		void add_block(block * b);
 		bool complete();
 		bool verify_integrity();
 		
@@ -39,8 +38,6 @@ class piece{
 		int m_count;
 		// each block size
 		int m_block_size;
-		//each block that make up the piece 16 blocks
-		std::vector<block *> m_piece_blocks;
 		// the piece hash to verify once we get all the blocks
 		aux::info_hash m_piece_hash;
 		// blocks received so far
