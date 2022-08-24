@@ -27,9 +27,3 @@ piece_manager& piece_manager::operator=(piece_manager && other){
 	return *this;
 };
 
-
-void piece_manager::push_block(block * piece_block){
-	assert(piece_block != nullptr);
-	auto& piece = m_pieces[piece_block->index()];
-	piece.add_block(piece_block);
-};
