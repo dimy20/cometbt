@@ -14,12 +14,9 @@ class piece_manager{
 		piece_manager(long long piece_len, std::vector<char>& piece_hashes);
 		piece_manager& operator=(piece_manager && other);
 		std::vector<piece> m_pieces;
-		std::queue<piece *> get_work_queue() { return m_work_queue; };
+		std::queue<int>& get_work_queue() { return m_work_queue; };
 		piece& get_piece(int index);
 
 	private:
-		std::queue<piece *> m_work_queue;
+		std::queue<int> m_work_queue;
 };
-
-// whenever a bitfiled arrives at a peer, the peer will notify the pice manager
-// about the pieces the remote peer has.       

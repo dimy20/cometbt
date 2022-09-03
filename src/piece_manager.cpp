@@ -14,9 +14,9 @@ piece_manager::piece_manager(long long piece_length, std::vector<char>& piece_ha
 		offset += SHA_DIGEST_LENGTH;
 	}
 
-	// build work queue
-	for(auto& piece : m_pieces){
-		m_work_queue.push(&piece);
+	int m = m_pieces.size();
+	for(int i = 0; i < m; i++){
+		m_work_queue.push(m_pieces[i].index());
 	}
 
 };
