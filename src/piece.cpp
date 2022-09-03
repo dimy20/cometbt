@@ -48,15 +48,37 @@ void piece::add_peer(peer_connection * peer){
 
 bool piece::verify_integrity(){
 	aux::info_hash received_hash(m_data, m_received_bytes);
-	std::cout << m_piece_hash.hex_str() << std::endl;
-	std::cout << received_hash.hex_str() << std::endl;
 	return m_piece_hash == received_hash;
 };
 
 void piece::incoming_block(block_t& b){
 	m_received_bytes += b.m_size;
 	memcpy(m_data + b.m_offset, b.m_data, b.m_size);
-	std::cout << "offset - >" << b.m_offset << std::endl;
-	std::cout << "size - > " << b.m_size << std::endl;
+	log_progress(b.m_size);
 	m_received_count++;
 };
+
+void piece::log_progress(int received){
+	int bar_width;
+	if(m_progress < 1.0) {
+		int bar_width = 70;
+
+		std::cout << "[";
+		int pos = bar_width * m_progress;
+		for (int i = 0; i < bar_width; ++i) {
+			if (i < pos) std::cout << "=";
+			else if (i == pos) std::cout << ">";
+			else std::cout << " ";
+		}
+		std::cout << "] ";
+		int current_kb = m_received_bytes / 1024;
+		int total_kb = m_piece_length / 1024;
+		std::cout << " " << current_kb << " kb / " << total_kb << " kb\r";
+		std::cout.flush();
+
+		float tmp = (float)(received * 100) / (float)(256 * 1024); 
+		m_progress += (float)(tmp / 100);
+	}else{
+		std::cout << std::endl;
+	}
+}
