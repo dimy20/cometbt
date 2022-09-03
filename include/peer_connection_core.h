@@ -36,6 +36,12 @@ enum class message_id{
 	CANCEL
 };
 
+struct have_message{
+	std::uint8_t length[MESSAGE_LENGTH_SIZE];
+	std::uint8_t id = static_cast<std::uint8_t>(message_id::HAVE);
+	std::uint8_t index[sizeof(int)];
+};
+
 struct interested_message{
 	std::uint8_t length[MESSAGE_LENGTH_SIZE];
 	std::uint8_t id = static_cast<std::uint8_t>(message_id::INTERESTED);
@@ -50,28 +56,26 @@ struct req_message{
 	std::uint8_t block_length[BLOCK_LENGTH_SIZE];  // length of the block
 };
 
-class peer_connection_core : public socket_tcp{
+class peer_connection_core{
 	public:
 		peer_connection_core(const struct peer_info_s& peer);
 		peer_connection_core(peer_connection_core && other);
 		void send_handshake(const aux::info_hash& info_hash, const std::string& id);
 
 		// starts connection and prepares receive buffer
-		void start(event_loop * loop);
+		void start(uv_loop_t * loop);
 
-		friend void read_cb(socket_tcp* sock, char * buff, std::size_t received_bytes);
+		friend void on_read(uv_stream_t * tcp, ssize_t nread, const uv_buf_t * buf);
+		friend void handshake_write_cb(uv_write_t *req, int status);
+		friend void on_connect(uv_connect_t * req, int status);
 
 		virtual void on_receive(int passed_bytes) = 0;
 
-		void lock() { pthread_mutex_lock(&m_mutex); };
-		void unlock() { pthread_mutex_unlock(&m_mutex); };
 	private:
 		void on_receive_internal(int received_bytes);
-		void on_connection();
 
 	protected:
 		void setup_receive();
-
 
 	protected:
 		enum class p_state{
