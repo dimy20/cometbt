@@ -2,11 +2,12 @@
 
 #include <iostream>
 #include "peer_connection_core.h"
-#include "event_loop.h"
 #include "peer_info.h"
 #include "serial.h"
 #include "bitfield.h"
 #include "piece_manager.h"
+#include "piece.h"
+#include <uv.h>
 
 #define MAX_BACKLOG 5 // pipeline messages
 
@@ -30,7 +31,7 @@ class peer_connection : public peer_connection_core{
 		void do_message();
 
 		// message handlers
-		void handle_bitfield(char * begin, std::size_t size);
+		void handle_bitfield();
 		void handle_unchoke();
 		void handle_choke();
 		void handle_piece();

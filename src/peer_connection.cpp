@@ -262,13 +262,20 @@ void peer_connection::on_receive(int passed_bytes){
 
 void peer_connection::handle_bitfield(char * begin, std::size_t size){
 	m_bitfield = std::move(aux::bitfield(begin, size - 1));
+void peer_connection::handle_bitfield(){
+	auto [chunk, size] = m_recv_buffer.get();
+	m_bitfield = std::move(aux::bitfield(chunk + 5, size - 5));
 	if(m_choked){
 		std::cout << "sending interested " << std::endl;
 		auto msg = create_interested_message();
-		int err;
-		int n = send(reinterpret_cast<char *>(msg.get()), 5, err);
+		uv_write_t * req = (uv_write_t *)(malloc(sizeof(uv_write_t)));
+		if(!req) std::cerr << "Failed to allocate" << std::endl;
+
+		uv_buf_t buf = {.base = (char *)msg.get(), .len = 5};
+		uv_write(req, m_socket, &buf, 1, write_cb);
 
 		m_state = p_state::READ_MESSAGE_SIZE; // wait for unchoke message
 		m_recv_buffer.reset(4);
+
 	}
 };
