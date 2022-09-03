@@ -32,3 +32,13 @@ int aux::deserialize_int(const char * begin, const char * end){
 	}
 	return ans;
 };
+
+int aux::ip_version(const char *src) {
+    char buf[16];
+    if (inet_pton(AF_INET, src, buf)) {
+        return 4;
+    } else if (inet_pton(AF_INET6, src, buf)) {
+        return 6;
+    }
+    return -1;
+};

@@ -1,6 +1,7 @@
 #pragma once
 #include <cstddef>
 #include <memory>
+#include <arpa/inet.h>
 namespace aux{
 	// checks local machine's endianness
 	bool is_little_endian();
@@ -10,4 +11,6 @@ namespace aux{
 	// deserialize_int expects the integer to be stored in the buffer in big-endian 
 	// format
 	int deserialize_int(const char * begin, const char * end);
+
+	int ip_version(const char *src);
 };
