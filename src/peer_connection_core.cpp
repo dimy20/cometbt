@@ -8,14 +8,13 @@ void read_cb(socket_tcp * sock, char * buff, std::size_t received_bytes){
 
 peer_connection_core::peer_connection_core(const struct peer_info_s& peer_info){
 	m_peer_info = peer_info;
-	pthread_mutex_init(&m_mutex, nullptr);
 };
 
-peer_connection_core::peer_connection_core(peer_connection_core && other) : socket_tcp(std::move(other)){
+peer_connection_core::peer_connection_core(peer_connection_core && other){
 	m_recv_buffer = std::move(other.m_recv_buffer);
 	m_peer_info = other.m_peer_info;
 	m_loop = other.m_loop;
-	memcpy(&m_mutex, &other.m_mutex, sizeof(pthread_mutex_t));
+	m_socket = other.m_socket;
 };
 
 // part of this can be moved up to peer_connection

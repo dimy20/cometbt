@@ -1,11 +1,9 @@
 #pragma once
 #include <vector>
 #include <memory>
-#include <pthread.h>
+#include <uv.h>
 #include "peer_info.h"
-#include "tcp.h"
 #include "recv_buffer.h"
-#include "event_loop.h"
 
 #define BUFF_SIZE 1024*32
 
@@ -84,17 +82,13 @@ class peer_connection_core : public socket_tcp{
 			READ_MESSAGE,
 			NOT_IMPLEMENTED_YET
 		};
-		struct peer_info_s m_peer_info;
-		p_state m_state;
+
 		recv_buffer m_recv_buffer;
 		bool m_disconnect = false;
-
-		event_loop * m_loop = nullptr;// ptr to the main loop
-	private:
-		pthread_mutex_t m_mutex;
-		// try to avoid this copy
-		// container to hold peer's info
-
+		uv_loop_t * m_loop = nullptr;
+		p_state m_state;
+		struct peer_info_s m_peer_info;
+		uv_stream_t * m_socket;
 };
 
 struct handshake_s{
