@@ -1,10 +1,43 @@
 #include "peer_connection.h"
 #include "serial.h"
 
-void read_cb(socket_tcp * sock, char * buff, std::size_t received_bytes){
-	peer_connection_core * peer = dynamic_cast<peer_connection_core *>(sock);
-	peer->on_receive_internal(received_bytes);
-};
+void on_close(uv_handle_t* handle) { std::cout << "closed" << std::endl; };
+
+typedef struct stream_data_s{
+	peer_connection_core * core_owner;
+	char * curr_recv_chunk;
+	size_t chunk_size;
+}stream_data_t;
+
+static void alloc_cb(uv_handle_t* handle, size_t size, uv_buf_t* buf) {
+	stream_data_t * data = (stream_data_t *)handle->data;
+	buf->base = data->curr_recv_chunk;
+	buf->len = data->chunk_size;
+}
+
+void on_read(uv_stream_t* tcp, ssize_t nread, const uv_buf_t* buf)
+{
+    if(nread >= 0) {
+		stream_data_t * data = (stream_data_t *)tcp->data;
+		assert(data != nullptr);
+		peer_connection_core * core_peer = data->core_owner;
+		assert(data != nullptr);
+		core_peer->on_receive_internal(nread);
+    }
+    else {
+		std::cout << "Failed to read : ";
+		std::cout << uv_strerror(nread) << std::endl;
+		uv_close((uv_handle_t*)tcp, on_close);
+    }
+}
+
+void handshake_write_cb(uv_write_t *req, int status) {
+	std::cout << "handshake callback " << std::endl;
+    if (status) {
+        fprintf(stderr, "Write error %s\n", uv_err_name(status));
+    }
+	free(req);
+}
 
 peer_connection_core::peer_connection_core(const struct peer_info_s& peer_info){
 	m_peer_info = peer_info;
@@ -19,7 +52,6 @@ peer_connection_core::peer_connection_core(peer_connection_core && other){
 
 // part of this can be moved up to peer_connection
 void peer_connection_core::send_handshake(const aux::info_hash& info_hash, const std::string& id){
-	assert(get_fd() != -1);
 	assert(info_hash.get() != nullptr);
 
 	struct handshake_s hs;
@@ -29,35 +61,99 @@ void peer_connection_core::send_handshake(const aux::info_hash& info_hash, const
 	memcpy(hs.info_hash, info_hash.get(), INFO_HASH_LENGTH);
 	memcpy(hs.peer_id, id.c_str(), PEER_ID_LENGTH);
 
-	int err;
-	m_loop->async_write(this, reinterpret_cast<char *>(&hs), HANDSHAKE_SIZE);
-	m_state = p_state::READ_PROTOCOL_ID;
-};
+	uv_buf_t buff;
+	buff.base = static_cast<char *>(malloc(HANDSHAKE_SIZE));
+	buff.len = HANDSHAKE_SIZE;
+
+	memcpy(buff.base, &hs, HANDSHAKE_SIZE);
+	uv_write_t * req = (uv_write_t *)malloc(sizeof(uv_write_t));
+
+	req->data = this;
+
+	uv_write(req, m_socket, &buff, 1, handshake_write_cb);
 
 
-void peer_connection_core::start(event_loop * loop){
-	assert(loop != nullptr);
-	int err;
-
-	m_loop = loop;
-	err = connect_to(m_peer_info.m_remote_ip, m_peer_info.m_remote_port);
-	if(err == -1) std::cerr << "failed to start peer connection" << std::endl;
-	set_flags(O_NONBLOCK);
-	send_handshake(m_peer_info.m_info_hash, m_peer_info.m_id);
+	// get ready to received
+	stream_data_t * data = (stream_data_t *)m_socket->data;
+	assert(data != nullptr);
 
 	auto [span, span_size] = m_recv_buffer.reserve(1024 * 16);
 
-	std::uint32_t events = EPOLLIN;
-	m_loop->set_socket(this, read_cb);
-	m_loop->event_ctl(this, events);
-	m_loop->async_read(this, span, span_size);
+	data->curr_recv_chunk = span;
+	data->chunk_size = span_size;
 
+	uv_read_start(m_socket, alloc_cb, on_read);
+
+	m_state = peer_connection_core::p_state::READ_PROTOCOL_ID;
 	// start waiting for comming protocol identifier
 	m_recv_buffer.reset(20);
 };
 
+void on_connect(uv_connect_t *req, int status){
+	if(status < 0) std::cout << "on_connect " << uv_strerror(status) << std::endl;
+	else{
+		std::cout << "on_connect success" << std::endl;
+	}
+
+	// get handle
+	uv_stream_t * socket = (uv_stream_t *)req->handle;
+
+	stream_data_t * data = (stream_data_t *)req->data;
+	peer_connection_core * core = data->core_owner;
+
+	// take stream data from the connection request and assign it to the handle.
+	socket->data = data;
+	req->data = nullptr;
+	core->m_socket = socket;
+
+	std::cout << core->m_peer_info.m_remote_ip << std::endl;
+
+	core->send_handshake(core->m_peer_info.m_info_hash, core->m_peer_info.m_id);
+
+};
+
+void peer_connection_core::start(uv_loop_t * loop){
+	assert(loop != nullptr);
+	int err;
+	m_loop = loop;
+	auto [span, span_size] = m_recv_buffer.reserve(1024 * 16);
+
+	uv_tcp_t * socket = (uv_tcp_t*)malloc(sizeof(uv_tcp_t));
+	uv_tcp_init(loop, socket);
+
+	uv_connect_t* connect = (uv_connect_t*)malloc(sizeof(uv_connect_t));
+	// pin
+	stream_data_t * data = (stream_data_t *)malloc(sizeof(stream_data_t));
+	if(!data){
+		std::cerr << "failed to allocated" << std::endl;
+		exit(1);
+	}
+
+	data->core_owner = this;
+	data->curr_recv_chunk = nullptr;
+	data->chunk_size = 0;
+
+	connect->data = data;
+
+	int ip_ver = aux::ip_version(m_peer_info.m_remote_ip.c_str());
+
+	if(ip_ver == 6){
+		int port = std::stoi(m_peer_info.m_remote_port);
+		struct sockaddr_in6 dest;
+		uv_ip6_addr(m_peer_info.m_remote_ip.c_str(), port, &dest);
+		uv_tcp_connect(connect, socket, (const struct sockaddr*)&dest, on_connect);
+
+	}else if (ip_ver == 4){
+		int port = std::stoi(m_peer_info.m_remote_port);
+		struct sockaddr_in dest;
+		uv_ip4_addr(m_peer_info.m_remote_ip.c_str(), port, &dest);
+		uv_tcp_connect(connect, socket, (const struct sockaddr*)&dest, on_connect);
+	}else{
+		std::cerr << "Invalid ip address : " << m_peer_info.m_remote_ip << std::endl;
+	}
+};
+
 void peer_connection_core::on_receive_internal(int received_bytes){
-	lock();
 	assert(received_bytes <= m_recv_buffer.max_receive());
 			
 	// likely to be more data to read, grow buffer
@@ -65,29 +161,6 @@ void peer_connection_core::on_receive_internal(int received_bytes){
 	//acount for received bytes
 	m_recv_buffer.received(received_bytes);
 
-	//another reason to do this is because epoll wont notify us again for the bytes
-	//we didnt read  (edge mode)
-	if(grow){
-		//std::cout << "asking for more bytes " << std::endl;
-
-		int available_bytes = read_available();
-
-		// bytes left out
-		if(available_bytes > 0){
-			auto[chunk, size] = m_recv_buffer.reserve(available_bytes);
-
-			int bytes = recv(chunk, size);
-					
-			assert(bytes > 0);
-
-			m_recv_buffer.received(bytes);
-			received_bytes += bytes;
-		}
-
-
-	}
-
-	//std::cout << "received bytes : " << received_bytes << std::endl;
 	int total_bytes = received_bytes;
 	int passed_bytes;
 	do{
@@ -97,13 +170,11 @@ void peer_connection_core::on_receive_internal(int received_bytes){
 	}while(total_bytes > 0 && passed_bytes > 0);
 
 	if(m_disconnect){
-		close();
-		m_loop->remove_socket(this);
+		uv_close((uv_handle_t*)m_socket, on_close);
 		return;
 	};
 
 	setup_receive();
-	unlock();
 };
 
 void peer_connection_core::setup_receive(){
@@ -119,7 +190,15 @@ void peer_connection_core::setup_receive(){
 
 	max_receive = m_recv_buffer.max_receive();
 	auto [chunk, size] = m_recv_buffer.reserve(max_receive);
-	m_loop->async_read(this, chunk, size);
+
+	// setup uv_read
+	stream_data_t * data = (stream_data_t *)m_socket->data;
+	assert(data != nullptr);
+
+	data->curr_recv_chunk = chunk;
+	data->chunk_size = size;
+
+	uv_read_start(m_socket, alloc_cb, on_read);
 
 	assert(m_recv_buffer.pos_at_end());
 
