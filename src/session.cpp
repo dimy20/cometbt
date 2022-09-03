@@ -1,6 +1,19 @@
 #include "session.h"
 #include <pthread.h>
 
+struct send_params{
+	int index;
+	std::queue<int> * work_queue;
+	piece_manager * p_manager;
+	peer_connection * peer;
+	uv_loop_t * loop;
+};
+
+struct piece_write_req{
+	int index;
+	piece_manager * p_manager;
+};
+
 // move to aux?
 static std::vector<char> open_file(const std::string& filename){
 	std::vector<char> buff;
@@ -24,20 +37,68 @@ session::session(const std::string& filename){
 	m_uv_loop = uv_default_loop();
 }
 
-void * io_worker(void * arg){
-
-	event_loop ev_loop;
-	session * s = reinterpret_cast<session*>(arg);
-
-	for(auto& peer_conn: s->m_peer_connections){
-		peer_conn.start(&ev_loop);
-	};
-
-	ev_loop.run();
-
-	return nullptr;
+bool write_piece(const std::string& filename, piece * p){
+	std::ofstream output("test", std::ios::binary | std::ios_base::app);
+	if(!output){
+		std::cerr << "failed to open filename : " << filename << std::endl;
+		return false;
+	}
+	const char * data = p->data();
+	output.write(data, p->size());
+	if(output.bad()) return false;
+	return true;
 };
+
+void save_piece(uv_work_t * handle){
+	//std::cout << "Saving piece" << std::endl;
+	struct piece_write_req * req = (struct piece_write_req *)handle->data;
+	int index = req->index;
+	piece_manager * p_manager = req->p_manager;
+	auto& piece = p_manager->get_piece(index);
+	write_piece("caca", &piece);
+	free(req);
+	// saving piece
+};
+
+void after(uv_work_t * req, int status){
+}
 // should only be responsible for handling main loop for now
+// maybe i can have a thread to select which peers to run for a given piece?
+void try_download(uv_async_t * handle){
+	struct send_params * params = (struct send_params*)handle->data;
+	assert(params != nullptr);
+
+	peer_connection * peer = params->peer;
+	//free(handle->data);
+	//write_piece("test", p);
+	if(!peer->m_bitfield.has_piece(params->index)){
+		params->work_queue->push(params->index);
+		return;
+	}
+	if(peer->choked()){
+		params->work_queue->push(params->index);
+		return;
+	}
+
+	int index = peer->fetch_piece(params->index, *params->work_queue);
+
+	if(index != -1){
+		uv_work_t * req = (uv_work_t *)malloc(sizeof(uv_work_t));
+		struct piece_write_req * pwr = (struct piece_write_req *)malloc(sizeof(struct piece_write_req));
+
+		pwr->index = index;
+		pwr->p_manager = params->p_manager;
+		req->data = (void *)pwr;
+
+		assert(params->loop != nullptr);
+		uv_queue_work(params->loop, req, save_piece, after);
+		int next_piece = params->work_queue->front();
+		peer->fetch_piece(next_piece, *params->work_queue);
+	};
+	free(params);
+};
+
+
 void session::start(){
 	uv_async_t async;
     uv_async_init(m_uv_loop, &async, try_download);
