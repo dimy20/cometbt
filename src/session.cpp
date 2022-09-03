@@ -21,6 +21,7 @@ session::session(const std::string& filename){
 	m_torrent.init_torrent_data();
 	// contacts tracker
 	m_torrent.setup_peerinfo();
+	m_uv_loop = uv_default_loop();
 }
 
 void * io_worker(void * arg){
@@ -38,37 +39,26 @@ void * io_worker(void * arg){
 };
 // should only be responsible for handling main loop for now
 void session::start(){
+	uv_async_t async;
+    uv_async_init(m_uv_loop, &async, try_download);
+
 	// client hadles just one peer for now
 	auto piece_len = m_torrent.piece_len();
 	m_piece_manager = std::move(piece_manager(piece_len, m_torrent.get_pieces_hash()));
 
 	int n;
 	n = m_torrent.get_peers_infos().size();
-	for(int i = 0; i < 1; i++){
-		peer_connection peer(m_torrent.get_peers_infos()[i], &m_piece_manager);
+	for(int i = 0; i < n; i++){
+		peer_connection peer(m_torrent.get_peers_infos()[i], &m_piece_manager, &async);
 		m_peer_connections.push_back(std::move(peer));
 	};
 
-	std::queue<piece *> work_queue = m_piece_manager.get_work_queue();
+	std::queue<int> work_queue = m_piece_manager.get_work_queue();
 
-	pthread_t worker_th;
-	pthread_create(&worker_th, nullptr, io_worker, this);
+	for(auto& peer_conn: m_peer_connections){
+		peer_conn.start_v2(m_uv_loop);
+	};
 
-	while(!work_queue.empty()){
+	uv_run(m_uv_loop, UV_RUN_DEFAULT);
 
-		for(int i = 0; i < m_peer_connections.size(); i++){
-			auto& piece = work_queue.front();
-			auto& peer = m_peer_connections[i];
-
-			if(peer.m_bitfield.empty()) continue;
-
-			if(!peer.m_bitfield.has_piece(piece->index())) continue;
-
-			if(!peer.choked()){
-				peer.fetch_piece(*piece);
-			}
-		};
-	}
-
-	pthread_join(worker_th, nullptr);
 };

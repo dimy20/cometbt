@@ -1,9 +1,9 @@
 #pragma once
 #include <vector>
-#include "event_loop.h"
 #include "peer_connection.h"
 #include "torrent.h"
 #include "piece_manager.h"
+#include <uv.h>
 // class responsible for managing the peer connections
 // holds event loop
 // this class will stand high in the layer hierarchy
@@ -23,6 +23,6 @@ class session{
 //	private:
 		torrent m_torrent; // make this better
 		std::vector<peer_connection> m_peer_connections;
-		event_loop m_main_loop; // main loop
 		piece_manager m_piece_manager;
+		uv_loop_t * m_uv_loop;
 };
