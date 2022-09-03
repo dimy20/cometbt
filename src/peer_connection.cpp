@@ -232,12 +232,25 @@ void peer_connection::handle_piece(){
 
 	auto& piece = m_piece_manager->get_piece(index);
 	piece.incoming_block(new_block);
-	m_backlog--; // allow send
+	piece.m_backlog--; // allow send
+	auto& work_queue = m_piece_manager->get_work_queue();
 
-	std::cout << "received block of size : " << size - 9<< std::endl;
+	// wake up thread to ask for new block
+	struct send_params * params;
+	params = (struct send_params*)malloc(sizeof(struct send_params));
+
+	params->index = index;
+	params->work_queue = &work_queue;
+	params->p_manager = m_piece_manager;
+	params->peer = this;
+	params->loop = m_loop;
+
+	m_async->data = (void*)(params);
+	uv_async_send(m_async);
 
 	m_state = p_state::READ_MESSAGE_SIZE;
 	m_recv_buffer.reset(4);
+
 	return;
 };
 
@@ -337,14 +350,12 @@ void peer_connection::on_receive(int passed_bytes){
 		if(!m_recv_buffer.is_message_finished()){
 			return;
 		}else{
-			std::cout << "received full message " << std::endl;
+			//std::cout << "received full message " << std::endl;
 			do_message();
 		}
 	}
 };
 
-void peer_connection::handle_bitfield(char * begin, std::size_t size){
-	m_bitfield = std::move(aux::bitfield(begin, size - 1));
 void peer_connection::handle_bitfield(){
 	auto [chunk, size] = m_recv_buffer.get();
 	m_bitfield = std::move(aux::bitfield(chunk + 5, size - 5));
