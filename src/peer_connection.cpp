@@ -1,18 +1,38 @@
 #include "peer_connection.h"
 #include "session.h"
 
+struct send_params{
+	int index;
+	std::queue<int> * work_queue;
+	piece_manager * p_manager;
+	peer_connection * peer;
+	uv_loop_t * loop;
+};
+
+struct piece_write_req{
+	int index;
+	piece_manager * p_manager;
+};
+
+void write_cb(uv_write_t *req, int status) {
+    if (status) {
+        fprintf(stderr, "Write error %s\n", uv_err_name(status));
+    }
+	free(req);
+};
+
 int peer_connection::get_length(const char * const buff, std::size_t size){
 	return aux::deserialize_int(buff, buff + size);
 };
 
-peer_connection::peer_connection(const struct peer_info_s & p_info, piece_manager * pm)
+peer_connection::peer_connection(const struct peer_info_s & p_info, piece_manager * pm,
+		uv_async_t * async)
 : peer_connection_core(p_info)
 {
 	m_total = 0;
 	m_choked = true;
 	m_piece_manager = pm;
-	m_backlog = 0;
-	m_total_requested = 0;
+	m_async = async;
 }
 
 peer_connection::peer_connection(peer_connection && other)
@@ -23,6 +43,7 @@ peer_connection::peer_connection(peer_connection && other)
 	m_total = other.m_total;
 	m_choked = other.m_choked;
 	m_bitfield = std::move(m_bitfield);
+	m_async = other.m_async;
 //	memcpy(&m_sem_choked, &other.m_sem_choked, sizeof(sem_t));
 };
 
@@ -31,6 +52,7 @@ peer_connection& peer_connection::operator=(const peer_connection& other){
 	m_msg_len = other.m_msg_len;
 	m_total = other.m_total;
 	m_bitfield = other.m_bitfield;
+	m_async = other.m_async;
 	return *this;
 };
 
@@ -60,18 +82,17 @@ void peer_connection::do_message(){
 	//std::cout << "processing message - payload : " << payload_len <<  std::endl;
 	message_id msg_id  = static_cast<message_id>(*msg_buff);
 	switch((msg_id)){
-		case message_id::BITFIELD:
-			{
-				msg_buff++;
-				//std::cout << "bitfield !! " << std::endl;
-				auto[recv_buffer, size] = m_recv_buffer.get();
-				handle_bitfield(recv_buffer, size - 1);
-				break;
-			}
+		case message_id::BITFIELD: handle_bitfield(); break;
 		case message_id::UNCHOKE: handle_unchoke(); break;
 		case message_id::CHOKE:   handle_choke();   break;
 		case message_id::PIECE:   handle_piece();   break;
-		default: std::cout << "msg id : " << *msg_buff << std::endl;
+		default:
+			{
+				//std::cout << " unsuported msg id : " << *msg_buff << std::endl;
+				m_state = p_state::READ_MESSAGE_SIZE;
+				m_recv_buffer.reset(4);
+				break;
+		  };
 			
 	}
 };

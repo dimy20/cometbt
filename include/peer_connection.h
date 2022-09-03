@@ -17,7 +17,7 @@ class piece;
 class peer_connection : public peer_connection_core{
 	public:
 		peer_connection();
-		peer_connection(const struct peer_info_s& peer, piece_manager * pm);
+		peer_connection(const struct peer_info_s& peer, piece_manager * pm, uv_async_t * async);
 		peer_connection(peer_connection && other);
 		peer_connection& operator=(const peer_connection& other);
 
