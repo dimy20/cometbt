@@ -77,6 +77,21 @@ void peer_connection::do_message(){
 };
 
 void peer_connection::handle_unchoke(){
+	assert(m_async != nullptr);
+	auto& work_queue = m_piece_manager->get_work_queue();
+
+	struct send_params *params = (struct send_params*)malloc(sizeof(struct send_params));
+	params->index = work_queue.front();
+	params->work_queue = &work_queue;
+	params->p_manager = m_piece_manager;
+	params->peer = this;
+	params->loop = m_loop;
+
+	m_async->data = (void*)(params);
+	uv_async_send(m_async);
+
+	work_queue.pop();
+
 	m_choked = false;
 	m_state = p_state::READ_MESSAGE_SIZE;
 	m_recv_buffer.reset(4);
