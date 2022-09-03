@@ -13,6 +13,7 @@ aux::bitfield::~bitfield(){
 };
 
 bool aux::bitfield::has_piece(int piece_index) const{
+	if(empty()) return false;
 	int byte_offset, bit_offset;
 	byte_offset = piece_index / 8;
 	bit_offset = piece_index % 8;
