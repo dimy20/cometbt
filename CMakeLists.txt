@@ -7,13 +7,13 @@ set(CMAKE_BUILD_TYPE Debug)
 
 file(GLOB_RECURSE SRC_FILES src/*.cpp)
 find_package(OpenSSL REQUIRED)
+add_subdirectory(libuv)
 
 add_library(decoder STATIC src/bencode.cpp)
 target_include_directories(decoder PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
 
 add_library(event_loop STATIC  src/socketSSL.cpp
 							   src/tcp.cpp
-							   src/event_loop.cpp
 							   src/timer.cpp
 							   src/http_parser.cpp)
 
@@ -32,19 +32,19 @@ add_library(torrent STATIC src/torrent.cpp
 						   src/piece_manager.cpp
 						   src/block.cpp)
 
-target_link_libraries(torrent decoder)
-target_include_directories(torrent PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
+target_link_libraries(torrent decoder uv)
+target_include_directories(torrent PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include uv)
 
 add_executable(main main.cpp)
 target_link_libraries(main decoder
 						   torrent
 						   event_loop
 						   crypto
-						   pthread
-						   ${OPENSSL_LIBRARIES})
+						   ${OPENSSL_LIBRARIES}
+						   uv)
 
 target_include_directories(main PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include
-									   ${OPENSSL_INCLUDE_DIR})
+									   ${OPENSSL_INCLUDE_DIR} uv)
 
 include(CTest)
 include(GoogleTest)
