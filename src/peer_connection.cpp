@@ -97,53 +97,73 @@ void peer_connection::handle_unchoke(){
 	m_recv_buffer.reset(4);
 };
 
+int peer_connection::fetch_piece(int index, std::queue<int>& work_queue){
+	// are we in the middle of dowloading a piece right now?
+	piece& p = m_curr_piece == -1 ? m_piece_manager->get_piece(index):
+											m_piece_manager->get_piece(m_curr_piece);
 
-void peer_connection::fetch_piece(piece& p){
-	lock();
+	if(m_curr_piece != -1) work_queue.push(index);
+
+	m_curr_piece = m_curr_piece != -1 ? m_curr_piece : index;
+
 	if(!m_bitfield.empty() && !m_bitfield.has_piece(p.index())){
-		unlock();
-		return;
+		return -1;
 	}
-	if(m_backlog == MAX_BACKLOG){
-		unlock();
-		return; // max oustanding request at this moment
+	if(p.m_backlog == MAX_BACKLOG){
+		return -1;// max oustanding request at this moment
 	}
-	/*
 
-	std::cout << "asking for piece " << p.hash().hex_str();
-	std::cout << " " << p.index() << std::endl;
-	*/
+
+	if(p.download_finished()){
+		int ans;
+		// schedule next piece here?
+		if(p.verify_integrity()){
+			std::cout << " Integrity verified, " << std::endl;
+			std::cout << m_peer_info.m_remote_ip << std::endl;
+			//send_have(m_curr_piece);
+			ans = m_curr_piece;
+		}else{
+			work_queue.push(m_curr_piece);
+			ans = -1;
+		}
+		m_curr_piece = -1;
+		return ans;
+	}
 
 	int size;
 	int piece_length = p.length();
-	//int total_requested = 0; // offset
-
-	if(p.download_finished()){
-		std::cout << "Piece donwload finished." << std::endl;
-		if(p.verify_integrity())
-			std::cout << "Integrity verified!" << std::endl;
-		exit(1);
-	}
 	// make m_backlog oustanding requests!
-	while(m_backlog < MAX_BACKLOG && m_total_requested < piece_length){
+	while(p.m_backlog < MAX_BACKLOG && p.m_total_requested < piece_length){
 		// last block might be smaller
-		if(m_total_requested + BLOCK_LENGTH > piece_length){
-			size = piece_length - m_total_requested;
+		if(p.m_total_requested + BLOCK_LENGTH > piece_length){
+			size = piece_length - p.m_total_requested;
 		}else size = BLOCK_LENGTH;
 
-		auto msg = create_request_message(p.index(), m_total_requested, size);
-		m_loop->async_write(this, reinterpret_cast<char *>(msg.get()), sizeof(*msg.get()));
+		auto msg = create_request_message(p.index(), p.m_total_requested, size);
 
-		m_backlog++;
-		m_total_requested += size;
+		uv_write_t * req = (uv_write_t *)malloc(sizeof(uv_write_t));
+		if(!req) std::cerr << "failed to alloacte " << std::endl;
+
+		uv_buf_t * buf = (uv_buf_t *)malloc(sizeof(uv_buf_t));
+		if(buf == nullptr) std::cerr << "FART " << std::endl;
+
+		buf->base = (char *)msg.get();
+		buf->len = sizeof(*msg.get());
+
+		uv_write(req, m_socket, buf, 1, write_cb);
+
+		p.m_backlog++;
+		p.m_total_requested += size;
 	};
 	// setup lower layer to received message
 	setup_receive();
-	unlock();
+	return -1;
 };
 
 void peer_connection::handle_choke(){
 	m_choked = true;
+	m_state = p_state::READ_MESSAGE_SIZE;
+	m_recv_buffer.reset(4);
 	std::cout << "choked" << std::endl;
 };
 

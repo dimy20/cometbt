@@ -22,7 +22,7 @@ class peer_connection : public peer_connection_core{
 		peer_connection& operator=(const peer_connection& other);
 
 		virtual void on_receive(int passed_bytes);
-		void fetch_piece(piece& p);
+		int fetch_piece(int index, std::queue<int>& work_queue);
 
 		bool choked() { return m_choked; };
 	private:
@@ -36,17 +36,13 @@ class peer_connection : public peer_connection_core{
 		void handle_choke();
 		void handle_piece();
 
-
 	public:
 		piece_manager * m_piece_manager;
 		int m_msg_len;
 		int m_total;
 		bool m_choked;
 		aux::bitfield m_bitfield;
-		// keeps track of the amount of pipelined requests
-		int m_backlog;
-		// keeps track of the amount of bytes that have been requested so far
-		// for the piece we're currently fecthing from this peer.
-		int m_total_requested;
+		uv_async_t * m_async;
+		int m_curr_piece = -1;
 };
 
