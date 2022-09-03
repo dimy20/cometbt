@@ -1,5 +1,4 @@
 #include "session.h"
-#include <pthread.h>
 
 struct send_params{
 	int index;
@@ -69,8 +68,6 @@ void try_download(uv_async_t * handle){
 	assert(params != nullptr);
 
 	peer_connection * peer = params->peer;
-	//free(handle->data);
-	//write_piece("test", p);
 	if(!peer->m_bitfield.has_piece(params->index)){
 		params->work_queue->push(params->index);
 		return;
@@ -92,7 +89,9 @@ void try_download(uv_async_t * handle){
 
 		assert(params->loop != nullptr);
 		uv_queue_work(params->loop, req, save_piece, after);
+
 		int next_piece = params->work_queue->front();
+		params->work_queue->pop();
 		peer->fetch_piece(next_piece, *params->work_queue);
 	};
 	free(params);
@@ -117,7 +116,7 @@ void session::start(){
 	std::queue<int> work_queue = m_piece_manager.get_work_queue();
 
 	for(auto& peer_conn: m_peer_connections){
-		peer_conn.start_v2(m_uv_loop);
+		peer_conn.start(m_uv_loop);
 	};
 
 	uv_run(m_uv_loop, UV_RUN_DEFAULT);
