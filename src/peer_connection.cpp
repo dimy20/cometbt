@@ -118,6 +118,33 @@ void peer_connection::handle_unchoke(){
 	m_recv_buffer.reset(4);
 };
 
+void peer_connection::send_have(int index){
+	const int payload_len = 5;
+	const char msg_id = (char)message_id::HAVE;
+
+	struct have_message * have_msg;
+	have_msg = (struct have_message *)malloc(sizeof(struct have_message));
+
+	if(!have_msg){
+		std::cerr << "Failed to allocate" << std::endl;
+		exit(1);
+	}
+
+	aux::serialize_int(have_msg->length, have_msg->length + 3, payload_len);
+	aux::serialize_int(have_msg->index, have_msg->index + 3, index);
+
+	uv_write_t * req = (uv_write_t *)malloc(sizeof(uv_write_t));
+	if(!req) std::cerr << "failed to alloacte " << std::endl;
+
+	uv_buf_t * buf = (uv_buf_t *)malloc(sizeof(uv_buf_t));
+	if(buf == nullptr) std::cerr << "FART " << std::endl;
+
+	buf->base = reinterpret_cast<char*>(have_msg);
+	buf->len = sizeof(have_message);
+
+	uv_write(req, m_socket, buf, 1, write_cb);
+};
+
 int peer_connection::fetch_piece(int index, std::queue<int>& work_queue){
 	// are we in the middle of dowloading a piece right now?
 	piece& p = m_curr_piece == -1 ? m_piece_manager->get_piece(index):

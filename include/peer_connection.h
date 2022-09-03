@@ -28,6 +28,7 @@ class peer_connection : public peer_connection_core{
 	private:
 		int get_length(const char * const buff, std::size_t size);
 		//change this to work directly with the receive buffer
+		void send_have(int index);
 		void do_message();
 
 		// message handlers
