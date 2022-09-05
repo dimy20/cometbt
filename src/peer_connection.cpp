@@ -1,23 +1,14 @@
 #include "peer_connection.h"
 #include "session.h"
 
-struct send_params{
-	int index;
-	std::queue<int> * work_queue;
-	piece_manager * p_manager;
-	peer_connection * peer;
-	uv_loop_t * loop;
-};
-
-struct piece_write_req{
-	int index;
-	piece_manager * p_manager;
-};
-
 void write_cb(uv_write_t *req, int status) {
     if (status) {
         fprintf(stderr, "Write error %s\n", uv_err_name(status));
     }
+	uv_buf_t * buff = (uv_buf_t *)req->data;
+	assert(req != nullptr && buff != nullptr);
+
+	free(buff);
 	free(req);
 };
 
@@ -190,13 +181,16 @@ int peer_connection::fetch_piece(int index, std::queue<int>& work_queue){
 		auto msg = create_request_message(p.index(), p.m_total_requested, size);
 
 		uv_write_t * req = (uv_write_t *)malloc(sizeof(uv_write_t));
-		if(!req) std::cerr << "failed to alloacte " << std::endl;
-
 		uv_buf_t * buf = (uv_buf_t *)malloc(sizeof(uv_buf_t));
-		if(buf == nullptr) std::cerr << "FART " << std::endl;
+
+		COMET_HANDLE_ALLOC(req);
+		COMET_HANDLE_ALLOC(buf);
 
 		buf->base = (char *)msg.get();
 		buf->len = sizeof(*msg.get());
+
+		// point to buff so we can free it in write_cb
+		req->data = buf;
 
 		uv_write(req, m_socket, buf, 1, write_cb);
 
@@ -362,11 +356,18 @@ void peer_connection::handle_bitfield(){
 	if(m_choked){
 		std::cout << "sending interested " << std::endl;
 		auto msg = create_interested_message();
-		uv_write_t * req = (uv_write_t *)(malloc(sizeof(uv_write_t)));
-		if(!req) std::cerr << "Failed to allocate" << std::endl;
 
-		uv_buf_t buf = {.base = (char *)msg.get(), .len = 5};
-		uv_write(req, m_socket, &buf, 1, write_cb);
+		uv_write_t * req = (uv_write_t *)(malloc(sizeof(uv_write_t)));
+		COMET_HANDLE_ALLOC(req);
+
+		uv_buf_t * buf = (uv_buf_t *)malloc(sizeof(uv_buf_t));
+		COMET_HANDLE_ALLOC(buf);
+
+		buf->base = (char *)msg.get();
+		buf->len = 5;
+
+		req->data = buf;
+		uv_write(req, m_socket, buf, 1, write_cb);
 
 		m_state = p_state::READ_MESSAGE_SIZE; // wait for unchoke message
 		m_recv_buffer.reset(4);

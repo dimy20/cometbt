@@ -1,17 +1,5 @@
 #include "session.h"
-
-struct send_params{
-	int index;
-	std::queue<int> * work_queue;
-	piece_manager * p_manager;
-	peer_connection * peer;
-	uv_loop_t * loop;
-};
-
-struct piece_write_req{
-	int index;
-	piece_manager * p_manager;
-};
+#include "log.h"
 
 // move to aux?
 static std::vector<char> open_file(const std::string& filename){
@@ -70,10 +58,12 @@ void try_download(uv_async_t * handle){
 	peer_connection * peer = params->peer;
 	if(!peer->m_bitfield.has_piece(params->index)){
 		params->work_queue->push(params->index);
+		free(params);
 		return;
 	}
 	if(peer->choked()){
 		params->work_queue->push(params->index);
+		free(params);
 		return;
 	}
 

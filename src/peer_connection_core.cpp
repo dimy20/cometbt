@@ -36,6 +36,11 @@ void handshake_write_cb(uv_write_t *req, int status) {
     if (status) {
         fprintf(stderr, "Write error %s\n", uv_err_name(status));
     }
+	uv_buf_t * buff = (uv_buf_t *)req->data;
+	assert(buff != nullptr);
+
+	free(buff->base);
+	free(buff);
 	free(req);
 }
 
@@ -61,16 +66,22 @@ void peer_connection_core::send_handshake(const aux::info_hash& info_hash, const
 	memcpy(hs.info_hash, info_hash.get(), INFO_HASH_LENGTH);
 	memcpy(hs.peer_id, id.c_str(), PEER_ID_LENGTH);
 
-	uv_buf_t buff;
-	buff.base = static_cast<char *>(malloc(HANDSHAKE_SIZE));
-	buff.len = HANDSHAKE_SIZE;
+	uv_buf_t * buff = (uv_buf_t *)malloc(sizeof(uv_buf_t));
+	if(!buff) COMET_LOG_ERROR(std::cerr, "Failed to allocate");
 
-	memcpy(buff.base, &hs, HANDSHAKE_SIZE);
+	buff->base = static_cast<char *>(malloc(HANDSHAKE_SIZE));
+	if(!buff->base) COMET_LOG_ERROR(std::cerr, "Failed to allocate");
+
+	buff->len = HANDSHAKE_SIZE;
+
+	memcpy(buff->base, &hs, HANDSHAKE_SIZE);
 	uv_write_t * req = (uv_write_t *)malloc(sizeof(uv_write_t));
+	if(!req) COMET_LOG_ERROR(std::cerr, "Failed to allocate");
 
-	req->data = this;
+	// point to buff and free it on callback
+	req->data = buff;
 
-	uv_write(req, m_socket, &buff, 1, handshake_write_cb);
+	uv_write(req, m_socket, buff, 1, handshake_write_cb);
 
 
 	// get ready to received
@@ -90,9 +101,9 @@ void peer_connection_core::send_handshake(const aux::info_hash& info_hash, const
 };
 
 void on_connect(uv_connect_t *req, int status){
-	if(status < 0) std::cout << "on_connect " << uv_strerror(status) << std::endl;
-	else{
-		std::cout << "on_connect success" << std::endl;
+	if(status < 0){
+		std::cout << "on_connect " << uv_strerror(status) << std::endl;
+		return;
 	}
 
 	// get handle
@@ -125,7 +136,7 @@ void peer_connection_core::start(uv_loop_t * loop){
 	// pin
 	stream_data_t * data = (stream_data_t *)malloc(sizeof(stream_data_t));
 	if(!data){
-		std::cerr << "failed to allocated" << std::endl;
+		COMET_LOG_ERROR(std::cerr, "Failed to allocate");
 		exit(1);
 	}
 
@@ -203,3 +214,9 @@ void peer_connection_core::setup_receive(){
 	assert(m_recv_buffer.pos_at_end());
 
 };
+
+peer_connection_core::~peer_connection_core(){
+	if(m_socket != nullptr){
+		free(m_socket);
+	}
+}

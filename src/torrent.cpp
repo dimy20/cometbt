@@ -35,7 +35,7 @@ torrent::torrent(const std::string& filename){
 	m_encoding = "";
 	m_info_private = -1;
 	m_id = gen_peer_id();
-	m_sock = SocketSSL();
+	m_sock = std::move(SocketSSL());
 };
 
 static std::string info_file_path(bencode::dict_t& d){

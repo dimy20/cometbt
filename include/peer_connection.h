@@ -7,12 +7,27 @@
 #include "bitfield.h"
 #include "piece_manager.h"
 #include "piece.h"
+#include "log.h"
 #include <uv.h>
 
 #define MAX_BACKLOG 5 // pipeline messages
 
 class piece_manager;
 class piece;
+
+struct send_params{
+	int index;
+	std::queue<int> * work_queue;
+	piece_manager * p_manager;
+	peer_connection * peer;
+	uv_loop_t * loop;
+};
+
+struct piece_write_req{
+	int index;
+	piece_manager * p_manager;
+};
+
 // this class implements the protocol
 class peer_connection : public peer_connection_core{
 	public:

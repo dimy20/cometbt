@@ -19,6 +19,17 @@ SocketSSL::SocketSSL(){
 	init_openssl();
 };
 
+
+SocketSSL& SocketSSL::operator=(SocketSSL && other){
+	m_fd = other.m_fd;
+	m_ssl = other.m_ssl;
+	other.m_ssl = nullptr;
+	m_flags = other.m_flags;
+	m_ctx = other.m_ctx;
+	other.m_ctx = nullptr;
+	return *this;
+};
+
 void SocketSSL::init_openssl(){
 	OpenSSL_add_ssl_algorithms();
 	SSL_load_error_strings();
@@ -36,18 +47,22 @@ void SocketSSL::connect_to(const std::string& host, const std::string& port){
 
     ret = getaddrinfo(host.c_str(), port.c_str(), &hints, &servinfo);
 
-	if(ret == -1) perror("getaddrinfo");
+	if(ret == -1){
+		freeaddrinfo(servinfo);
+		COMET_LOG_ERROR(std::cerr, "getaddrinfo");
+		return;
+	}
 
 	p = servinfo;
 
-	for(p == servinfo; p != nullptr; p = p->ai_next){
+	for(p = servinfo; p != nullptr; p = p->ai_next){
 		m_fd = new_socket(p->ai_family, p->ai_socktype, p->ai_protocol);
 		if(m_fd == -1) continue;
 
 		ret = connect(m_fd, p->ai_addr, p->ai_addrlen); /*takes too long*/
 		if(ret == -1){
 			close(m_fd);
-			std::cerr << "Error : failed to connect to " << host << std::endl;
+			COMET_LOG_ERROR(std::cerr, "failed to connect to " << host);
 		}else break; /*connected*/
 	}
 
@@ -112,3 +127,7 @@ int SocketSSL::recv(char * buff, int size){
 	return total;
 }
 
+SocketSSL::~SocketSSL(){
+	SSL_CTX_free(m_ctx);
+	SSL_free(m_ssl);
+};

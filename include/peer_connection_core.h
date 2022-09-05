@@ -60,6 +60,7 @@ class peer_connection_core{
 	public:
 		peer_connection_core(const struct peer_info_s& peer);
 		peer_connection_core(peer_connection_core && other);
+		~peer_connection_core();
 		void send_handshake(const aux::info_hash& info_hash, const std::string& id);
 
 		// starts connection and prepares receive buffer
@@ -92,7 +93,7 @@ class peer_connection_core{
 		uv_loop_t * m_loop = nullptr;
 		p_state m_state;
 		struct peer_info_s m_peer_info;
-		uv_stream_t * m_socket;
+		uv_stream_t * m_socket = nullptr;
 };
 
 struct handshake_s{
