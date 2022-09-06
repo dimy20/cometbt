@@ -43,12 +43,12 @@ void save_piece(uv_work_t * handle){
 	piece_manager * p_manager = req->p_manager;
 	auto& piece = p_manager->get_piece(index);
 	write_piece("caca", &piece);
-	free(req);
-	// saving piece
 };
 
 void after(uv_work_t * req, int status){
-}
+	free(req->data);
+	free(req);
+};
 // should only be responsible for handling main loop for now
 // maybe i can have a thread to select which peers to run for a given piece?
 void try_download(uv_async_t * handle){
@@ -71,7 +71,9 @@ void try_download(uv_async_t * handle){
 
 	if(index != -1){
 		uv_work_t * req = (uv_work_t *)malloc(sizeof(uv_work_t));
+		COMET_ASSERT_ALLOC(req);
 		struct piece_write_req * pwr = (struct piece_write_req *)malloc(sizeof(struct piece_write_req));
+		COMET_ASSERT_ALLOC(pwr);
 
 		pwr->index = index;
 		pwr->p_manager = params->p_manager;

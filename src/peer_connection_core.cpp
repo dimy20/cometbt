@@ -67,22 +67,21 @@ void peer_connection_core::send_handshake(const aux::info_hash& info_hash, const
 	memcpy(hs.peer_id, id.c_str(), PEER_ID_LENGTH);
 
 	uv_buf_t * buff = (uv_buf_t *)malloc(sizeof(uv_buf_t));
-	if(!buff) COMET_LOG_ERROR(std::cerr, "Failed to allocate");
+	COMET_ASSERT_ALLOC(buff);
 
 	buff->base = static_cast<char *>(malloc(HANDSHAKE_SIZE));
-	if(!buff->base) COMET_LOG_ERROR(std::cerr, "Failed to allocate");
+	COMET_ASSERT_ALLOC(buff->base);
 
 	buff->len = HANDSHAKE_SIZE;
 
 	memcpy(buff->base, &hs, HANDSHAKE_SIZE);
 	uv_write_t * req = (uv_write_t *)malloc(sizeof(uv_write_t));
-	if(!req) COMET_LOG_ERROR(std::cerr, "Failed to allocate");
+	COMET_ASSERT_ALLOC(req);
 
 	// point to buff and free it on callback
 	req->data = buff;
 
 	uv_write(req, m_socket, buff, 1, handshake_write_cb);
-
 
 	// get ready to received
 	stream_data_t * data = (stream_data_t *)m_socket->data;
@@ -102,7 +101,7 @@ void peer_connection_core::send_handshake(const aux::info_hash& info_hash, const
 
 void on_connect(uv_connect_t *req, int status){
 	if(status < 0){
-		std::cout << "on_connect " << uv_strerror(status) << std::endl;
+		COMET_LOG_ERROR(std::cerr, "on_connect: " << uv_strerror(status))
 		return;
 	}
 
@@ -120,7 +119,7 @@ void on_connect(uv_connect_t *req, int status){
 	std::cout << core->m_peer_info.m_remote_ip << std::endl;
 
 	core->send_handshake(core->m_peer_info.m_info_hash, core->m_peer_info.m_id);
-
+	free(req);
 };
 
 void peer_connection_core::start(uv_loop_t * loop){
@@ -130,15 +129,15 @@ void peer_connection_core::start(uv_loop_t * loop){
 	auto [span, span_size] = m_recv_buffer.reserve(1024 * 16);
 
 	uv_tcp_t * socket = (uv_tcp_t*)malloc(sizeof(uv_tcp_t));
+	COMET_ASSERT_ALLOC(socket);
+
 	uv_tcp_init(loop, socket);
 
 	uv_connect_t* connect = (uv_connect_t*)malloc(sizeof(uv_connect_t));
+	COMET_ASSERT_ALLOC(connect);
 	// pin
 	stream_data_t * data = (stream_data_t *)malloc(sizeof(stream_data_t));
-	if(!data){
-		COMET_LOG_ERROR(std::cerr, "Failed to allocate");
-		exit(1);
-	}
+	COMET_ASSERT_ALLOC(data);
 
 	data->core_owner = this;
 	data->curr_recv_chunk = nullptr;
@@ -160,7 +159,9 @@ void peer_connection_core::start(uv_loop_t * loop){
 		uv_ip4_addr(m_peer_info.m_remote_ip.c_str(), port, &dest);
 		uv_tcp_connect(connect, socket, (const struct sockaddr*)&dest, on_connect);
 	}else{
-		std::cerr << "Invalid ip address : " << m_peer_info.m_remote_ip << std::endl;
+		free(connect);
+		free(data);
+		COMET_LOG_ERROR(std::cerr, "Invalid ip address");
 	}
 };
 

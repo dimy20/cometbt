@@ -92,7 +92,10 @@ void peer_connection::handle_unchoke(){
 	assert(m_async != nullptr);
 	auto& work_queue = m_piece_manager->get_work_queue();
 
-	struct send_params *params = (struct send_params*)malloc(sizeof(struct send_params));
+	struct send_params *params;
+	params = (struct send_params*)malloc(sizeof(struct send_params)); 
+	COMET_ASSERT_ALLOC(params);
+
 	params->index = work_queue.front();
 	params->work_queue = &work_queue;
 	params->p_manager = m_piece_manager;
@@ -183,8 +186,8 @@ int peer_connection::fetch_piece(int index, std::queue<int>& work_queue){
 		uv_write_t * req = (uv_write_t *)malloc(sizeof(uv_write_t));
 		uv_buf_t * buf = (uv_buf_t *)malloc(sizeof(uv_buf_t));
 
-		COMET_HANDLE_ALLOC(req);
-		COMET_HANDLE_ALLOC(buf);
+		COMET_ASSERT_ALLOC(req);
+		COMET_ASSERT_ALLOC(buf);
 
 		buf->base = (char *)msg.get();
 		buf->len = sizeof(*msg.get());
@@ -232,6 +235,8 @@ void peer_connection::handle_piece(){
 	// wake up thread to ask for new block
 	struct send_params * params;
 	params = (struct send_params*)malloc(sizeof(struct send_params));
+	COMET_ASSERT_ALLOC(params);
+
 
 	params->index = index;
 	params->work_queue = &work_queue;
@@ -358,10 +363,10 @@ void peer_connection::handle_bitfield(){
 		auto msg = create_interested_message();
 
 		uv_write_t * req = (uv_write_t *)(malloc(sizeof(uv_write_t)));
-		COMET_HANDLE_ALLOC(req);
+		COMET_ASSERT_ALLOC(req);
 
 		uv_buf_t * buf = (uv_buf_t *)malloc(sizeof(uv_buf_t));
-		COMET_HANDLE_ALLOC(buf);
+		COMET_ASSERT_ALLOC(buf);
 
 		buf->base = (char *)msg.get();
 		buf->len = 5;
