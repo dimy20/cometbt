@@ -25,13 +25,14 @@ int peer_connection::get_length(const char * const buff, std::size_t size){
 };
 
 peer_connection::peer_connection(const struct peer_info_s & p_info, piece_manager * pm,
-		uv_async_t * async)
+		uv_async_t * async, session * s)
 : peer_connection_core(p_info)
 {
 	m_total = 0;
 	m_choked = true;
 	m_piece_manager = pm;
 	m_async = async;
+	m_session = s;
 }
 
 peer_connection::peer_connection(peer_connection && other)
@@ -43,7 +44,8 @@ peer_connection::peer_connection(peer_connection && other)
 	m_choked = other.m_choked;
 	m_bitfield = std::move(m_bitfield);
 	m_async = other.m_async;
-//	memcpy(&m_sem_choked, &other.m_sem_choked, sizeof(sem_t));
+	m_active = other.m_active;
+	m_session = other.m_session;
 };
 
 peer_connection& peer_connection::operator=(const peer_connection& other){
@@ -52,6 +54,8 @@ peer_connection& peer_connection::operator=(const peer_connection& other){
 	m_total = other.m_total;
 	m_bitfield = other.m_bitfield;
 	m_async = other.m_async;
+	m_active = other.m_active;
+	m_session = other.m_session;
 	return *this;
 };
 
@@ -221,6 +225,7 @@ int peer_connection::fetch_piece(int index, std::queue<int>& work_queue){
 	return -1;
 };
 
+// what if im choked when dowloadng a piece?
 void peer_connection::handle_choke(){
 	m_choked = true;
 	m_state = p_state::READ_MESSAGE_SIZE;
@@ -334,7 +339,12 @@ void peer_connection::on_receive(int passed_bytes){
 			std::cerr << "Error: failed to verify remote peer id" << std::endl;
 			m_disconnect = true;
 			return;
-		}else std::cout << "verified peer id, handshake complete" << std::endl;
+		}else{
+			std::cout << "verified peer id, handshake complete" << std::endl;
+			// just for now use this very simplistic way of determining if a peer
+			// is active or not
+			m_active = true;
+		}
 
 		m_state = p_state::READ_MESSAGE_SIZE;
 		m_recv_buffer.reset(4);

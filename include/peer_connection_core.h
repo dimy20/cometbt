@@ -78,6 +78,7 @@ class peer_connection_core{
 
 	protected:
 		void setup_receive();
+		uv_stream_t * socket() const { return m_socket; };
 
 	protected:
 		enum class p_state{

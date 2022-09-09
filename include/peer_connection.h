@@ -12,6 +12,7 @@
 
 #define MAX_BACKLOG 5 // pipeline messages
 
+class session;
 class piece_manager;
 class piece;
 
@@ -32,7 +33,7 @@ struct piece_write_req{
 class peer_connection : public peer_connection_core{
 	public:
 		peer_connection();
-		peer_connection(const struct peer_info_s& peer, piece_manager * pm, uv_async_t * async);
+		peer_connection(const struct peer_info_s& peer, piece_manager * pm, uv_async_t * async, session * s);
 		peer_connection(peer_connection && other);
 		peer_connection& operator=(const peer_connection& other);
 
@@ -42,6 +43,7 @@ class peer_connection : public peer_connection_core{
 		int fetch_piece(int index, std::queue<int>& work_queue);
 		bool choked() { return m_choked; };
 	private:
+		bool active () const { return m_active; };
 		int get_length(const char * const buff, std::size_t size);
 		//change this to work directly with the receive buffer
 		void send_have(int index);
@@ -61,5 +63,7 @@ class peer_connection : public peer_connection_core{
 		aux::bitfield m_bitfield;
 		uv_async_t * m_async;
 		int m_curr_piece = -1;
+		bool m_active = false;
+		session * m_session = nullptr;
 };
 
