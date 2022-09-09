@@ -198,9 +198,20 @@ static std::string get_port(const std::string& url){
 void torrent::setup_peerinfo(){
 	int err;
 
-	//TODO remove this from here to a lower layer
 	std::string host = get_host(m_announce);
-	m_sock.connect_to(host, "443");
+	std::string protocol = get_protocol(m_announce);
+	std::string port = get_port(m_announce);
+
+	if(protocol == "udp"){
+		COMET_LOG("Udp tracker protocol not supported.");
+		exit(EXIT_FAILURE);
+	};
+
+	m_sock.connect_to(host, protocol == "https" && port == "" ? "443" : port);
+	if(!m_sock){
+		COMET_LOG("Failed to connect to tracker : " << host);
+		return;
+	}
 
 	http_parser::query_params_s params;
 
