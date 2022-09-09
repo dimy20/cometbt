@@ -4,12 +4,10 @@
 static int new_socket(int family, int socktype, int protocol){
 	int fd, ret;
 	fd = socket(family, socktype, protocol);
-
 	if(fd < 0){
 		perror("socket");
 		exit(1);
 	};
-
 	return fd;
 };
 
@@ -47,11 +45,10 @@ void SocketSSL::connect_to(const std::string& host, const std::string& port){
 
     ret = getaddrinfo(host.c_str(), port.c_str(), &hints, &servinfo);
 
-	if(ret == -1){
-		freeaddrinfo(servinfo);
-		COMET_LOG_ERROR(std::cerr, "getaddrinfo");
+	if(ret != 0){
+		COMET_LOG_ERROR(std::cerr, gai_strerror(ret));
 		return;
-	}
+	};
 
 	p = servinfo;
 
@@ -68,7 +65,7 @@ void SocketSSL::connect_to(const std::string& host, const std::string& port){
 
 	if(p == nullptr){
 		std::cerr << "Error : Unable to create socket. " << std::endl;
-		exit(EXIT_FAILURE);
+		return;
 	}
 
 	/* Negotiate ssl session */
@@ -130,4 +127,8 @@ int SocketSSL::recv(char * buff, int size){
 SocketSSL::~SocketSSL(){
 	SSL_CTX_free(m_ctx);
 	SSL_free(m_ssl);
+};
+
+SocketSSL::operator bool(){
+	return m_ssl != nullptr;
 };

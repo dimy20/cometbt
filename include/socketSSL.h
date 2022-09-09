@@ -25,6 +25,7 @@ class SocketSSL{
 		SocketSSL();
 		~SocketSSL();
 		SocketSSL& operator=(SocketSSL && other);
+		operator bool();
 		void connect_to(const std::string& host, const std::string& port);
 		int recv(char * buff, int size);
 		int send(char * buff, int size);
@@ -34,7 +35,7 @@ class SocketSSL{
 		uint8_t m_flags;
 		int m_fd;
 		SSL_CTX * m_ctx;
-		SSL * m_ssl;
+		SSL * m_ssl = nullptr;
 
 };
 
