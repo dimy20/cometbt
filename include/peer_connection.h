@@ -37,8 +37,9 @@ class peer_connection : public peer_connection_core{
 		peer_connection& operator=(const peer_connection& other);
 
 		virtual void on_receive(int passed_bytes);
-		int fetch_piece(int index, std::queue<int>& work_queue);
+		virtual void on_remote_close();
 
+		int fetch_piece(int index, std::queue<int>& work_queue);
 		bool choked() { return m_choked; };
 	private:
 		int get_length(const char * const buff, std::size_t size);

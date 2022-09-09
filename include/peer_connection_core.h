@@ -71,6 +71,7 @@ class peer_connection_core{
 		friend void on_connect(uv_connect_t * req, int status);
 
 		virtual void on_receive(int passed_bytes) = 0;
+		virtual void on_remote_close() = 0;
 
 	private:
 		void on_receive_internal(int received_bytes);

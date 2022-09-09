@@ -15,20 +15,19 @@ static void alloc_cb(uv_handle_t* handle, size_t size, uv_buf_t* buf) {
 	buf->len = data->chunk_size;
 }
 
-void on_read(uv_stream_t* tcp, ssize_t nread, const uv_buf_t* buf)
-{
+void on_read(uv_stream_t* tcp, ssize_t nread, const uv_buf_t* buf){
+	stream_data_t * data = (stream_data_t *)tcp->data;
+	assert(data != nullptr);
+	peer_connection_core * core_peer = data->core_owner;
+	assert(core_peer != nullptr);
+
     if(nread >= 0) {
-		stream_data_t * data = (stream_data_t *)tcp->data;
-		assert(data != nullptr);
-		peer_connection_core * core_peer = data->core_owner;
-		assert(data != nullptr);
 		core_peer->on_receive_internal(nread);
-    }
-    else {
-		std::cout << "Failed to read : ";
-		std::cout << uv_strerror(nread) << std::endl;
+	}else{
+		COMET_LOG_ERROR(std::cerr, "Read error : " << uv_strerror(nread));
 		uv_close((uv_handle_t*)tcp, on_close);
-    }
+		core_peer->on_remote_close();
+	}
 }
 
 void handshake_write_cb(uv_write_t *req, int status) {

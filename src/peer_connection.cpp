@@ -379,3 +379,15 @@ void peer_connection::handle_bitfield(){
 
 	}
 };
+
+void peer_connection::on_remote_close(){
+	if(m_curr_piece == -1) return;
+
+	auto& piece = m_piece_manager->get_piece(m_curr_piece);
+	piece.reset();
+
+	auto& work_queue = m_piece_manager->get_work_queue();
+	work_queue.push(m_curr_piece);
+
+	m_active = false;
+}
