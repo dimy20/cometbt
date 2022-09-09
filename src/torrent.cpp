@@ -154,14 +154,45 @@ void torrent::init_torrent_data(){
 
 };
 
-static std::string get_host(const std::string& url){
-	int n, count, i;
+static std::string get_protocol(const std::string& url){
+	int i = 0;
+	int n = url.size();
+	while(i < n && url[i] != ':') i++;
+	return url.substr(0, i);
+};
 
-	n = url.size(), count = 0, i = 8;
-	for(i = 8; i <n & url[i] != '/'; i++){
+static std::string get_host(const std::string& url){
+	const char * https = "https";
+	const char * http = "http";
+	const char * udp = "udp";
+
+	std::string tracker_protocol = get_protocol(url);
+
+	int begin = tracker_protocol.size() + 3;
+	int count = 0;
+	int n = url.size();
+
+	for(int i = begin; i < n && url[i] != '/' && url[i] != ':'; i++){
 		count++;
 	};
-	return url.substr(8, count);
+
+	return url.substr(tracker_protocol.size() + 3, count);
+};
+
+static std::string get_port(const std::string& url){
+	int n = url.size();
+	int protocol_size = get_protocol(url).size();
+	int host_size = get_host(url).size();
+	int begin = protocol_size + host_size + 3;
+	int end = 0;
+
+	if(url[begin] == '/') return "";
+	else if(url[begin] == ':'){
+		end = ++begin;
+		while(end < n && url[end] - '0' <= 9 && url[end] - '0' >= 0) end++;
+		return url.substr(begin, end - begin);
+	}else return "";
+
 };
 
 void torrent::setup_peerinfo(){
