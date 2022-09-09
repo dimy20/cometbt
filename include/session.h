@@ -20,6 +20,7 @@ class session{
 	public:
 		session(const std::string& filename);
 		void start();
+		std::vector<peer_connection>& peers() {return m_peer_connections; };
 //	private:
 		torrent m_torrent; // make this better
 		std::vector<peer_connection> m_peer_connections;

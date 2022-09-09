@@ -25,24 +25,27 @@ session::session(const std::string& filename){
 }
 
 bool write_piece(const std::string& filename, piece * p){
-	std::ofstream output("test", std::ios::binary | std::ios_base::app);
+	std::ofstream output(filename, std::ios::binary /*| std::ios_base::app*/);
 	if(!output){
-		std::cerr << "failed to open filename : " << filename << std::endl;
+		COMET_LOG_ERROR(std::cerr, "Failed to open : " << filename);
 		return false;
 	}
+
+	int offset = p->index() * (1024 * 256);
 	const char * data = p->data();
+	output.seekp(offset, std::ios::beg);
 	output.write(data, p->size());
+
 	if(output.bad()) return false;
 	return true;
 };
 
 void save_piece(uv_work_t * handle){
-	//std::cout << "Saving piece" << std::endl;
 	struct piece_write_req * req = (struct piece_write_req *)handle->data;
 	int index = req->index;
 	piece_manager * p_manager = req->p_manager;
 	auto& piece = p_manager->get_piece(index);
-	write_piece("caca", &piece);
+	write_piece("ubuntu.iso", &piece);
 };
 
 void after(uv_work_t * req, int status){
@@ -101,7 +104,10 @@ void session::start(){
 	int n;
 	n = m_torrent.get_peers_infos().size();
 	for(int i = 0; i < n; i++){
-		peer_connection peer(m_torrent.get_peers_infos()[i], &m_piece_manager, &async);
+		peer_connection peer(m_torrent.get_peers_infos()[i],
+							&m_piece_manager,
+							&async,
+							this);
 		m_peer_connections.push_back(std::move(peer));
 	};
 
