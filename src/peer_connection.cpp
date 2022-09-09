@@ -1,6 +1,14 @@
 #include "peer_connection.h"
 #include "session.h"
 
+void have_cb(uv_write_t *req, int status){
+	uv_buf_t * buf = (uv_buf_t *)req->data;
+	assert(buf != nullptr);
+	free(buf->base);
+	free(buf);
+	free(req);
+};
+
 void write_cb(uv_write_t *req, int status) {
     if (status) {
         fprintf(stderr, "Write error %s\n", uv_err_name(status));
@@ -114,29 +122,37 @@ void peer_connection::handle_unchoke(){
 
 void peer_connection::send_have(int index){
 	const int payload_len = 5;
-	const char msg_id = (char)message_id::HAVE;
+	struct have_message have_msg;
 
-	struct have_message * have_msg;
-	have_msg = (struct have_message *)malloc(sizeof(struct have_message));
+	aux::serialize_int(have_msg.length, have_msg.length + 3, payload_len);
+	aux::serialize_int(have_msg.index, have_msg.index + 3, index);
 
-	if(!have_msg){
-		std::cerr << "Failed to allocate" << std::endl;
-		exit(1);
+	assert(m_session != nullptr);
+
+	auto& others = m_session->peers();
+	int n = others.size();
+
+	for(int i = 0 ; i < n; i++){
+		uv_write_t * req = static_cast<uv_write_t *>(malloc(sizeof(uv_write_t)));
+		COMET_ASSERT_ALLOC(req);
+
+		uv_buf_t * buf = static_cast<uv_buf_t *>(malloc(sizeof(uv_buf_t)));
+		COMET_ASSERT_ALLOC(buf);
+
+		buf->base = static_cast<char *>(malloc(sizeof(struct have_message)));
+		COMET_ASSERT_ALLOC(buf);
+
+		memcpy(buf->base, &have_msg, sizeof(struct have_message));
+		buf->len = sizeof(struct have_message);
+		
+		req->data = static_cast<void *>(buf);
+
+		if(&others[i] != this && others[i].socket() != nullptr){
+			auto socket = others[i].socket();
+			uv_write(req, socket, buf, 1, have_cb);
+		}
 	}
 
-	aux::serialize_int(have_msg->length, have_msg->length + 3, payload_len);
-	aux::serialize_int(have_msg->index, have_msg->index + 3, index);
-
-	uv_write_t * req = (uv_write_t *)malloc(sizeof(uv_write_t));
-	if(!req) std::cerr << "failed to alloacte " << std::endl;
-
-	uv_buf_t * buf = (uv_buf_t *)malloc(sizeof(uv_buf_t));
-	if(buf == nullptr) std::cerr << "FART " << std::endl;
-
-	buf->base = reinterpret_cast<char*>(have_msg);
-	buf->len = sizeof(have_message);
-
-	uv_write(req, m_socket, buf, 1, write_cb);
 };
 
 int peer_connection::fetch_piece(int index, std::queue<int>& work_queue){
@@ -162,7 +178,7 @@ int peer_connection::fetch_piece(int index, std::queue<int>& work_queue){
 		if(p.verify_integrity()){
 			std::cout << " Integrity verified, " << std::endl;
 			std::cout << m_peer_info.m_remote_ip << std::endl;
-			//send_have(m_curr_piece);
+			send_have(m_curr_piece);
 			ans = m_curr_piece;
 		}else{
 			work_queue.push(m_curr_piece);
