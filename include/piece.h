@@ -26,7 +26,7 @@ class piece{
 		void add_peer(peer_connection * peer);
 		bool download_finished() { return m_received_count == 16; };
 		bool verify_integrity();
-		
+		void reset();	
 		void incoming_block(block_t& b);
 		std::vector<peer_connection *>& peers() { return m_peers; };
 

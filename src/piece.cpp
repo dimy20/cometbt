@@ -82,3 +82,12 @@ void piece::log_progress(int received){
 		std::cout << std::endl;
 	}
 }
+
+void piece::reset(){
+	m_progress = 0.0f;
+	m_received_count = 0;
+	m_backlog = 0;
+	m_total_requested = 0;
+	memset(m_data, 0, m_received_bytes);
+	m_received_bytes = 0;
+};
